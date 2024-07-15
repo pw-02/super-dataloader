@@ -18,27 +18,25 @@ from batch import Batch
 from epoch import Epoch
 
 class SUPERCoordinator:
-    def __init__(self, args:SUPERArgs):
+    def __init__(self, args:SUPERArgs, dataset:Dataset):
         self.args: SUPERArgs = args
-        self.dataset:Dataset = Dataset(self.args.s3_data_dir, self.args.batch_size, self.args.drop_last, 
-                                       self.args.num_dataset_partitions, self.args.workload_kind)
-        self.partition_epochs: Dict[int, List[Epoch]] = {}
-        self.active_partition_epoch:Epoch = None
+        self.dataset:Dataset = dataset
+        self.epoch_partitions: Dict[int, List[Epoch]] = {}
+        self.active_epoch_partition:Epoch = None
         self.jobs: Dict[int, MLTrainingJob] = {}
         self.lambda_client:AWSLambdaClient = AWSLambdaClient()
         self.prefetch_batches_stop_event = threading.Event()
         self.token_bucket:TokenBucket = TokenBucket(capacity=args.max_lookahead_batches, refill_rate=0)
         self.executor = ThreadPoolExecutor(max_workers=args.max_prefetch_workers)  # Adjust max_workers as neede
-        self.workload_kind = 'workload_kind'
-        logger.info(f"Dataset Confirmed. Data Dir: {self.dataset.data_dir}, Files: {len(self.dataset)}, Batches: {self.dataset.num_batches}, Partitions: {len(self.dataset.partitions)}")
-
+        self.workload_kind = self.args.workload_kind
+        
     def start_prefetcher_service(self):
         """Starts the prefetching process."""
         try:
             prefetch_thread = threading.Thread(target=self.prefetch, daemon=True, name='prefetch-thread')
             prefetch_thread.start()
         except Exception as e:
-            logger.error(f"Error in start_prefetching: {e}")
+            logger.error(f"Error starting prefetching service: {e}")
 
     def prefetch(self):
         """Prefetches data and handles batch processing."""
@@ -46,22 +44,22 @@ class SUPERCoordinator:
         while not self.prefetch_batches_stop_event.is_set():
             epoch_idx += 1
             for partition_id, partition in self.dataset.partitions.items():
-                self.active_partition_epoch = Epoch(f'{epoch_idx}_{partition_id}', partition_id)
-                self.partition_epochs.setdefault(partition.partition_id, []).append(self.active_partition_epoch)
-                batch_sampler = BatchSampler(len(partition), self.args.batch_size, self.active_partition_epoch.epoch_id, self.args.shuffle, self.args.drop_last)
+                self.active_epoch_partition = Epoch(f'{epoch_idx}_{partition_id}', partition_id)
+                self.epoch_partitions.setdefault(partition.partition_id, []).append(self.active_epoch_partition)
+                batch_sampler = BatchSampler(len(partition), self.args.batch_size, self.active_epoch_partition.epoch_id, self.args.shuffle, self.args.drop_last)
                 # Process batches until the end of the epoch
                 while True:
                     try:
                         self.token_bucket.wait_for_tokens()
                         next_batch = next(batch_sampler)
-                        self.active_partition_epoch.add_batch(next_batch)
+                        self.active_epoch_partition.add_batch(next_batch)
                         # Submit the batch for prefetching
                         self.executor.submit(self.prefetch_batch, next_batch)
                     except EndOfEpochException:
                         # End of epoch, break the loop
                         break
                 # Mark the active epoch as finalized
-                self.active_partition_epoch.batches_finalized = True
+                self.active_epoch_partition.batches_finalized = True
                 self.token_bucket.refill(1) #refill here because the pevious token wasn't used due to end of epoch
 
     def create_new_job(self, job_id, data_dir):
@@ -78,24 +76,24 @@ class SUPERCoordinator:
         return success, message
     
     def allocate_next_partition_epoch_to_job(self, job: MLTrainingJob):
-        # Check if there are no epochs remaining in the job
+        # Check if there are no epoch partitions remaining in the job
         if len(job.partition_epochs_remaining) == 0:
             # Assign active epoch to the job
             job.reset_partition_epochs_remaining(self.dataset.partitions)
-            self.active_partition_epoch.queue_up_batches_for_job(job.job_id)
-            job.current_partition_epoch = self.active_partition_epoch
+            self.active_epoch_partition.queue_up_batches_for_job(job.job_id)
+            job.current_partition_epoch = self.active_epoch_partition
         else:
             # Set the current index to the starting integer
-            current_index = self.active_partition_epoch.partition_id
+            current_index = self.active_epoch_partition.partition_id
             
             # Initialize a variable to track the found epoch
             found_epoch = None
             
             # Iterate in reverse with wrap-around
             for _ in range(len(self.dataset.partitions)):
-                # Check if the current index is in job.partition_epochs_remaining
+                # Check if the current index is in job.epoch_partitions_remaining
                 if current_index in job.partition_epochs_remaining:
-                    last_epoch = self.partition_epochs[current_index][-1]
+                    last_epoch = self.epoch_partitions[current_index][-1]
                     
                     # Check if the last epoch ID is not in the job's epoch history
                     if last_epoch.epoch_id not in job.epoch_history:
@@ -118,7 +116,7 @@ class SUPERCoordinator:
         job.update_batch_processing_rate()
         if job.current_partition_epoch is None:
             self.allocate_next_partition_epoch_to_job(job)
-        
+
         elif job.current_partition_epoch.batches_finalized and job.current_partition_epoch.pending_batch_accesses[job.job_id].empty():
             #job finished its current partition epoch
             job.partition_epochs_remaining.remove(job.current_partition_epoch.partition_id)
@@ -159,7 +157,7 @@ class SUPERCoordinator:
                 'task':self.args.workload_kind,
                 'cache_address': self.args.cache_address
                 }
-            response = self.lambda_client.invoke_function(self.args.batch_creation_lambda,json.dumps(payload), self.args.simulate_mode)
+            response = self.lambda_client.invoke_function(self.args.create_batch_lambda,json.dumps(payload), self.args.simulate_mode)
 
             if response['success'] == True:
                 # logger.info(f"{response['message']}. Request Duration: {response['duration']:.3f}s")
@@ -228,7 +226,8 @@ class SUPERCoordinator:
 
 if __name__ == "__main__":
     super_args:SUPERArgs = SUPERArgs()
-    coordinator = SUPERCoordinator(super_args)
+    dataset = Dataset('')
+    coordinator = SUPERCoordinator(super_args, dataset)
     # Start worker threads
     coordinator.start_workers()
     time.sleep(2)

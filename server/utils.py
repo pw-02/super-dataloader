@@ -123,8 +123,8 @@ def partition_dict(original_dict: Dict[Any, Any], num_partitions, batch_size):
         # Calculate the total number of values
         total_values = len(values)
         
-        # Calculate the base partition size such that it is divisible by 128
-        base_partition_size = (total_values // num_partitions) // 128 * 128
+        # Calculate the base partition size such that it is divisible by batch_size
+        base_partition_size = (total_values // num_partitions) // batch_size * batch_size
         
         # Calculate the remaining values that should be evenly distributed across partitions
         remaining_values = total_values - base_partition_size * num_partitions
@@ -136,8 +136,8 @@ def partition_dict(original_dict: Dict[Any, Any], num_partitions, batch_size):
         for i in range(num_partitions):
             # Determine the size of the current partition
             if i < remaining_values:
-                # If there are remaining values, add one additional base size (128) to this partition
-                partition_size = base_partition_size + 128
+                # If there are remaining values, add one additional base size (batch_size) to this partition
+                partition_size = base_partition_size + batch_size
             else:
                 # Otherwise, use the base partition size
                 partition_size = base_partition_size

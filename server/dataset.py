@@ -9,6 +9,8 @@ import numpy as np
 from utils import partition_dict
 
 
+# The base class `BaseDataset` contains common properties and methods shared by both `Dataset` and `DatasetPartition`.
+
 # Define the base class with common properties and methods
 class BaseDataset:
     def __init__(self, samples: Dict[str, List[str]], batch_size: int, drop_last: bool):
@@ -54,7 +56,7 @@ class Dataset(BaseDataset):
         super().__init__(self.samples, batch_size, drop_last)
         
         # Partition the samples and initialize partitions
-        partitions = partition_dict(self.samples, num_partitions, batch_size)
+        partitions = partition_dict(self.samples, num_partitions,batch_size)
         self.partitions: Dict[int, DatasetPartition] = {}
     
         total_len = 0
@@ -62,7 +64,7 @@ class Dataset(BaseDataset):
         for idx, data in enumerate(partitions):
             new_partition = DatasetPartition(idx + 1, data, self.batch_size, self.drop_last)
             self.partitions[new_partition.partition_id] = new_partition
-            # print(len(new_partition))
+            print(len(new_partition))
             total_len += len(new_partition)
         
         # Ensure total length matches the length of the dataset
@@ -79,10 +81,6 @@ class DatasetPartition(BaseDataset):
     def __init__(self, partition_id: int, samples: Dict[str, List[str]], batch_size: int, drop_last: bool):
         # Call the base class initializer
         super().__init__(samples, batch_size, drop_last)
-        
         # Initialize partition-specific properties
         self.partition_id = partition_id
         self.epochs: Dict[int, Epoch] = {}
-
-# The base class `BaseDataset` contains common properties and methods shared by both `Dataset` and `DatasetPartition`.
-# Both derived classes call the base class initializer and benefit from the shared logic.

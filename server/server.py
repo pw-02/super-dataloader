@@ -11,6 +11,7 @@ from args import SUPERArgs
 from batch import Batch
 from typing import Dict, List
 import time
+from dataset import Dataset
 
 class CacheCoordinatorService(cache_coordinator_pb2_grpc.CacheCoordinatorServiceServicer):
     def __init__(self, coordinator: SUPERCoordinator):
@@ -70,13 +71,23 @@ def serve(config: DictConfig):
             shuffle=config.workload.shuffle,
             num_dataset_partitions =config.workload.num_dataset_partitions)
         
-        # Create an instance of the coordinator class
-        coordinator = SUPERCoordinator(args=super_args)
+        #confirm access to remote dataset
+        dataset = Dataset(super_args.s3_data_dir, super_args.batch_size, super_args.drop_last, 
+                          super_args.num_dataset_partitions, super_args.workload_kind)
         
+        if len(dataset) < 1:
+            # logger.error("Dataset is empty or is not accessible. Exiting...")
+            raise Exception("Dataset is empty or is not accessible")
+        else:
+            logger.info(f"Dataset Confirmed. Data Dir: {dataset.data_dir}, Total Files: {len(dataset)}, Total Batches: {dataset.num_batches},Total Partitions: {len(dataset.partitions)}")
+
+        # Create an instance of the coordinator class
+        coordinator = SUPERCoordinator(args=super_args, dataset=dataset)
+
         # Warm up batch creation lambda if not in simulate mode
         if not super_args.simulate_mode:
             logger.info("Warming up batch creation lambda function..")
-            response = coordinator.lambda_client.warm_up_lambda(super_args.batch_creation_lambda) 
+            response = coordinator.lambda_client.warm_up_lambda(super_args.create_batch_lambda) 
             if response['success']:
                 logger.info(f"Warm up took {response['duration']:.3f}s")
         else:
@@ -84,12 +95,11 @@ def serve(config: DictConfig):
 
         # Start data loading workers
         logger.info("Data loading workers started")
-        # coordinator.prefetch()
         coordinator.start_prefetcher_service()
 
         # Initialize and start the gRPC server
         cache_service = CacheCoordinatorService(coordinator)
-        server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+        server = grpc.server(futures.ThreadPoolExecutor(max_workers=1))
         cache_coordinator_pb2_grpc.add_CacheCoordinatorServiceServicer_to_server(cache_service, server)
         server.add_insecure_port('[::]:50051')
         server.start()
@@ -102,9 +112,12 @@ def serve(config: DictConfig):
         logger.info("Server stopped due to keyboard interrupt")
         server.stop(0)
     except Exception as e:
-            logger.exception(f"Error in serve(): {e}")
-    finally:  
-        coordinator.stop_workers()
+            logger.exception(f"{e}. Shutting Down.")
+            if  'server' in locals():
+                server.stop(0)
+    finally:
+        if 'coordinator' in locals():
+            coordinator.stop_workers()
 
 if __name__ == '__main__':
     serve()

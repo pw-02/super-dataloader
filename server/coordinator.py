@@ -4,7 +4,7 @@ import threading
 from typing import Dict, List
 from concurrent import futures
 from args import SUPERArgs
-from server.logging import logger
+from logger_config import logger
 from dataset import Dataset
 from job import MLTrainingJob
 from sampling import BatchSampler, SequentialSampler, EndOfEpochException, RandomSampler

@@ -1,0 +1,5 @@
+[2024-07-15 18:51:16,706][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-07-15 18:57:13,223][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-07-15 18:59:15,810][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-07-15 18:59:35,095][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://owtchunks/train/, Files: 2285, Batches: 2285, Partitions: 1
+[2024-07-15 18:59:54,619][SUPER][INFO] - Warming up batch creation lambda function..

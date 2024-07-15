@@ -1,7 +1,7 @@
 import grpc
 from concurrent import futures
-import superdl.proto.cache_coordinator_pb2 as cache_coordinator_pb2
-import superdl.proto.cache_coordinator_pb2_grpc as cache_coordinator_pb2_grpc
+import proto.cache_coordinator_pb2 as cache_coordinator_pb2
+import proto.cache_coordinator_pb2_grpc as cache_coordinator_pb2_grpc
 import google.protobuf.empty_pb2
 from logger_config import logger
 from coordinator import SUPERCoordinator
@@ -52,15 +52,14 @@ class CacheCoordinatorService(cache_coordinator_pb2_grpc.CacheCoordinatorService
         return google.protobuf.empty_pb2.Empty()
 
        
-
 @hydra.main(version_base=None, config_path="../conf", config_name="config")
 def serve(config: DictConfig):
     try:
-        logger.info("Starting SUPER Datloading Service")   
+        logger.info("Starting SUPER Datloading Service")
         super_args:SUPERArgs = SUPERArgs(
             workload_kind =config.workload.kind,
             s3_data_dir = config.workload.s3_data_dir,
-            batch_creation_lambda = config.batch_creation_lambda,
+            create_batch_lambda = config.create_batch_lambda,
             batch_size = config.workload.batch_size,
             drop_last=config.workload.drop_last,
             simulate_mode = config.simulate_mode,

@@ -42,7 +42,7 @@ RUN pip install --no-cache-dir -r /tmp/requirements-dev.txt \
     && rm /tmp/requirements-dev.txt
 
 # Set PYTHONPATH
-ENV PYTHONPATH=/workspaces/super-grpc
+ENV PYTHONPATH=/workspaces/super-dataloader
 EXPOSE 50051
 
 # Cleanup

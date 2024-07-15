@@ -5,6 +5,7 @@ awscli
 hydra-core
 numpy
 aws-sam-cli
+transformers
 # hydra
 # twine
 # pandas

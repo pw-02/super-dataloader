@@ -12,7 +12,7 @@ class Batch:
         self.is_cached:bool = False
         self.caching_in_progress:bool = False
         self.next_access_time:float = None
-        self.last_access_time:float = float('inf')
+        self.last_accessed_time:float = None #float('inf')
         self.has_been_acessed_before = False
         self.lock = threading.Lock()  # Lock for accessing shared resources
 

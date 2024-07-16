@@ -10,7 +10,6 @@ from omegaconf import DictConfig
 from args import SUPERArgs
 from batch import Batch
 from typing import Dict, List
-import time
 from dataset import Dataset
 
 class CacheCoordinatorService(cache_coordinator_pb2_grpc.CacheCoordinatorServiceServicer):
@@ -37,9 +36,6 @@ class CacheCoordinatorService(cache_coordinator_pb2_grpc.CacheCoordinatorService
         batch_messages =[cache_coordinator_pb2.Batch(batch_id=batch.batch_id, 
                                                      indicies=batch.indicies, 
                                                      is_cached=batch.is_cached) for batch in batches]
-
-        # logger.info(f"Sending next {len(batches)} batches to job'{request.job_id}'")
-
         # Create and return the response
         response = cache_coordinator_pb2.GetNextBatchResponse(
             job_id=request.job_id,
@@ -93,13 +89,6 @@ def serve(config: DictConfig):
         else:
             logger.info("Running in simualtion mode")
 
-        # Start data loading workers
-        coordinator.start_prefetcher_service()
-        logger.info("Data loading workers started")
-
-        coordinator.start_keep_batches_alive_service()
-        logger.info("Batch monitoring started")
-
         # Initialize and start the gRPC server
         cache_service = CacheCoordinatorService(coordinator)
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=1))
@@ -107,10 +96,13 @@ def serve(config: DictConfig):
         server.add_insecure_port('[::]:50051')
         server.start()
         logger.info("Server started. Listening on port 50051...")
+        
+        cache_service.coordinator.start_prefetcher_service()        
+        cache_service.coordinator.start_keep_batches_alive_service()
 
         # Keep the server running until interrupted
         server.wait_for_termination()
-    
+
     except KeyboardInterrupt:
         logger.info("Server stopped due to keyboard interrupt")
         server.stop(0)
@@ -120,6 +112,7 @@ def serve(config: DictConfig):
                 server.stop(0)
     finally:
         if 'coordinator' in locals():
+            logger.info(f"Total Lambda Invocations:{coordinator.lambda_invocation_count}")
             coordinator.stop_workers()
 
 if __name__ == '__main__':

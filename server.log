@@ -3573,3 +3573,15 @@ TypeError: partition_dict() takes 2 positional arguments but 3 were given
 [2024-07-15 22:21:26,020][SUPER][INFO] - Starting SUPER Datloading Service
 [2024-07-15 22:22:10,561][SUPER][INFO] - Starting SUPER Datloading Service
 [2024-07-15 22:22:29,062][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-07-16 17:06:40,843][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-07-16 17:06:47,474][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://sdl-cifar10/train/, Total Files: 50000, Total Batches: 391,Total Partitions: 10
+[2024-07-16 17:06:47,475][SUPER][INFO] - Running in simualtion mode
+[2024-07-16 17:06:47,477][SUPER][INFO] - Data loading workers started
+[2024-07-16 17:06:47,480][SUPER][INFO] - Batch monitoring started
+[2024-07-16 17:06:47,579][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-07-16 17:08:11,321][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-07-16 17:08:11,975][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://sdl-cifar10/train/, Total Files: 50000, Total Batches: 391,Total Partitions: 10
+[2024-07-16 17:08:11,976][SUPER][INFO] - Running in simualtion mode
+[2024-07-16 17:08:11,979][SUPER][INFO] - Data loading workers started
+[2024-07-16 17:08:12,024][SUPER][INFO] - Batch monitoring started
+[2024-07-16 17:08:12,060][SUPER][INFO] - Server started. Listening on port 50051...

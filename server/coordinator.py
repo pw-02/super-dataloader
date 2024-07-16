@@ -1,18 +1,14 @@
 import time
 import json
 import threading
-from typing import Dict, List
-from concurrent import futures
+from typing import Dict, List, Set
 from args import SUPERArgs
 from logger_config import logger
 from dataset import Dataset
 from job import MLTrainingJob
-from sampling import BatchSampler, SequentialSampler, EndOfEpochException, RandomSampler
-from utils import format_timestamp,  TokenBucket, remove_trailing_slash
+from sampling import BatchSampler, EndOfEpochException
+from utils import TokenBucket, format_timestamp, remove_trailing_slash
 from aws_utils import AWSLambdaClient
-from queue import  Queue, Empty
-import numpy as np
-from copy import deepcopy
 from concurrent.futures import ThreadPoolExecutor
 from batch import Batch
 from epoch import Epoch
@@ -37,6 +33,15 @@ class SUPERCoordinator:
             prefetch_thread.start()
         except Exception as e:
             logger.error(f"Error starting prefetching service: {e}")
+    
+    def start_keep_batches_alive_service(self):
+        """Starts the prefetching process."""
+        try:
+            prefetch_thread = threading.Thread(target=self.monitor_active_batches, daemon=True, name='monitor-batches-thread')
+            prefetch_thread.start()
+        except Exception as e:
+            logger.error(f"Error starting prefetching service: {e}")
+
 
     def prefetch(self):
         """Prefetches data and handles batch processing."""
@@ -124,8 +129,6 @@ class SUPERCoordinator:
             self.allocate_next_partition_epoch_to_job(job)
 
         while job.current_partition_epoch.pending_batch_accesses[job.job_id].qsize() < 1:
-            # self.token_bucket.capacity +=10
-            # print('hit')
             time.sleep(0.01)
 
         num_items = min(job.current_partition_epoch.pending_batch_accesses[job.job_id].qsize(), num_batches_requested)
@@ -135,8 +138,9 @@ class SUPERCoordinator:
             batch_id = job.current_partition_epoch.pending_batch_accesses[job.job_id].get()
             batch:Batch = job.current_partition_epoch.batches[batch_id]
             if batch.is_first_access():
-              self.token_bucket.refill(1) 
-        
+              self.token_bucket.refill(1)
+
+            batch.set_last_accessed_time()        
             next_batches.append(batch)
         return next_batches
            
@@ -146,25 +150,26 @@ class SUPERCoordinator:
         chunk_size = self.args.batch_size
         return num_files, num_chunks, chunk_size
         
-    def prefetch_batch(self, next_batch:Batch, attempt = 1):
+    def prefetch_batch(self, next_batch:Batch, attempt = 1, mode = 'prefetch'):
         if attempt >  5:
-            return True
+            return False
         try:
             payload = {
                 'bucket_name': self.dataset.bucket_name,
                 'batch_id': next_batch.batch_id,
                 'batch_samples': self.dataset.get_samples(next_batch.indicies),
-                'task':self.args.workload_kind,
+                'workload_kind':  self.args.workload_kind,
+                'task':mode,
                 'cache_address': self.args.cache_address
                 }
             response = self.lambda_client.invoke_function(self.args.create_batch_lambda,json.dumps(payload), self.args.simulate_mode)
 
             if response['success'] == True:
-                # logger.info(f"{response['message']}. Request Duration: {response['duration']:.3f}s")
-                # logger.info(f"Cached Batch_Id: {next_batch.batch_id}, Request Duration: {response['duration']:.3f}s")
+                logger.debug(f"Cached Batch_Id: {next_batch.batch_id}, Request Duration: {response['duration']:.3f}s")
                 next_batch.set_cache_status(is_cached=True)
+                next_batch.set_last_accessed_time()
             else:
-                logger.info(f" Failed to cache  Batch_Id: {next_batch.batch_id}, Message: {response['message']}, Request Duration: {response['duration']:.3f}s, Attempt: {attempt}")
+                logger.error(f"Failed to cache batch: {next_batch.batch_id}, Message: {response['message']}, Request Duration: {response['duration']:.3f}s, Attempt: {attempt}")
                 attempt +=1
                 self.prefetch_batch(next_batch,attempt)
             return True
@@ -174,23 +179,31 @@ class SUPERCoordinator:
         
     def stop_workers(self):
         self.prefetch_batches_stop_event.set()
-        # self.executor.shutdown(wait=False)
+        #self.executor.shutdown(wait=False)
     
     def handle_job_ended(self, job_id):
         self.jobs[job_id].is_active = False
         self.deactivate_inactive_epochs()
         self.jobs.pop(job_id)
+    
 
-    def deactivate_inactive_epochs(self):
-        # # Collect IDs of active epochs
-        # active_epoch_ids = {self.active_epoch.epoch_id}
-        # for job in self.jobs.values():
-        #     if job.is_active and job.current_epoch_id not in active_epoch_ids:
-        #         active_epoch_ids.add(job.current_epoch_id)
-        # # Deactivate epochs that are not active
-        # for epoch in self.epochs.values():
-        #     epoch.is_active = epoch.epoch_id in active_epoch_ids
-        pass
+    def monitor_active_batches(self):
+        while not self.prefetch_batches_stop_event.is_set():
+            time.sleep(10)
+            active_epochs_set:Set[Epoch] = set()
+            for job in self.jobs.values():
+                if job.is_active and job.current_partition_epoch is not None:
+                    active_epochs_set.add(job.current_partition_epoch)
+            active_epochs_set.add(self.active_epoch_partition)
+
+            for epoch in active_epochs_set:
+                batches: Dict[str, Batch] = epoch.batches
+                for batch in batches.values():
+                    if batch.last_accessed_time is not None:
+                         time_since_last_accessed = time.time() - batch.last_accessed_time
+                         if time_since_last_accessed > self.args.keep_alive_ping_iterval:
+                            self.prefetch_batch(batch,attempt=1, mode='keep_alive')
+
 
     def test_prefetch_rate(self, num_items_to_process = 10, num_workers = 10):
         from concurrent.futures import ThreadPoolExecutor, as_completed

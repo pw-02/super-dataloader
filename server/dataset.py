@@ -8,9 +8,7 @@ from typing import List, Tuple
 import numpy as np
 from utils import partition_dict
 
-
 # The base class `BaseDataset` contains common properties and methods shared by both `Dataset` and `DatasetPartition`.
-
 # Define the base class with common properties and methods
 class BaseDataset:
     def __init__(self, samples: Dict[str, List[str]], batch_size: int, drop_last: bool):

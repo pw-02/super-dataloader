@@ -94,8 +94,11 @@ def serve(config: DictConfig):
             logger.info("Running in simualtion mode")
 
         # Start data loading workers
-        logger.info("Data loading workers started")
         coordinator.start_prefetcher_service()
+        logger.info("Data loading workers started")
+
+        coordinator.start_keep_batches_alive_service()
+        logger.info("Batch monitoring started")
 
         # Initialize and start the gRPC server
         cache_service = CacheCoordinatorService(coordinator)

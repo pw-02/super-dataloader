@@ -1,7 +1,7 @@
 import grpc
 import proto.cache_coordinator_pb2 as cache_coordinator_pb2
 import proto.cache_coordinator_pb2_grpc as cache_coordinator_pb2_grpc
-from server.logging import logger
+from logger_config import logger
 import time
 
 def run_unit_tests():
@@ -31,7 +31,7 @@ def run_unit_tests():
     stub.JobEnded(cache_coordinator_pb2.JobEndedRequest(job_id=123))
     logger.info("Job Ended notification sent")
 
-def request_batches_test(num_epochs = 2, epoch_size=50000, batches_per_request=16):
+def request_batches_test(num_epochs, epoch_size, batches_per_request):
     # Connect to the gRPC server
     channel = grpc.insecure_channel('localhost:50051')
     stub = cache_coordinator_pb2_grpc.CacheCoordinatorServiceStub(channel)
@@ -66,4 +66,3 @@ def request_batches_test(num_epochs = 2, epoch_size=50000, batches_per_request=1
 if __name__ == '__main__':
     run_unit_tests()
     request_batches_test(num_epochs = 1, epoch_size=50000, batches_per_request=1)
-    

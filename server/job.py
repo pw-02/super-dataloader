@@ -1,22 +1,6 @@
-from concurrent.futures import ThreadPoolExecutor
-import json
-import logging
-import sys
 import time
-import math
-from sampling import BatchSampler
-from utils import format_timestamp
-from queue import Queue
-from utils import create_unique_id, CustomQueue
-from typing import Dict, List
-from dataclasses import dataclass
-import numpy as np
-from copy import deepcopy
-import threading
 from epoch import Epoch
 from logger_config import logger
-
-
 
 class MLTrainingJob():
     def __init__(self,job_id:int):
@@ -27,7 +11,6 @@ class MLTrainingJob():
         self.epochs_processed = 0
         self.partition_epochs_remaining = []
         self.current_partition_epoch:Epoch = None
-
         # Variables to track the previous request time and calculate average time interval
         self.previous_request_time = None
         self.total_time_intervals = 0
@@ -52,7 +35,7 @@ class MLTrainingJob():
         if self.num_intervals > 0:
             average_time_interval = self.total_time_intervals / self.num_intervals
             self.processing_rate = average_time_interval
-            logger.info(f"Average time interval between requests: {average_time_interval:.4f} seconds")
+            logger.debug(f"Job {self.job_id} average time interval between requests: {average_time_interval:.4f} seconds")
         
     # def predict_batch_access_time(self, batch_id):
     #     current_time = time.time()
@@ -73,4 +56,3 @@ class MLTrainingJob():
         # Remove the retrieved batches from pending_batches
         del self.pending_batches[:num_batches_to_retrieve]
         return next_batches
-    

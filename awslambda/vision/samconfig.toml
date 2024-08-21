@@ -4,12 +4,12 @@ version = 0.1
 
 [default]
 [default.global.parameters]
-stack_name = "superdataloader"
+stack_name = "supervisionfunction"
 aws_region = "us-west-2"
 confirm_changeset = true
 allow_sam_cli_role_creation = true
 disable_rollback = true
-createbatchfunction_authentication = true
+createvisionbatchfunction_authentication = true
 save_arguments = false
 
 [default.build.parameters]
@@ -21,12 +21,12 @@ lint = true
 
 [default.deploy.parameters]
 capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"  # Add CAPABILITY_NAMED_IAM here
-confirm_changeset = false
 resolve_s3 = true
-s3_prefix = "superdataloader"
+s3_prefix = "supervisionfunction"
 region = "us-west-2"
-image_repositories = ["CreateBatchFunction=590178426343.dkr.ecr.us-west-2.amazonaws.com/superdataloaderc0e05835/createbatchfunctiona9a93187repo"]
-# force_upload = true
+# image_repositories = ["CreateVisionBatchFunction=590178426343.dkr.ecr.us-west-2.amazonaws.com/superdataloaderc0e05835/createvisionbatchfunctiona9a93187repo"]
+force_upload = true
+image_repositories = ["CreateVisionBatchFunction=590178426343.dkr.ecr.us-west-2.amazonaws.com/supervisionfunction31012d32/createvisionbatchfunction44a1e0adrepo"]
 [default.package.parameters]
 resolve_s3 = true
 

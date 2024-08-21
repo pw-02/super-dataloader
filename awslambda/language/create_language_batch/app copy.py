@@ -31,7 +31,7 @@ import os
 # REDIS_PORT = 6379
 nltk.data.path.append(os.getenv('NLTK_DATA', '/var/task/nltk_data'))
 s3_client = None
-# redis_client = None
+redis_client = None
 # Set the TRANSFORMERS_CACHE environment variable
 os.environ['HF_HOME'] = '/tmp'
 # Ensure the cache directory exists
@@ -265,7 +265,7 @@ def transform(bucket_name):
         ])
     
 
-def get_data_sample(bucket_name, data_sample,transformations):
+def get_data_sample(bucket_name, data_sample,transformations, s3_client):
 
     sample_path, sample_label = data_sample
     obj = s3_client.get_object(Bucket=bucket_name, Key=sample_path)
@@ -283,7 +283,7 @@ def get_data_sample(bucket_name, data_sample,transformations):
         return transform(bucket_name)(content), sample_label
         # return torchvision.transforms.ToTensor()(content), sample_label
 
-def create_text_tokens(bucket_name, samples):
+def create_text_tokens(bucket_name, samples, s3_client):
     global tokenizer
     check_and_download_nltk_resource('stopwords')
     check_and_download_nltk_resource('wordnet')
@@ -304,10 +304,10 @@ def create_text_tokens(bucket_name, samples):
     return token_data
 
 
-def create_minibatch(bucket_name, samples, transformations):
+def create_minibatch(bucket_name, samples, transformations, s3_client):
     sample_data, sample_labels = [], []
     with ThreadPoolExecutor() as executor:
-        futures = {executor.submit(get_data_sample, bucket_name, sample, transformations): sample for sample in samples}
+        futures = {executor.submit(get_data_sample, bucket_name, sample, transformations,s3_client): sample for sample in samples}
         for future in concurrent.futures.as_completed(futures):
             file_path = futures[future]
             try:
@@ -347,26 +347,41 @@ def lambda_handler(event, context):
         batch_samples = event['batch_samples']
         batch_id = event['batch_id'] 
         cache_address = event['cache_address']
-        # transformations = event['transformations']
+        workload_kind = event['workload_kind']
         transformations =  None
         cache_host, cache_port = cache_address.split(":")
-
-        global s3_client #, redis_client
-
+        global s3_client , redis_client
         if s3_client is None:
             s3_client = boto3.client('s3')
 
-        # if redis_client is None:
-        redis_client = redis.StrictRedis(host=cache_host, port=cache_port) # Instantiate Redis client
-           
-        if task == 'vision':
-             #deserailize transfor,ations
+        # # Initialize S3 client
+        # s3_client = boto3.client('s3')
+
+        # Initialize cache client
+        if redis_client is None:
+            redis_client = redis.StrictRedis(host=cache_host, port=cache_port)
+        # cache_client = redis.StrictRedis(host=cache_host, port=cache_port)
+        if task == 'keep_alive':
+            try:
+                response = redis_client.get(batch_id)
+            except Exception as e:
+                pass  
+            if response is not None and not isinstance(response, Exception):
+                return {
+                    'success': True,
+                    'batch_id': batch_id,
+                    'is_cached': True,
+                    'message': f"Successfully kept-alive '{batch_id}'"
+                    }
+
+        if workload_kind == 'vision':
+            #deserailize transfor,ations
             if transformations:
                 transformations = dict_to_torchvision_transform(json.loads(transformations))
-            torch_minibatch = create_minibatch(bucket_name, batch_samples, transformations)
+            torch_minibatch = create_minibatch(bucket_name, batch_samples, transformations,s3_client)
 
-        elif task == 'language':
-            torch_minibatch = create_text_tokens(bucket_name, batch_samples)
+        elif workload_kind == 'language':
+            torch_minibatch = create_text_tokens(bucket_name, batch_samples, s3_client)
 
         # Cache minibatch in Redis using batch_id as the key
         redis_client.set(batch_id, torch_minibatch)

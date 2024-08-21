@@ -159,9 +159,14 @@ class AWSLambdaClient():
 
             response = self.lambda_client.invoke(FunctionName=function_name,InvocationType='RequestResponse',Payload=payload)
             response_data = json.loads(response['Payload'].read().decode('utf-8'))
-            response['duration'] = time.perf_counter() - start_time
-            response['success'] = response_data['success']
-            response['message'] = response_data['message']
+            if 'errorMessage' in response_data:
+                response['duration'] = time.perf_counter() - start_time
+                response['success'] = False
+                response['message'] = response_data['errorMessage']
+            else:
+                response['duration'] = time.perf_counter() - start_time
+                response['success'] = response_data['success']
+                response['message'] = response_data['message']
         return response
     
     def warm_up_lambda(self, function_name):

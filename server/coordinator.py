@@ -145,7 +145,7 @@ class SUPERCoordinator:
         chunk_size = self.args.batch_size
         return num_files, num_chunks, chunk_size
     
-    def prefetch_batch(self, next_batch: Batch, attempt=1, mode='prefetch'):
+    def prefetch_batch(self, next_batch: Batch, attempt=1, task='prefetch'):
         if attempt > 5:
             return False
         try:
@@ -154,7 +154,7 @@ class SUPERCoordinator:
                 'batch_id': next_batch.batch_id,
                 'batch_samples': self.dataset.get_samples(next_batch.indicies),
                 'workload_kind': self.args.workload_kind,
-                'task': mode,
+                'task': task,
                 'cache_address': self.args.cache_address
             }
             response = self.lambda_client.invoke_function(
@@ -162,12 +162,12 @@ class SUPERCoordinator:
             )
 
             if response['success']:
-                logger.info(f"Invoked lambda for batch {next_batch.batch_id}, Mode: {mode}, Duration: {response['duration']:.3f}s, Invocation_count: {self.lambda_invocation_count+1}")
+                logger.info(f"Invoked lambda for batch {next_batch.batch_id}, Mode: {task}, Duration: {response['duration']:.3f}s, Invocation_count: {self.lambda_invocation_count+1}")
                 next_batch.set_cache_status(is_cached=True)
                 next_batch.set_last_accessed_time()
             else:
                 logger.error(f"Failed to invoke lambda for batch: {next_batch.batch_id}, Message: {response['message']}, Request Duration: {response['duration']:.3f}s, Attempt: {attempt}, Invocation_count: {self.lambda_invocation_count+1}")
-                self.prefetch_batch(next_batch, attempt + 1, mode)
+                self.prefetch_batch(next_batch, attempt + 1, task)
             
             with self.lambda_invocation_lock:
                 self.lambda_invocation_count += 1  # Increment the lambda invocation counter
@@ -200,7 +200,7 @@ class SUPERCoordinator:
                     if batch.last_accessed_time is not None:
                          time_since_last_accessed = time.time() - batch.last_accessed_time
                          if time_since_last_accessed > self.args.keep_alive_ping_iterval:
-                            self.prefetch_batch(batch,attempt=1, mode='keep_alive')
+                            self.prefetch_batch(batch,attempt=1, task='keep_alive')
 
 
     def test_prefetch_rate(self, num_items_to_process=10, num_workers=10):

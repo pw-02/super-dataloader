@@ -577,3 +577,404 @@
 [2024-07-16 18:14:18,724][SUPER][INFO] - Invoked lambda for batch 1_1_23_dafc7ad6c023fb6b0b5e6c2cabf891d885463092, Mode: keep_alive, Duration: 0.010s, Invocation_count: 198
 [2024-07-16 18:14:18,735][SUPER][INFO] - Invoked lambda for batch 1_1_24_45f8cdf9bf0f21eea0bee66edfb7e7c21b8615d0, Mode: keep_alive, Duration: 0.010s, Invocation_count: 199
 [2024-07-16 18:14:18,746][SUPER][INFO] - Invoked lambda for batch 1_1_25_262c308ab89b839ad36363bfa3c81ac547bbadd5, Mode: keep_alive, Duration: 0.010s, Invocation_count: 200
+[2024-08-07 19:18:54,905][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-07 19:19:00,774][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 10
+[2024-08-07 19:19:00,776][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-07 19:19:00,962][SUPER][INFO] - Warm up took 0.186s
+[2024-08-07 19:19:00,989][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-07 19:19:00,991][SUPER][INFO] - Data loading workers started
+[2024-08-07 19:19:01,002][SUPER][INFO] - Batch monitoring started
+[2024-08-07 19:19:35,790][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Message: client internal error, Request Duration: 33.648s, Attempt: 1, Invocation_count: 1
+[2024-08-07 19:22:01,028][SUPER][ERROR] - Error in prefetch_batch: KeyError - 'success'
+[2024-08-07 19:23:01,823][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-07 19:23:14,137][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 10
+[2024-08-07 19:23:14,138][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-07 19:23:23,470][SUPER][INFO] - Warm up took 9.331s
+[2024-08-07 19:23:23,479][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-07 19:23:23,488][SUPER][INFO] - Data loading workers started
+[2024-08-07 19:23:23,576][SUPER][INFO] - Batch monitoring started
+[2024-08-07 19:26:12,327][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-07 19:26:22,968][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 10
+[2024-08-07 19:26:22,969][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-07 19:26:24,862][SUPER][INFO] - Warm up took 1.892s
+[2024-08-07 19:26:24,870][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-07 19:26:24,873][SUPER][INFO] - Data loading workers started
+[2024-08-07 19:26:24,893][SUPER][INFO] - Batch monitoring started
+[2024-08-07 19:31:52,300][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-07 19:32:01,672][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 10
+[2024-08-07 19:32:01,673][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-07 19:32:03,592][SUPER][INFO] - Warm up took 1.918s
+[2024-08-07 19:32:03,600][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-07 19:32:03,602][SUPER][INFO] - Data loading workers started
+[2024-08-07 19:32:03,618][SUPER][INFO] - Batch monitoring started
+[2024-08-07 19:32:20,446][SUPER][ERROR] - Error in prefetch_batch: KeyError - 'success'
+[2024-08-07 19:33:29,376][SUPER][INFO] - Invoked lambda for batch 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Mode: prefetch, Duration: 52.360s, Invocation_count: 1
+[2024-08-07 19:33:49,854][SUPER][ERROR] - Error in prefetch_batch: KeyError - 'success'
+[2024-08-07 19:33:56,716][SUPER][INFO] - Invoked lambda for batch 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Mode: keep_alive, Duration: 1.019s, Invocation_count: 2
+[2024-08-07 19:34:21,715][SUPER][INFO] - Invoked lambda for batch 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Mode: keep_alive, Duration: 0.623s, Invocation_count: 3
+[2024-08-07 19:34:22,573][SUPER][INFO] - Invoked lambda for batch 1_1_4_d079ffd63fdd3e2d0dd3ce7f100f8639cf8455b4, Mode: prefetch, Duration: 31.860s, Invocation_count: 4
+[2024-08-07 19:34:32,220][SUPER][ERROR] - Error in prefetch_batch: KeyError - 'success'
+[2024-08-07 19:34:44,050][SUPER][INFO] - Invoked lambda for batch 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Mode: keep_alive, Duration: 0.648s, Invocation_count: 5
+[2024-08-07 19:34:45,553][SUPER][INFO] - Invoked lambda for batch 1_1_4_d079ffd63fdd3e2d0dd3ce7f100f8639cf8455b4, Mode: keep_alive, Duration: 0.630s, Invocation_count: 6
+[2024-08-07 19:34:56,505][SUPER][INFO] - Invoked lambda for batch 1_1_6_5376e58050ed8e6b4f911b8d671bf1a9a2a62367, Mode: prefetch, Duration: 22.669s, Invocation_count: 7
+[2024-08-07 19:35:21,117][SUPER][ERROR] - Error in prefetch_batch: KeyError - 'success'
+[2024-08-07 19:35:23,111][SUPER][INFO] - Invoked lambda for batch 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Mode: keep_alive, Duration: 1.019s, Invocation_count: 8
+[2024-08-07 19:35:25,347][SUPER][INFO] - Invoked lambda for batch 1_1_4_d079ffd63fdd3e2d0dd3ce7f100f8639cf8455b4, Mode: keep_alive, Duration: 0.633s, Invocation_count: 9
+[2024-08-07 19:35:29,417][SUPER][INFO] - Invoked lambda for batch 1_1_6_5376e58050ed8e6b4f911b8d671bf1a9a2a62367, Mode: keep_alive, Duration: 0.611s, Invocation_count: 10
+[2024-08-07 19:35:40,077][SUPER][INFO] - Invoked lambda for batch 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Mode: keep_alive, Duration: 0.649s, Invocation_count: 11
+[2024-08-07 19:35:43,884][SUPER][INFO] - Invoked lambda for batch 1_1_8_085dc439bbb9849fe9fbcf4be4a61f2b40725652, Mode: prefetch, Duration: 22.763s, Invocation_count: 12
+[2024-08-07 19:35:50,726][SUPER][INFO] - Invoked lambda for batch 1_1_4_d079ffd63fdd3e2d0dd3ce7f100f8639cf8455b4, Mode: keep_alive, Duration: 0.637s, Invocation_count: 13
+[2024-08-07 19:35:51,184][SUPER][ERROR] - Error in prefetch_batch: KeyError - 'success'
+[2024-08-07 19:35:51,297][SUPER][INFO] - Invoked lambda for batch 1_1_6_5376e58050ed8e6b4f911b8d671bf1a9a2a62367, Mode: keep_alive, Duration: 0.570s, Invocation_count: 14
+[2024-08-07 19:37:30,847][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-07 19:37:35,128][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 10
+[2024-08-07 19:37:35,129][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-07 19:37:35,302][SUPER][INFO] - Warm up took 0.172s
+[2024-08-07 19:37:35,311][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-07 19:37:35,313][SUPER][INFO] - Data loading workers started
+[2024-08-07 19:37:35,322][SUPER][INFO] - Batch monitoring started
+[2024-08-07 19:37:42,581][SUPER][ERROR] - Error in prefetch_batch: KeyError - 'success'
+[2024-08-07 19:38:32,666][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-07 19:38:37,657][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 10
+[2024-08-07 19:38:37,659][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-07 19:39:03,435][SUPER][INFO] - Warm up took 24.874s
+[2024-08-07 19:39:03,444][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-07 19:39:03,451][SUPER][INFO] - Data loading workers started
+[2024-08-07 19:39:03,544][SUPER][INFO] - Batch monitoring started
+[2024-08-07 20:28:24,506][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-07 20:28:42,642][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 10
+[2024-08-07 20:28:42,643][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-07 20:32:13,262][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-07 20:32:27,177][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 10
+[2024-08-07 20:32:27,178][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-07 20:32:58,148][SUPER][INFO] - Warm up took 22.231s
+[2024-08-07 20:32:58,178][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-07 20:32:58,179][SUPER][INFO] - Data loading workers started
+[2024-08-07 20:32:58,190][SUPER][INFO] - Batch monitoring started
+[2024-08-07 22:43:27,987][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-07 22:43:36,484][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 10
+[2024-08-07 22:43:36,486][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-07 22:44:21,907][SUPER][INFO] - Warm up took 32.478s
+[2024-08-07 22:44:21,934][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-07 22:44:21,936][SUPER][INFO] - Data loading workers started
+[2024-08-07 22:44:21,952][SUPER][INFO] - Batch monitoring started
+[2024-08-07 22:45:19,224][SUPER][INFO] - Invoked lambda for batch 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Mode: prefetch, Duration: 22.384s, Invocation_count: 1
+[2024-08-07 22:47:41,284][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-07 22:47:46,574][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 10
+[2024-08-07 22:47:46,576][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-07 22:48:06,364][SUPER][INFO] - Warm up took 10.567s
+[2024-08-07 22:48:06,373][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-07 22:48:06,380][SUPER][INFO] - Data loading workers started
+[2024-08-07 22:48:06,391][SUPER][INFO] - Batch monitoring started
+[2024-08-07 22:48:16,041][SUPER][INFO] - Invoked lambda for batch 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Mode: prefetch, Duration: 6.973s, Invocation_count: 1
+[2024-08-07 22:48:24,524][SUPER][INFO] - Invoked lambda for batch 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Mode: prefetch, Duration: 6.358s, Invocation_count: 2
+[2024-08-07 22:48:33,133][SUPER][INFO] - Invoked lambda for batch 1_1_3_82b8739b62aa666e7fab682e01e5713a7a858f3a, Mode: prefetch, Duration: 7.116s, Invocation_count: 3
+[2024-08-07 22:48:46,347][SUPER][INFO] - Invoked lambda for batch 1_1_4_d079ffd63fdd3e2d0dd3ce7f100f8639cf8455b4, Mode: prefetch, Duration: 7.320s, Invocation_count: 4
+[2024-08-07 22:50:07,256][SUPER][INFO] - Invoked lambda for batch 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Mode: keep_alive, Duration: 88.895s, Invocation_count: 5
+[2024-08-07 22:50:07,257][SUPER][INFO] - Invoked lambda for batch 1_1_5_43c5bf177f6de3012f4ac50e8fb14472d11bd179, Mode: prefetch, Duration: 7.211s, Invocation_count: 5
+[2024-08-07 22:50:17,569][SUPER][INFO] - Invoked lambda for batch 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Mode: keep_alive, Duration: 6.527s, Invocation_count: 7
+[2024-08-07 22:50:17,570][SUPER][INFO] - Invoked lambda for batch 1_1_6_5376e58050ed8e6b4f911b8d671bf1a9a2a62367, Mode: prefetch, Duration: 8.606s, Invocation_count: 7
+[2024-08-07 22:50:25,284][SUPER][INFO] - Invoked lambda for batch 1_1_3_82b8739b62aa666e7fab682e01e5713a7a858f3a, Mode: keep_alive, Duration: 6.840s, Invocation_count: 9
+[2024-08-07 22:50:26,732][SUPER][INFO] - Invoked lambda for batch 1_1_7_959395f39c5fdb3cdd08d313de5631a2ea28b3eb, Mode: prefetch, Duration: 7.711s, Invocation_count: 10
+[2024-08-07 22:50:34,506][SUPER][INFO] - Invoked lambda for batch 1_1_8_085dc439bbb9849fe9fbcf4be4a61f2b40725652, Mode: prefetch, Duration: 6.912s, Invocation_count: 11
+[2024-08-07 22:50:37,238][SUPER][INFO] - Invoked lambda for batch 1_1_4_d079ffd63fdd3e2d0dd3ce7f100f8639cf8455b4, Mode: keep_alive, Duration: 7.782s, Invocation_count: 12
+[2024-08-07 22:50:43,159][SUPER][INFO] - Invoked lambda for batch 1_1_9_0dde2ee37b09da3aa0065d6d048e160a7e52b999, Mode: prefetch, Duration: 6.823s, Invocation_count: 13
+[2024-08-07 22:50:48,636][SUPER][INFO] - Invoked lambda for batch 1_1_5_43c5bf177f6de3012f4ac50e8fb14472d11bd179, Mode: keep_alive, Duration: 7.025s, Invocation_count: 14
+[2024-08-07 22:51:01,314][SUPER][INFO] - Invoked lambda for batch 1_1_10_557a2f83c8b832bba77e0c8bcfb43f0a030553d5, Mode: prefetch, Duration: 6.901s, Invocation_count: 15
+[2024-08-07 22:51:02,742][SUPER][INFO] - Invoked lambda for batch 1_1_6_5376e58050ed8e6b4f911b8d671bf1a9a2a62367, Mode: keep_alive, Duration: 12.681s, Invocation_count: 16
+[2024-08-07 22:51:10,688][SUPER][INFO] - Invoked lambda for batch 1_1_7_959395f39c5fdb3cdd08d313de5631a2ea28b3eb, Mode: keep_alive, Duration: 6.517s, Invocation_count: 17
+[2024-08-07 22:51:49,085][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-07 22:51:58,021][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 10
+[2024-08-07 22:51:58,022][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-07 22:52:12,341][SUPER][INFO] - Warm up took 10.431s
+[2024-08-07 22:52:12,355][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-07 22:52:12,356][SUPER][INFO] - Data loading workers started
+[2024-08-07 22:52:12,437][SUPER][INFO] - Batch monitoring started
+[2024-08-07 22:52:20,658][SUPER][INFO] - Invoked lambda for batch 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Mode: prefetch, Duration: 6.270s, Invocation_count: 1
+[2024-08-07 22:52:27,570][SUPER][INFO] - Invoked lambda for batch 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Mode: prefetch, Duration: 5.968s, Invocation_count: 2
+[2024-08-07 22:52:34,750][SUPER][INFO] - Invoked lambda for batch 1_1_3_82b8739b62aa666e7fab682e01e5713a7a858f3a, Mode: prefetch, Duration: 6.356s, Invocation_count: 3
+[2024-08-07 22:52:42,423][SUPER][INFO] - Invoked lambda for batch 1_1_4_d079ffd63fdd3e2d0dd3ce7f100f8639cf8455b4, Mode: prefetch, Duration: 6.600s, Invocation_count: 4
+[2024-08-07 22:52:51,785][SUPER][INFO] - Invoked lambda for batch 1_1_5_43c5bf177f6de3012f4ac50e8fb14472d11bd179, Mode: prefetch, Duration: 6.637s, Invocation_count: 5
+[2024-08-07 22:53:02,605][SUPER][INFO] - Invoked lambda for batch 1_1_6_5376e58050ed8e6b4f911b8d671bf1a9a2a62367, Mode: prefetch, Duration: 6.639s, Invocation_count: 6
+[2024-08-07 22:53:10,578][SUPER][INFO] - Invoked lambda for batch 1_1_7_959395f39c5fdb3cdd08d313de5631a2ea28b3eb, Mode: prefetch, Duration: 7.161s, Invocation_count: 7
+[2024-08-07 22:53:10,579][SUPER][INFO] - Invoked lambda for batch 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Mode: keep_alive, Duration: 26.489s, Invocation_count: 7
+[2024-08-07 22:53:18,862][SUPER][INFO] - Invoked lambda for batch 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Mode: keep_alive, Duration: 5.825s, Invocation_count: 9
+[2024-08-07 22:53:18,863][SUPER][INFO] - Invoked lambda for batch 1_1_8_085dc439bbb9849fe9fbcf4be4a61f2b40725652, Mode: prefetch, Duration: 6.735s, Invocation_count: 9
+[2024-08-07 22:53:26,481][SUPER][INFO] - Invoked lambda for batch 1_1_9_0dde2ee37b09da3aa0065d6d048e160a7e52b999, Mode: prefetch, Duration: 6.867s, Invocation_count: 11
+[2024-08-07 22:53:26,481][SUPER][INFO] - Invoked lambda for batch 1_1_3_82b8739b62aa666e7fab682e01e5713a7a858f3a, Mode: keep_alive, Duration: 6.133s, Invocation_count: 11
+[2024-08-07 22:53:33,735][SUPER][INFO] - Invoked lambda for batch 1_1_10_557a2f83c8b832bba77e0c8bcfb43f0a030553d5, Mode: prefetch, Duration: 6.423s, Invocation_count: 13
+[2024-08-07 22:53:52,600][SUPER][INFO] - Invoked lambda for batch 1_1_4_d079ffd63fdd3e2d0dd3ce7f100f8639cf8455b4, Mode: keep_alive, Duration: 7.254s, Invocation_count: 14
+[2024-08-07 22:54:03,010][SUPER][INFO] - Invoked lambda for batch 1_1_5_43c5bf177f6de3012f4ac50e8fb14472d11bd179, Mode: keep_alive, Duration: 6.449s, Invocation_count: 15
+[2024-08-07 22:54:35,131][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-07 22:54:41,223][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 10
+[2024-08-07 22:54:41,225][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-07 22:55:03,959][SUPER][INFO] - Warm up took 19.880s
+[2024-08-07 22:55:03,971][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-07 22:55:03,972][SUPER][INFO] - Data loading workers started
+[2024-08-07 22:55:03,995][SUPER][INFO] - Batch monitoring started
+[2024-08-07 22:55:11,846][SUPER][INFO] - Invoked lambda for batch 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Mode: prefetch, Duration: 5.841s, Invocation_count: 1
+[2024-08-07 22:55:17,418][SUPER][INFO] - Invoked lambda for batch 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Mode: prefetch, Duration: 5.570s, Invocation_count: 2
+[2024-08-07 22:55:23,159][SUPER][INFO] - Invoked lambda for batch 1_1_3_82b8739b62aa666e7fab682e01e5713a7a858f3a, Mode: prefetch, Duration: 5.740s, Invocation_count: 3
+[2024-08-07 22:55:29,059][SUPER][INFO] - Invoked lambda for batch 1_1_4_d079ffd63fdd3e2d0dd3ce7f100f8639cf8455b4, Mode: prefetch, Duration: 5.899s, Invocation_count: 4
+[2024-08-07 22:55:35,105][SUPER][INFO] - Invoked lambda for batch 1_1_5_43c5bf177f6de3012f4ac50e8fb14472d11bd179, Mode: prefetch, Duration: 6.043s, Invocation_count: 5
+[2024-08-07 22:55:40,971][SUPER][INFO] - Invoked lambda for batch 1_1_6_5376e58050ed8e6b4f911b8d671bf1a9a2a62367, Mode: prefetch, Duration: 5.864s, Invocation_count: 6
+[2024-08-07 22:55:46,861][SUPER][INFO] - Invoked lambda for batch 1_1_7_959395f39c5fdb3cdd08d313de5631a2ea28b3eb, Mode: prefetch, Duration: 5.888s, Invocation_count: 7
+[2024-08-07 22:55:52,866][SUPER][INFO] - Invoked lambda for batch 1_1_8_085dc439bbb9849fe9fbcf4be4a61f2b40725652, Mode: prefetch, Duration: 6.004s, Invocation_count: 8
+[2024-08-07 22:55:58,673][SUPER][INFO] - Invoked lambda for batch 1_1_9_0dde2ee37b09da3aa0065d6d048e160a7e52b999, Mode: prefetch, Duration: 5.806s, Invocation_count: 9
+[2024-08-07 22:55:59,940][SUPER][INFO] - Invoked lambda for batch 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Mode: keep_alive, Duration: 25.841s, Invocation_count: 10
+[2024-08-07 22:56:04,653][SUPER][INFO] - Invoked lambda for batch 1_1_10_557a2f83c8b832bba77e0c8bcfb43f0a030553d5, Mode: prefetch, Duration: 5.977s, Invocation_count: 11
+[2024-08-07 22:56:05,590][SUPER][INFO] - Invoked lambda for batch 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Mode: keep_alive, Duration: 5.649s, Invocation_count: 12
+[2024-08-07 22:56:11,379][SUPER][INFO] - Invoked lambda for batch 1_1_3_82b8739b62aa666e7fab682e01e5713a7a858f3a, Mode: keep_alive, Duration: 5.787s, Invocation_count: 13
+[2024-08-07 22:56:50,271][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-07 22:56:54,734][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 10
+[2024-08-07 22:56:54,735][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-07 22:57:15,894][SUPER][INFO] - Warm up took 21.157s
+[2024-08-07 22:57:15,905][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-07 22:57:15,906][SUPER][INFO] - Data loading workers started
+[2024-08-07 22:57:15,992][SUPER][INFO] - Batch monitoring started
+[2024-08-07 22:57:27,208][SUPER][INFO] - Invoked lambda for batch 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Mode: prefetch, Duration: 11.080s, Invocation_count: 1
+[2024-08-07 22:57:37,479][SUPER][INFO] - Invoked lambda for batch 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Mode: prefetch, Duration: 10.270s, Invocation_count: 2
+[2024-08-07 22:57:48,254][SUPER][INFO] - Invoked lambda for batch 1_1_3_82b8739b62aa666e7fab682e01e5713a7a858f3a, Mode: prefetch, Duration: 10.773s, Invocation_count: 3
+[2024-08-07 22:57:59,046][SUPER][INFO] - Invoked lambda for batch 1_1_4_d079ffd63fdd3e2d0dd3ce7f100f8639cf8455b4, Mode: prefetch, Duration: 10.791s, Invocation_count: 4
+[2024-08-07 22:58:07,117][SUPER][INFO] - Invoked lambda for batch 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Mode: keep_alive, Duration: 21.093s, Invocation_count: 5
+[2024-08-07 22:58:10,115][SUPER][INFO] - Invoked lambda for batch 1_1_5_43c5bf177f6de3012f4ac50e8fb14472d11bd179, Mode: prefetch, Duration: 11.067s, Invocation_count: 6
+[2024-08-07 22:58:17,080][SUPER][INFO] - Invoked lambda for batch 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Mode: keep_alive, Duration: 9.962s, Invocation_count: 7
+[2024-08-07 22:58:20,847][SUPER][INFO] - Invoked lambda for batch 1_1_6_5376e58050ed8e6b4f911b8d671bf1a9a2a62367, Mode: prefetch, Duration: 10.730s, Invocation_count: 8
+[2024-08-07 22:58:27,664][SUPER][INFO] - Invoked lambda for batch 1_1_3_82b8739b62aa666e7fab682e01e5713a7a858f3a, Mode: keep_alive, Duration: 10.582s, Invocation_count: 9
+[2024-08-07 22:58:31,295][SUPER][INFO] - Invoked lambda for batch 1_1_7_959395f39c5fdb3cdd08d313de5631a2ea28b3eb, Mode: prefetch, Duration: 10.447s, Invocation_count: 10
+[2024-08-07 22:58:38,050][SUPER][INFO] - Invoked lambda for batch 1_1_4_d079ffd63fdd3e2d0dd3ce7f100f8639cf8455b4, Mode: keep_alive, Duration: 10.384s, Invocation_count: 11
+[2024-08-07 22:58:42,407][SUPER][INFO] - Invoked lambda for batch 1_1_8_085dc439bbb9849fe9fbcf4be4a61f2b40725652, Mode: prefetch, Duration: 11.111s, Invocation_count: 12
+[2024-08-07 22:59:35,347][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-07 22:59:49,461][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 10
+[2024-08-07 22:59:49,463][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-07 22:59:59,963][SUPER][INFO] - Warm up took 10.499s
+[2024-08-07 22:59:59,972][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-07 22:59:59,974][SUPER][INFO] - Data loading workers started
+[2024-08-07 22:59:59,983][SUPER][INFO] - Batch monitoring started
+[2024-08-07 23:00:06,424][SUPER][INFO] - Invoked lambda for batch 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Mode: prefetch, Duration: 6.222s, Invocation_count: 1
+[2024-08-07 23:00:12,216][SUPER][INFO] - Invoked lambda for batch 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Mode: prefetch, Duration: 5.791s, Invocation_count: 2
+[2024-08-07 23:00:18,211][SUPER][INFO] - Invoked lambda for batch 1_1_3_82b8739b62aa666e7fab682e01e5713a7a858f3a, Mode: prefetch, Duration: 5.993s, Invocation_count: 3
+[2024-08-07 23:00:24,439][SUPER][INFO] - Invoked lambda for batch 1_1_4_d079ffd63fdd3e2d0dd3ce7f100f8639cf8455b4, Mode: prefetch, Duration: 6.226s, Invocation_count: 4
+[2024-08-07 23:00:30,797][SUPER][INFO] - Invoked lambda for batch 1_1_5_43c5bf177f6de3012f4ac50e8fb14472d11bd179, Mode: prefetch, Duration: 6.357s, Invocation_count: 5
+[2024-08-07 23:00:37,036][SUPER][INFO] - Invoked lambda for batch 1_1_6_5376e58050ed8e6b4f911b8d671bf1a9a2a62367, Mode: prefetch, Duration: 6.238s, Invocation_count: 6
+[2024-08-07 23:00:43,202][SUPER][INFO] - Invoked lambda for batch 1_1_7_959395f39c5fdb3cdd08d313de5631a2ea28b3eb, Mode: prefetch, Duration: 6.163s, Invocation_count: 7
+[2024-08-08 00:06:20,275][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-08 00:06:27,404][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 10
+[2024-08-08 00:06:27,405][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-08 00:06:51,355][SUPER][INFO] - Warm up took 23.950s
+[2024-08-08 00:06:51,378][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-08 00:06:51,388][SUPER][INFO] - Data loading workers started
+[2024-08-08 00:06:51,410][SUPER][INFO] - Batch monitoring started
+[2024-08-08 00:06:58,316][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Message: RequestId: d9fc8891-f1b1-450d-b12e-a5230f2a9063 Error: Runtime exited with error: signal: killed, Request Duration: 6.495s, Attempt: 1, Invocation_count: 1
+[2024-08-08 00:07:13,269][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Message: RequestId: 1e591730-10c9-428a-bcc9-75eb08f61e66 Error: Runtime exited with error: signal: killed, Request Duration: 14.950s, Attempt: 2, Invocation_count: 1
+[2024-08-08 00:07:27,811][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Message: RequestId: 34cc7069-e0b6-411d-a665-1e3ecf3c61ae Error: Runtime exited with error: signal: killed, Request Duration: 14.542s, Attempt: 3, Invocation_count: 1
+[2024-08-08 00:07:42,406][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Message: RequestId: f33196de-db2a-4427-a92f-fa8038b412ee Error: Runtime exited with error: signal: killed, Request Duration: 14.593s, Attempt: 4, Invocation_count: 1
+[2024-08-08 00:09:43,916][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-08 00:09:50,778][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 10
+[2024-08-08 00:09:50,779][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-08 00:10:01,190][SUPER][INFO] - Warm up took 10.410s
+[2024-08-08 00:10:01,211][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-08 00:10:01,213][SUPER][INFO] - Data loading workers started
+[2024-08-08 00:10:01,318][SUPER][INFO] - Batch monitoring started
+[2024-08-08 00:10:02,838][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Message: all input arrays must have the same shape, Request Duration: 1.320s, Attempt: 1, Invocation_count: 1
+[2024-08-08 00:10:03,763][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Message: all input arrays must have the same shape, Request Duration: 0.923s, Attempt: 2, Invocation_count: 1
+[2024-08-08 00:10:04,683][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Message: all input arrays must have the same shape, Request Duration: 0.918s, Attempt: 3, Invocation_count: 1
+[2024-08-08 00:10:05,503][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Message: all input arrays must have the same shape, Request Duration: 0.819s, Attempt: 4, Invocation_count: 1
+[2024-08-08 00:10:06,425][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Message: all input arrays must have the same shape, Request Duration: 0.920s, Attempt: 5, Invocation_count: 1
+[2024-08-08 00:10:07,555][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Message: all input arrays must have the same shape, Request Duration: 1.128s, Attempt: 1, Invocation_count: 6
+[2024-08-08 00:10:08,379][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Message: all input arrays must have the same shape, Request Duration: 0.822s, Attempt: 2, Invocation_count: 6
+[2024-08-08 00:10:09,191][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Message: all input arrays must have the same shape, Request Duration: 0.811s, Attempt: 3, Invocation_count: 6
+[2024-08-08 00:10:09,906][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Message: all input arrays must have the same shape, Request Duration: 0.714s, Attempt: 4, Invocation_count: 6
+[2024-08-08 00:10:10,724][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Message: all input arrays must have the same shape, Request Duration: 0.816s, Attempt: 5, Invocation_count: 6
+[2024-08-08 00:10:12,160][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_3_82b8739b62aa666e7fab682e01e5713a7a858f3a, Message: all input arrays must have the same shape, Request Duration: 1.434s, Attempt: 1, Invocation_count: 11
+[2024-08-08 00:10:13,184][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_3_82b8739b62aa666e7fab682e01e5713a7a858f3a, Message: all input arrays must have the same shape, Request Duration: 1.023s, Attempt: 2, Invocation_count: 11
+[2024-08-08 00:11:23,207][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-08 00:11:34,690][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 10
+[2024-08-08 00:11:34,691][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-08 00:11:34,898][SUPER][INFO] - Warm up took 0.206s
+[2024-08-08 00:11:34,916][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-08 00:11:34,920][SUPER][INFO] - Data loading workers started
+[2024-08-08 00:11:44,380][SUPER][INFO] - Batch monitoring started
+[2024-08-08 00:16:43,111][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-08 00:16:48,266][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 1
+[2024-08-08 00:16:48,267][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-08 00:17:08,524][SUPER][INFO] - Warm up took 20.256s
+[2024-08-08 00:17:08,544][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-08 00:17:08,582][SUPER][INFO] - Data loading workers started
+[2024-08-08 00:17:08,622][SUPER][INFO] - Batch monitoring started
+[2024-08-08 00:17:20,192][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Message: all input arrays must have the same shape, Request Duration: 1.428s, Attempt: 1, Invocation_count: 1
+[2024-08-08 00:17:24,907][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Message: all input arrays must have the same shape, Request Duration: 0.915s, Attempt: 2, Invocation_count: 1
+[2024-08-08 00:17:25,722][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Message: all input arrays must have the same shape, Request Duration: 0.812s, Attempt: 3, Invocation_count: 1
+[2024-08-08 00:17:26,647][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Message: all input arrays must have the same shape, Request Duration: 0.923s, Attempt: 4, Invocation_count: 1
+[2024-08-08 00:17:27,569][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Message: all input arrays must have the same shape, Request Duration: 0.920s, Attempt: 5, Invocation_count: 1
+[2024-08-08 00:17:28,692][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Message: all input arrays must have the same shape, Request Duration: 1.118s, Attempt: 1, Invocation_count: 6
+[2024-08-08 00:17:29,511][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Message: all input arrays must have the same shape, Request Duration: 0.817s, Attempt: 2, Invocation_count: 6
+[2024-08-08 00:17:30,260][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Message: all input arrays must have the same shape, Request Duration: 0.747s, Attempt: 3, Invocation_count: 6
+[2024-08-08 00:17:31,048][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Message: all input arrays must have the same shape, Request Duration: 0.788s, Attempt: 4, Invocation_count: 6
+[2024-08-08 00:17:31,974][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Message: all input arrays must have the same shape, Request Duration: 0.924s, Attempt: 5, Invocation_count: 6
+[2024-08-08 00:17:33,301][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_3_82b8739b62aa666e7fab682e01e5713a7a858f3a, Message: all input arrays must have the same shape, Request Duration: 1.325s, Attempt: 1, Invocation_count: 11
+[2024-08-08 00:17:34,322][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_3_82b8739b62aa666e7fab682e01e5713a7a858f3a, Message: all input arrays must have the same shape, Request Duration: 1.019s, Attempt: 2, Invocation_count: 11
+[2024-08-08 00:17:35,347][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_3_82b8739b62aa666e7fab682e01e5713a7a858f3a, Message: all input arrays must have the same shape, Request Duration: 1.024s, Attempt: 3, Invocation_count: 11
+[2024-08-08 00:17:36,475][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_3_82b8739b62aa666e7fab682e01e5713a7a858f3a, Message: all input arrays must have the same shape, Request Duration: 1.127s, Attempt: 4, Invocation_count: 11
+[2024-08-08 00:17:37,601][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_3_82b8739b62aa666e7fab682e01e5713a7a858f3a, Message: all input arrays must have the same shape, Request Duration: 1.124s, Attempt: 5, Invocation_count: 11
+[2024-08-08 00:17:39,240][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_4_d079ffd63fdd3e2d0dd3ce7f100f8639cf8455b4, Message: all input arrays must have the same shape, Request Duration: 1.637s, Attempt: 1, Invocation_count: 16
+[2024-08-08 00:17:40,364][SUPER][ERROR] - Failed to invoke lambda for batch: 1_1_4_d079ffd63fdd3e2d0dd3ce7f100f8639cf8455b4, Message: all input arrays must have the same shape, Request Duration: 1.123s, Attempt: 2, Invocation_count: 16
+[2024-08-08 00:18:15,677][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-08 00:18:20,908][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 1
+[2024-08-08 00:18:20,909][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-08 00:18:21,102][SUPER][INFO] - Warm up took 0.192s
+[2024-08-08 00:18:21,121][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-08 00:18:21,124][SUPER][INFO] - Data loading workers started
+[2024-08-08 00:18:21,193][SUPER][INFO] - Batch monitoring started
+[2024-08-08 00:39:41,840][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-08 00:39:47,082][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 1
+[2024-08-08 00:39:47,084][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-08 00:40:07,345][SUPER][INFO] - Warm up took 20.259s
+[2024-08-08 00:40:07,368][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-08 00:40:07,405][SUPER][INFO] - Data loading workers started
+[2024-08-08 00:40:07,460][SUPER][INFO] - Batch monitoring started
+[2024-08-08 00:40:15,218][SUPER][INFO] - Invoked lambda for batch 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Mode: prefetch, Duration: 2.872s, Invocation_count: 1
+[2024-08-08 00:40:17,781][SUPER][INFO] - Invoked lambda for batch 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Mode: prefetch, Duration: 2.563s, Invocation_count: 2
+[2024-08-08 00:40:20,438][SUPER][INFO] - Invoked lambda for batch 1_1_3_82b8739b62aa666e7fab682e01e5713a7a858f3a, Mode: prefetch, Duration: 2.656s, Invocation_count: 3
+[2024-08-08 00:40:23,251][SUPER][INFO] - Invoked lambda for batch 1_1_4_d079ffd63fdd3e2d0dd3ce7f100f8639cf8455b4, Mode: prefetch, Duration: 2.811s, Invocation_count: 4
+[2024-08-08 00:40:26,287][SUPER][INFO] - Invoked lambda for batch 1_1_5_43c5bf177f6de3012f4ac50e8fb14472d11bd179, Mode: prefetch, Duration: 3.035s, Invocation_count: 5
+[2024-08-08 00:40:29,082][SUPER][INFO] - Invoked lambda for batch 1_1_6_5376e58050ed8e6b4f911b8d671bf1a9a2a62367, Mode: prefetch, Duration: 2.793s, Invocation_count: 6
+[2024-08-08 00:40:32,024][SUPER][INFO] - Invoked lambda for batch 1_1_7_959395f39c5fdb3cdd08d313de5631a2ea28b3eb, Mode: prefetch, Duration: 2.939s, Invocation_count: 7
+[2024-08-08 00:40:34,856][SUPER][INFO] - Invoked lambda for batch 1_1_8_085dc439bbb9849fe9fbcf4be4a61f2b40725652, Mode: prefetch, Duration: 2.829s, Invocation_count: 8
+[2024-08-08 00:40:37,524][SUPER][INFO] - Invoked lambda for batch 1_1_9_0dde2ee37b09da3aa0065d6d048e160a7e52b999, Mode: prefetch, Duration: 2.669s, Invocation_count: 9
+[2024-08-08 00:40:40,200][SUPER][INFO] - Invoked lambda for batch 1_1_10_557a2f83c8b832bba77e0c8bcfb43f0a030553d5, Mode: prefetch, Duration: 2.674s, Invocation_count: 10
+[2024-08-08 00:42:16,464][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-08 00:42:20,829][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 1
+[2024-08-08 00:42:20,830][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-08 00:42:40,863][SUPER][INFO] - Warm up took 20.037s
+[2024-08-08 00:42:40,875][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-08 00:42:40,923][SUPER][INFO] - Data loading workers started
+[2024-08-08 00:42:40,976][SUPER][INFO] - Batch monitoring started
+[2024-08-08 00:42:46,932][SUPER][INFO] - Invoked lambda for batch 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Mode: prefetch, Duration: 5.596s, Invocation_count: 1
+[2024-08-08 00:42:52,102][SUPER][INFO] - Invoked lambda for batch 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Mode: prefetch, Duration: 5.169s, Invocation_count: 2
+[2024-08-08 00:42:57,466][SUPER][INFO] - Invoked lambda for batch 1_1_3_82b8739b62aa666e7fab682e01e5713a7a858f3a, Mode: prefetch, Duration: 5.364s, Invocation_count: 3
+[2024-08-08 00:43:02,973][SUPER][INFO] - Invoked lambda for batch 1_1_4_d079ffd63fdd3e2d0dd3ce7f100f8639cf8455b4, Mode: prefetch, Duration: 5.505s, Invocation_count: 4
+[2024-08-08 00:43:08,379][SUPER][INFO] - Invoked lambda for batch 1_1_5_43c5bf177f6de3012f4ac50e8fb14472d11bd179, Mode: prefetch, Duration: 5.411s, Invocation_count: 5
+[2024-08-08 00:43:13,910][SUPER][INFO] - Invoked lambda for batch 1_1_6_5376e58050ed8e6b4f911b8d671bf1a9a2a62367, Mode: prefetch, Duration: 5.530s, Invocation_count: 6
+[2024-08-08 00:43:19,342][SUPER][INFO] - Invoked lambda for batch 1_1_7_959395f39c5fdb3cdd08d313de5631a2ea28b3eb, Mode: prefetch, Duration: 5.430s, Invocation_count: 7
+[2024-08-08 00:43:24,679][SUPER][INFO] - Invoked lambda for batch 1_1_8_085dc439bbb9849fe9fbcf4be4a61f2b40725652, Mode: prefetch, Duration: 5.336s, Invocation_count: 8
+[2024-08-08 00:43:26,715][SUPER][INFO] - Invoked lambda for batch 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Mode: keep_alive, Duration: 15.718s, Invocation_count: 9
+[2024-08-08 00:43:29,996][SUPER][INFO] - Invoked lambda for batch 1_1_9_0dde2ee37b09da3aa0065d6d048e160a7e52b999, Mode: prefetch, Duration: 5.315s, Invocation_count: 10
+[2024-08-08 00:43:31,838][SUPER][INFO] - Invoked lambda for batch 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Mode: keep_alive, Duration: 5.123s, Invocation_count: 11
+[2024-08-08 00:43:35,230][SUPER][INFO] - Invoked lambda for batch 1_1_10_557a2f83c8b832bba77e0c8bcfb43f0a030553d5, Mode: prefetch, Duration: 5.234s, Invocation_count: 12
+[2024-08-08 00:43:36,956][SUPER][INFO] - Invoked lambda for batch 1_1_3_82b8739b62aa666e7fab682e01e5713a7a858f3a, Mode: keep_alive, Duration: 5.119s, Invocation_count: 13
+[2024-08-08 00:43:42,087][SUPER][INFO] - Invoked lambda for batch 1_1_4_d079ffd63fdd3e2d0dd3ce7f100f8639cf8455b4, Mode: keep_alive, Duration: 5.129s, Invocation_count: 14
+[2024-08-08 00:43:47,299][SUPER][INFO] - Invoked lambda for batch 1_1_5_43c5bf177f6de3012f4ac50e8fb14472d11bd179, Mode: keep_alive, Duration: 5.209s, Invocation_count: 15
+[2024-08-08 00:43:52,418][SUPER][INFO] - Invoked lambda for batch 1_1_6_5376e58050ed8e6b4f911b8d671bf1a9a2a62367, Mode: keep_alive, Duration: 5.118s, Invocation_count: 16
+[2024-08-08 00:43:57,602][SUPER][INFO] - Invoked lambda for batch 1_1_7_959395f39c5fdb3cdd08d313de5631a2ea28b3eb, Mode: keep_alive, Duration: 5.183s, Invocation_count: 17
+[2024-08-08 00:44:02,759][SUPER][INFO] - Invoked lambda for batch 1_1_8_085dc439bbb9849fe9fbcf4be4a61f2b40725652, Mode: keep_alive, Duration: 5.155s, Invocation_count: 18
+[2024-08-08 00:44:07,775][SUPER][INFO] - Invoked lambda for batch 1_1_9_0dde2ee37b09da3aa0065d6d048e160a7e52b999, Mode: keep_alive, Duration: 5.017s, Invocation_count: 19
+[2024-08-08 00:44:12,720][SUPER][INFO] - Invoked lambda for batch 1_1_10_557a2f83c8b832bba77e0c8bcfb43f0a030553d5, Mode: keep_alive, Duration: 4.944s, Invocation_count: 20
+[2024-08-08 00:44:27,850][SUPER][INFO] - Invoked lambda for batch 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Mode: keep_alive, Duration: 5.118s, Invocation_count: 21
+[2024-08-08 00:44:32,863][SUPER][INFO] - Invoked lambda for batch 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Mode: keep_alive, Duration: 5.010s, Invocation_count: 22
+[2024-08-08 00:44:37,981][SUPER][INFO] - Invoked lambda for batch 1_1_3_82b8739b62aa666e7fab682e01e5713a7a858f3a, Mode: keep_alive, Duration: 5.121s, Invocation_count: 23
+[2024-08-08 00:44:43,208][SUPER][INFO] - Invoked lambda for batch 1_1_4_d079ffd63fdd3e2d0dd3ce7f100f8639cf8455b4, Mode: keep_alive, Duration: 5.225s, Invocation_count: 24
+[2024-08-08 00:44:48,529][SUPER][INFO] - Invoked lambda for batch 1_1_5_43c5bf177f6de3012f4ac50e8fb14472d11bd179, Mode: keep_alive, Duration: 5.317s, Invocation_count: 25
+[2024-08-08 00:44:53,711][SUPER][INFO] - Invoked lambda for batch 1_1_6_5376e58050ed8e6b4f911b8d671bf1a9a2a62367, Mode: keep_alive, Duration: 5.180s, Invocation_count: 26
+[2024-08-08 00:44:58,775][SUPER][INFO] - Invoked lambda for batch 1_1_7_959395f39c5fdb3cdd08d313de5631a2ea28b3eb, Mode: keep_alive, Duration: 5.062s, Invocation_count: 27
+[2024-08-08 00:45:04,100][SUPER][INFO] - Invoked lambda for batch 1_1_8_085dc439bbb9849fe9fbcf4be4a61f2b40725652, Mode: keep_alive, Duration: 5.323s, Invocation_count: 28
+[2024-08-08 00:45:09,207][SUPER][INFO] - Invoked lambda for batch 1_1_9_0dde2ee37b09da3aa0065d6d048e160a7e52b999, Mode: keep_alive, Duration: 5.107s, Invocation_count: 29
+[2024-08-08 00:45:14,442][SUPER][INFO] - Invoked lambda for batch 1_1_10_557a2f83c8b832bba77e0c8bcfb43f0a030553d5, Mode: keep_alive, Duration: 5.234s, Invocation_count: 30
+[2024-08-08 00:45:29,509][SUPER][INFO] - Invoked lambda for batch 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Mode: keep_alive, Duration: 5.054s, Invocation_count: 31
+[2024-08-08 00:45:34,445][SUPER][INFO] - Invoked lambda for batch 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Mode: keep_alive, Duration: 4.934s, Invocation_count: 32
+[2024-08-08 00:45:39,423][SUPER][INFO] - Invoked lambda for batch 1_1_3_82b8739b62aa666e7fab682e01e5713a7a858f3a, Mode: keep_alive, Duration: 4.978s, Invocation_count: 33
+[2024-08-08 00:45:44,625][SUPER][INFO] - Invoked lambda for batch 1_1_4_d079ffd63fdd3e2d0dd3ce7f100f8639cf8455b4, Mode: keep_alive, Duration: 5.201s, Invocation_count: 34
+[2024-08-08 00:45:49,750][SUPER][INFO] - Invoked lambda for batch 1_1_5_43c5bf177f6de3012f4ac50e8fb14472d11bd179, Mode: keep_alive, Duration: 5.122s, Invocation_count: 35
+[2024-08-08 00:45:54,848][SUPER][INFO] - Invoked lambda for batch 1_1_6_5376e58050ed8e6b4f911b8d671bf1a9a2a62367, Mode: keep_alive, Duration: 5.097s, Invocation_count: 36
+[2024-08-08 00:45:59,806][SUPER][INFO] - Invoked lambda for batch 1_1_7_959395f39c5fdb3cdd08d313de5631a2ea28b3eb, Mode: keep_alive, Duration: 4.956s, Invocation_count: 37
+[2024-08-08 00:46:05,031][SUPER][INFO] - Invoked lambda for batch 1_1_8_085dc439bbb9849fe9fbcf4be4a61f2b40725652, Mode: keep_alive, Duration: 5.223s, Invocation_count: 38
+[2024-08-08 00:46:10,050][SUPER][INFO] - Invoked lambda for batch 1_1_9_0dde2ee37b09da3aa0065d6d048e160a7e52b999, Mode: keep_alive, Duration: 5.017s, Invocation_count: 39
+[2024-08-08 00:46:15,162][SUPER][INFO] - Invoked lambda for batch 1_1_10_557a2f83c8b832bba77e0c8bcfb43f0a030553d5, Mode: keep_alive, Duration: 5.109s, Invocation_count: 40
+[2024-08-08 00:49:21,439][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-08 00:49:30,686][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 1
+[2024-08-08 00:49:30,687][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-08 00:49:50,643][SUPER][INFO] - Warm up took 19.957s
+[2024-08-08 00:49:50,670][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-08 00:49:50,727][SUPER][INFO] - Data loading workers started
+[2024-08-08 00:49:50,781][SUPER][INFO] - Batch monitoring started
+[2024-08-08 00:49:53,687][SUPER][INFO] - Invoked lambda for batch 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Mode: prefetch, Duration: 2.406s, Invocation_count: 1
+[2024-08-08 00:49:55,838][SUPER][INFO] - Invoked lambda for batch 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Mode: prefetch, Duration: 2.149s, Invocation_count: 2
+[2024-08-08 00:49:58,191][SUPER][INFO] - Invoked lambda for batch 1_1_3_82b8739b62aa666e7fab682e01e5713a7a858f3a, Mode: prefetch, Duration: 2.351s, Invocation_count: 3
+[2024-08-08 00:50:00,548][SUPER][INFO] - Invoked lambda for batch 1_1_4_d079ffd63fdd3e2d0dd3ce7f100f8639cf8455b4, Mode: prefetch, Duration: 2.356s, Invocation_count: 4
+[2024-08-08 00:50:03,115][SUPER][INFO] - Invoked lambda for batch 1_1_5_43c5bf177f6de3012f4ac50e8fb14472d11bd179, Mode: prefetch, Duration: 2.565s, Invocation_count: 5
+[2024-08-08 00:50:05,463][SUPER][INFO] - Invoked lambda for batch 1_1_6_5376e58050ed8e6b4f911b8d671bf1a9a2a62367, Mode: prefetch, Duration: 2.346s, Invocation_count: 6
+[2024-08-08 00:50:07,717][SUPER][INFO] - Invoked lambda for batch 1_1_7_959395f39c5fdb3cdd08d313de5631a2ea28b3eb, Mode: prefetch, Duration: 2.250s, Invocation_count: 7
+[2024-08-08 00:51:50,698][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-08 00:52:00,331][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 1
+[2024-08-08 00:52:00,333][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-08 00:52:20,536][SUPER][INFO] - Warm up took 20.203s
+[2024-08-08 00:52:20,575][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-08 00:52:20,767][SUPER][INFO] - Data loading workers started
+[2024-08-08 00:52:20,820][SUPER][INFO] - Batch monitoring started
+[2024-08-08 00:52:23,878][SUPER][INFO] - Invoked lambda for batch 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Mode: prefetch, Duration: 2.594s, Invocation_count: 1
+[2024-08-08 00:52:26,368][SUPER][INFO] - Invoked lambda for batch 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Mode: prefetch, Duration: 2.488s, Invocation_count: 2
+[2024-08-08 00:52:28,956][SUPER][INFO] - Invoked lambda for batch 1_1_3_82b8739b62aa666e7fab682e01e5713a7a858f3a, Mode: prefetch, Duration: 2.586s, Invocation_count: 3
+[2024-08-08 00:52:31,593][SUPER][INFO] - Invoked lambda for batch 1_1_4_d079ffd63fdd3e2d0dd3ce7f100f8639cf8455b4, Mode: prefetch, Duration: 2.624s, Invocation_count: 4
+[2024-08-08 00:52:34,353][SUPER][INFO] - Invoked lambda for batch 1_1_5_43c5bf177f6de3012f4ac50e8fb14472d11bd179, Mode: prefetch, Duration: 2.759s, Invocation_count: 5
+[2024-08-08 00:52:37,014][SUPER][INFO] - Invoked lambda for batch 1_1_6_5376e58050ed8e6b4f911b8d671bf1a9a2a62367, Mode: prefetch, Duration: 2.660s, Invocation_count: 6
+[2024-08-08 00:52:39,679][SUPER][INFO] - Invoked lambda for batch 1_1_7_959395f39c5fdb3cdd08d313de5631a2ea28b3eb, Mode: prefetch, Duration: 2.663s, Invocation_count: 7
+[2024-08-08 00:54:23,202][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-08 00:54:33,546][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 1
+[2024-08-08 00:54:33,547][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-08 00:54:53,512][SUPER][INFO] - Warm up took 19.969s
+[2024-08-08 00:54:53,535][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-08 00:54:53,580][SUPER][INFO] - Data loading workers started
+[2024-08-08 00:54:53,615][SUPER][INFO] - Batch monitoring started
+[2024-08-08 00:54:59,450][SUPER][INFO] - Invoked lambda for batch 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Mode: prefetch, Duration: 5.541s, Invocation_count: 1
+[2024-08-08 00:55:04,779][SUPER][INFO] - Invoked lambda for batch 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Mode: prefetch, Duration: 5.328s, Invocation_count: 2
+[2024-08-08 00:55:10,208][SUPER][INFO] - Invoked lambda for batch 1_1_3_82b8739b62aa666e7fab682e01e5713a7a858f3a, Mode: prefetch, Duration: 5.419s, Invocation_count: 3
+[2024-08-08 00:55:32,515][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-08 00:55:36,988][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 1
+[2024-08-08 00:55:36,989][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-08 00:55:37,189][SUPER][INFO] - Warm up took 0.199s
+[2024-08-08 00:55:37,208][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-08 00:55:37,210][SUPER][INFO] - Data loading workers started
+[2024-08-08 00:55:37,356][SUPER][INFO] - Batch monitoring started
+[2024-08-08 00:55:42,873][SUPER][INFO] - Invoked lambda for batch 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Mode: prefetch, Duration: 5.301s, Invocation_count: 1
+[2024-08-08 00:55:52,190][SUPER][INFO] - Invoked lambda for batch 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Mode: prefetch, Duration: 14.615s, Invocation_count: 2
+[2024-08-08 00:55:53,622][SUPER][INFO] - Invoked lambda for batch 1_1_7_959395f39c5fdb3cdd08d313de5631a2ea28b3eb, Mode: prefetch, Duration: 16.034s, Invocation_count: 3
+[2024-08-08 00:55:53,624][SUPER][INFO] - Invoked lambda for batch 1_1_3_82b8739b62aa666e7fab682e01e5713a7a858f3a, Mode: prefetch, Duration: 16.046s, Invocation_count: 3
+[2024-08-08 00:55:53,754][SUPER][INFO] - Invoked lambda for batch 1_1_8_085dc439bbb9849fe9fbcf4be4a61f2b40725652, Mode: prefetch, Duration: 16.163s, Invocation_count: 5
+[2024-08-08 00:55:53,851][SUPER][INFO] - Invoked lambda for batch 1_1_9_0dde2ee37b09da3aa0065d6d048e160a7e52b999, Mode: prefetch, Duration: 16.258s, Invocation_count: 6
+[2024-08-08 00:55:54,236][SUPER][INFO] - Invoked lambda for batch 1_1_10_557a2f83c8b832bba77e0c8bcfb43f0a030553d5, Mode: prefetch, Duration: 16.640s, Invocation_count: 7
+[2024-08-08 01:49:06,487][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-08 01:49:17,877][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 1
+[2024-08-08 01:49:17,878][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-08 01:49:18,085][SUPER][INFO] - Warm up took 0.207s
+[2024-08-08 01:49:18,114][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-08 01:49:18,146][SUPER][INFO] - Data loading workers started
+[2024-08-08 01:49:18,186][SUPER][INFO] - Batch monitoring started
+[2024-08-08 01:49:24,393][SUPER][INFO] - Invoked lambda for batch 1_1_1_6432794cc0dcc31ae4cac1ac0dcb98c3ea9d12ba, Mode: prefetch, Duration: 5.899s, Invocation_count: 1
+[2024-08-08 01:49:33,712][SUPER][INFO] - Invoked lambda for batch 1_1_10_557a2f83c8b832bba77e0c8bcfb43f0a030553d5, Mode: prefetch, Duration: 15.190s, Invocation_count: 2
+[2024-08-08 01:49:33,720][SUPER][INFO] - Invoked lambda for batch 1_1_2_e8a8495b1c2495baca1cbdd7b0d3f69a61fa8691, Mode: prefetch, Duration: 15.221s, Invocation_count: 2
+[2024-08-08 01:49:34,640][SUPER][INFO] - Invoked lambda for batch 1_1_3_82b8739b62aa666e7fab682e01e5713a7a858f3a, Mode: prefetch, Duration: 16.138s, Invocation_count: 4
+[2024-08-08 01:49:34,938][SUPER][INFO] - Invoked lambda for batch 1_1_8_085dc439bbb9849fe9fbcf4be4a61f2b40725652, Mode: prefetch, Duration: 16.425s, Invocation_count: 5
+[2024-08-08 01:49:34,993][SUPER][INFO] - Invoked lambda for batch 1_1_6_5376e58050ed8e6b4f911b8d671bf1a9a2a62367, Mode: prefetch, Duration: 16.485s, Invocation_count: 6
+[2024-08-08 01:49:35,015][SUPER][INFO] - Invoked lambda for batch 1_1_5_43c5bf177f6de3012f4ac50e8fb14472d11bd179, Mode: prefetch, Duration: 16.510s, Invocation_count: 7
+[2024-08-08 01:49:35,246][SUPER][INFO] - Invoked lambda for batch 1_1_4_d079ffd63fdd3e2d0dd3ce7f100f8639cf8455b4, Mode: prefetch, Duration: 16.742s, Invocation_count: 8
+[2024-08-08 01:52:37,060][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-08 01:52:42,214][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 1
+[2024-08-08 01:52:42,215][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-08 01:52:42,416][SUPER][INFO] - Warm up took 0.200s
+[2024-08-08 01:52:42,428][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-08 01:52:42,430][SUPER][INFO] - Data loading workers started
+[2024-08-08 01:52:42,498][SUPER][INFO] - Batch monitoring started
+[2024-08-08 01:54:01,789][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-08 01:54:07,129][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 1
+[2024-08-08 01:54:07,130][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-08 01:54:07,335][SUPER][INFO] - Warm up took 0.204s
+[2024-08-08 01:54:07,352][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-08 01:54:07,353][SUPER][INFO] - Data loading workers started
+[2024-08-08 01:54:07,414][SUPER][INFO] - Batch monitoring started
+[2024-08-08 01:55:16,877][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-08 01:55:22,430][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://imagenet1k-sdl/train/, Total Files: 1096302, Total Batches: 8565,Total Partitions: 1
+[2024-08-08 01:55:22,431][SUPER][INFO] - Warming up batch creation lambda function..
+[2024-08-08 01:55:22,639][SUPER][INFO] - Warm up took 0.207s
+[2024-08-08 01:55:22,664][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-08 01:55:22,665][SUPER][INFO] - Data loading workers started
+[2024-08-08 01:55:22,703][SUPER][INFO] - Batch monitoring started

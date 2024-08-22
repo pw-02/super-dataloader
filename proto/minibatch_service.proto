@@ -3,18 +3,31 @@ syntax = "proto3";
 import "google/protobuf/empty.proto";  // Import Empty type
 /* 
 Command to create stub files:
-python -m grpc_tools.protoc --proto_path=. ./proto/cache_coordinator.proto --python_out=. --grpc_python_out=.
+python -m grpc_tools.protoc --proto_path=. ./proto/minibatch_service.proto --python_out=. --grpc_python_out=.
 */
-service CacheCoordinatorService {
+service MiniBatchService {
   //rpc RegisterJob(JobInfo) returns (RegisterJobResponse);
   //rpc SendMetrics(MetricsRequest) returns (google.protobuf.Empty);
   rpc Ping(PingRequest) returns (PingResponse);
+  rpc RegisterDataset(RegisterDatasetRequest) returns (RegisterDatasetResponse);
+
   rpc RegisterJob(RegisterJobRequest) returns (RegisterJobResponse);
   rpc GetNextBatchToProcess(GetNextBatchRequest) returns (GetNextBatchResponse);
   rpc JobEnded(JobEndedRequest) returns (google.protobuf.Empty);
   rpc GetDatasetInfo(DatasetInfoRequest) returns (DatasetInfoResponse);
 
 }
+
+message RegisterDatasetRequest {
+  string data_dir = 2;
+  }
+
+message RegisterDatasetResponse {
+  bool dataset_registered = 1;
+  string message =2;
+  }
+
+
 
 
 message DatasetInfoRequest {

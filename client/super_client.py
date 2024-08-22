@@ -1,8 +1,8 @@
 import grpc
-import proto.cache_coordinator_pb2 as cache_coordinator_pb2
-import proto.cache_coordinator_pb2_grpc as cache_coordinator_pb2_grpc
+import proto.minibatch_service_pb2 as minibatch_service_pb2
+import proto.minibatch_service_pb2_grpc as minibatch_service_pb2_grpc
 import logging
-from proto.cache_coordinator_pb2_grpc import CacheCoordinatorServiceStub
+from proto.minibatch_service_pb2_grpc import MiniBatchServiceStub
 
 # def configure_logger():
 #     # Set the log levels for specific loggers to WARNING
@@ -26,18 +26,18 @@ class SuperClient:
         # Establish a connection to the gRPC server
         self.channel = grpc.insecure_channel(self.super_addresss)
         # Create a stub (client)
-        self.stub:CacheCoordinatorServiceStub = cache_coordinator_pb2_grpc.CacheCoordinatorServiceStub(self.channel)
+        self.stub:MiniBatchServiceStub = minibatch_service_pb2_grpc.MiniBatchServiceStub(self.channel)
         
     def ping_server(self):
         try:
-            ping_response = self.stub.Ping(cache_coordinator_pb2.PingRequest(message='ping'))
+            ping_response = self.stub.Ping(minibatch_service_pb2.PingRequest(message='ping'))
             logging.info(f"Ping Response: {ping_response.message}")
         except Exception as e:
             logging.error(f"Error in ping_server request: {e}")
 
     def register_job(self, job_id:str, data_dir:str):
         try:       
-            register_job_response = self.stub.RegisterJob(cache_coordinator_pb2.RegisterJobRequest(
+            register_job_response = self.stub.RegisterJob(minibatch_service_pb2.RegisterJobRequest(
                 job_id=job_id, 
                 data_dir=data_dir))
             logging.info(f"Register job Response: {register_job_response.message}")
@@ -48,7 +48,7 @@ class SuperClient:
     def get_next_batch(self, job_int:int, num_batches_requested:int = 1):
         try:   
             next_batch_response = self.stub.GetNextBatchToProcess(
-                cache_coordinator_pb2.GetNextBatchRequest(
+                minibatch_service_pb2.GetNextBatchRequest(
                     job_id=job_int, 
                     num_batches_requested=num_batches_requested))   
             
@@ -61,7 +61,7 @@ class SuperClient:
     def get_dataset_details(self, data_dir:str =''):
         try:   
             dataset_info_response = self.stub.GetDatasetInfo(
-                cache_coordinator_pb2.DatasetInfoRequest(
+                minibatch_service_pb2.DatasetInfoRequest(
                     data_dir=data_dir))   
             
             return dataset_info_response
@@ -72,7 +72,7 @@ class SuperClient:
     
     def job_ended_notification(self, job_int:int):
         try:   
-            self.stub.JobEnded(cache_coordinator_pb2.JobEndedRequest(job_id=job_int))
+            self.stub.JobEnded(minibatch_service_pb2.JobEndedRequest(job_id=job_int))
             logging.info("Job Ended notification sent")
 
         except Exception as e:

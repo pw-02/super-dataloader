@@ -1,5 +1,6 @@
 {
   "name": "super-dev",
+  "forwardPorts": [50051],
   "context": "..",
   "dockerFile": "./Dockerfile",
   "runArgs": [

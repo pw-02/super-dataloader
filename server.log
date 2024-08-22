@@ -978,3 +978,57 @@
 [2024-08-08 01:55:22,664][SUPER][INFO] - Server started. Listening on port 50051...
 [2024-08-08 01:55:22,665][SUPER][INFO] - Data loading workers started
 [2024-08-08 01:55:22,703][SUPER][INFO] - Batch monitoring started
+[2024-08-21 22:43:03,831][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-21 22:45:26,602][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-21 22:45:27,150][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://sdl-cifar10/test/, Total Files: 10000, Total Batches: 79,Total Partitions: 1
+[2024-08-21 22:45:27,151][SUPER][INFO] - Running in simualtion mode
+[2024-08-21 22:45:27,175][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-21 22:48:14,002][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-21 22:48:14,544][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://sdl-cifar10/test/, Total Files: 10000, Total Batches: 79,Total Partitions: 1
+[2024-08-21 22:48:14,545][SUPER][INFO] - Running in simualtion mode
+[2024-08-21 22:48:14,556][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-21 22:54:20,606][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-21 22:54:21,139][SUPER][INFO] - Dataset Confirmed. Data Dir: s3://sdl-cifar10/test/, Total Files: 10000, Total Batches: 79,Total Partitions: 1
+[2024-08-21 22:54:21,140][SUPER][INFO] - Running in simualtion mode
+[2024-08-21 22:54:21,149][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-21 22:54:30,134][SUPER][INFO] - New job with id '1' successfully registered.
+[2024-08-21 22:55:51,625][SUPER][INFO] - Job with id '1' already registered. Skipping.
+[2024-08-21 22:57:05,923][SUPER][INFO] - Job with id '1' already registered. Skipping.
+[2024-08-21 22:58:06,782][SUPER][INFO] - Job with id '1' already registered. Skipping.
+[2024-08-21 22:58:38,101][SUPER][INFO] - Job with id '1' already registered. Skipping.
+[2024-08-21 23:11:24,741][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-21 23:11:24,752][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-21 23:12:11,723][SUPER][INFO] - Dataset 's3://sdl-cifar10/test/' successfully registered.
+[2024-08-21 23:12:38,879][SUPER][INFO] - Dataset 's3://sdl-cifar10/test/' successfully registered.
+[2024-08-21 23:15:56,725][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-21 23:15:56,737][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-21 23:16:14,412][grpc._server][ERROR] - Exception calling application: name 'dataset' is not defined
+Traceback (most recent call last):
+  File "/opt/conda/lib/python3.10/site-packages/grpc/_server.py", line 609, in _call_behavior
+    response_or_iterator = behavior(argument, context)
+  File "/workspaces/super-dataloader/server/server.py", line 24, in RegisterDataset
+    success, message = self.coordinator.create_dataset(request.data_dir)
+  File "/workspaces/super-dataloader/server/coordinator.py", line 79, in create_dataset
+    message = f"Dataset '{data_dir}' registered with SUPER. Total Files: {len(dataset)}, Total Batches: {dataset.num_batches},Total Partitions: {len(dataset.partitions)}"
+NameError: name 'dataset' is not defined
+[2024-08-21 23:17:25,353][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-21 23:17:25,364][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-21 23:17:45,127][SUPER][INFO] - Dataset 's3://sdl-cifar10/test/' registered with SUPER. Total Files: 10000, Total Batches: 79,Total Partitions: 1
+[2024-08-21 23:43:12,447][SUPER][INFO] - Starting SUPER Datloading Service
+[2024-08-21 23:43:12,458][SUPER][INFO] - Server started. Listening on port 50051...
+[2024-08-21 23:49:06,709][SUPER][INFO] - Dataset 's3://sdl-cifar10/test/' registered with SUPER. Total Files: 10000, Total Batches:79, Partitions:1
+[2024-08-21 23:49:31,041][SUPER][INFO] - Dataset 's3://sdl-cifar10/test/' registered with SUPER. Total Files: 10000, Total Batches: 79,Total Partitions: 1
+[2024-08-21 23:52:14,086][SUPER][INFO] - Dataset 's3://sdl-cifar10/test/' registered with SUPER. Total Files: 10000, Total Batches: 79,Total Partitions: 1
+[2024-08-21 23:52:33,775][SUPER][INFO] - Dataset 's3://sdl-cifar10/test/' registered with SUPER. Total Files: 10000, Total Batches: 79,Total Partitions: 1
+[2024-08-21 23:53:21,156][SUPER][INFO] - Dataset 's3://sdl-cifar10/test/' registered with SUPER. Total Files: 10000, Total Batches: 79,Total Partitions: 1
+[2024-08-21 23:55:06,025][SUPER][INFO] - Dataset 's3://sdl-cifar10/test/' registered with SUPER. Total Files: 10000, Total Batches: 79,Total Partitions: 1
+[2024-08-21 23:55:25,929][SUPER][INFO] - Dataset 's3://sdl-cifar10/test/' registered with SUPER. Total Files: 10000, Total Batches: 79,Total Partitions: 1
+[2024-08-21 23:56:30,371][SUPER][INFO] - Dataset 's3://sdl-cifar10/test/' registered with SUPER. Total Files: 10000, Total Batches: 79,Total Partitions: 1
+[2024-08-21 23:57:15,103][SUPER][INFO] - Dataset 's3://sdl-cifar10/test/' registered with SUPER. Total Files: 10000, Total Batches: 79,Total Partitions: 1
+[2024-08-21 23:58:20,025][SUPER][INFO] - Dataset 's3://sdl-cifar10/test/' registered with SUPER. Total Files: 10000, Total Batches: 79,Total Partitions: 1
+[2024-08-21 23:59:00,029][SUPER][INFO] - Dataset 's3://sdl-cifar10/test/' registered with SUPER. Total Files: 10000, Total Batches: 79,Total Partitions: 1
+[2024-08-21 23:59:50,241][SUPER][INFO] - Dataset 's3://sdl-cifar10/test/' registered with SUPER. Total Files: 10000, Total Batches: 79,Total Partitions: 1
+[2024-08-22 00:00:10,847][SUPER][INFO] - Dataset 's3://sdl-cifar10/test/' registered with SUPER. Total Files: 10000, Total Batches: 79,Total Partitions: 1
+[2024-08-22 00:01:22,669][SUPER][INFO] - Dataset 's3://sdl-cifar10/test/' registered with SUPER. Total Files: 10000, Total Batches: 79,Total Partitions: 1
+[2024-08-22 00:02:54,600][SUPER][INFO] - Dataset 's3://sdl-cifar10/test/' registered with SUPER. Total Files: 10000, Total Batches: 79,Total Partitions: 1
+[2024-08-22 00:03:30,812][SUPER][INFO] - Dataset 's3://sdl-cifar10/test/' registered with SUPER. Total Files: 10000, Total Batches: 79,Total Partitions: 1

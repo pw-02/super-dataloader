@@ -53,16 +53,17 @@ class RandomSampler:
 
 
 class BatchSampler:
-    def __init__(self, size, batch_size, seed, shuffle=True, drop_last=False):
+    def __init__(self, size, batch_size, epoch_id, shuffle=True, drop_last=False):
         if shuffle:
             self.sampler = RandomSampler(size)
         else:
             self.sampler = SequentialSampler(size)
-        
+        self.size = size
         self.batch_size = batch_size
         self.drop_last = drop_last
-        self.seed = seed
+        self.epoch_id = epoch_id
         self.current_index = 0
+        self.shuffle = shuffle
 
     def __iter__(self):
         return self
@@ -82,7 +83,7 @@ class BatchSampler:
             raise EndOfEpochException
 
         self.current_index += 1
-        return Batch(batch, self.seed, self.current_index)
+        return Batch(batch, self.epoch_id, self.current_index)
 
     def __len__(self):
         total_batches = len(self.sampler) // self.batch_size
@@ -90,8 +91,14 @@ class BatchSampler:
             total_batches += 1
         return total_batches
 
-    def increment_epoch_seed(self):
-        self.seed += 1
+    def reset(self, epoch_id):
+        self.epoch_id = epoch_id 
+        self.current_index = 0
+        if self.shuffle:
+            self.sampler = RandomSampler(self.size)
+        else:
+            self.sampler = SequentialSampler(self.size)
+
 
 
 if __name__ == "__main__":

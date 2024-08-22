@@ -5,7 +5,7 @@ defaults:
   # - override hydra/job_logging: disabled
 
 cache_address: 10.0.19.221:6378  #10.0.24.192:6378  #10.0.24.192:6378 # '10.0.24.192:6378' # '10.0.29.229:6378' 10.0.20.157:6378'
-simulate_mode: False
+simulate_mode: True
 create_batch_lambda: 'CreateVisionTrainingBatch'
 testing_locally: False
 sam_local_url: 'http://localhost:3000'

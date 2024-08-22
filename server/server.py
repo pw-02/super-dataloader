@@ -1,7 +1,7 @@
 import grpc
 from concurrent import futures
-import proto.cache_coordinator_pb2 as cache_coordinator_pb2
-import proto.cache_coordinator_pb2_grpc as cache_coordinator_pb2_grpc
+import proto.minibatch_service_pb2 as minibatch_service_pb2
+import proto.minibatch_service_pb2_grpc as minibatch_service_pb2_grpc
 import google.protobuf.empty_pb2
 from logger_config import logger
 from coordinator import SUPERCoordinator
@@ -12,32 +12,38 @@ from batch import Batch
 from typing import Dict, List
 from dataset import Dataset
 
-class CacheCoordinatorService(cache_coordinator_pb2_grpc.CacheCoordinatorServiceServicer):
+class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServicer):
     def __init__(self, coordinator: SUPERCoordinator):
         self.coordinator = coordinator
 
     def Ping(self, request, context):
         message = request.message
-        return cache_coordinator_pb2.PingResponse(message = 'pong')
+        return minibatch_service_pb2.PingResponse(message = 'pong')
+    
+    def RegisterDataset(self, request, context):
+        success, message = self.coordinator.create_dataset(request.data_dir)
+        logger.info(message)
+        return minibatch_service_pb2.RegisterDatasetResponse(dataset_registered=success, message = message)
+    
     
     def RegisterJob(self, request, context):
         success, message = self.coordinator.create_new_job(request.job_id,request.data_dir)
         logger.info(message)
-        return cache_coordinator_pb2.RegisterJobResponse(job_registered=success, message = message)
+        return minibatch_service_pb2.RegisterJobResponse(job_registered=success, message = message)
     
     def GetDatasetInfo(self, request, context):
         num_files, num_chunks,chunk_size =  self.coordinator.get_dataset_info(request.data_dir)
-        return cache_coordinator_pb2.DatasetInfoResponse(num_files=num_files, num_chunks=num_chunks,chunk_size=chunk_size)
+        return minibatch_service_pb2.DatasetInfoResponse(num_files=num_files, num_chunks=num_chunks,chunk_size=chunk_size)
     
     def GetNextBatchToProcess(self, request, context):
         
         batches:List[Batch] = self.coordinator.next_batch_for_job(request.job_id,request.num_batches_requested)
         # Convert batches to gRPC message format
-        batch_messages =[cache_coordinator_pb2.Batch(batch_id=batch.batch_id, 
+        batch_messages =[minibatch_service_pb2.Batch(batch_id=batch.batch_id, 
                                                      indicies=batch.indicies, 
                                                      is_cached=batch.is_cached) for batch in batches]
         # Create and return the response
-        response = cache_coordinator_pb2.GetNextBatchResponse(
+        response = minibatch_service_pb2.GetNextBatchResponse(
             job_id=request.job_id,
             batches=batch_messages
             )
@@ -67,38 +73,30 @@ def serve(config: DictConfig):
             shuffle=config.workload.shuffle,
             num_dataset_partitions =config.workload.num_dataset_partitions)
         
-        #confirm access to remote dataset
-        dataset = Dataset(super_args.s3_data_dir, super_args.batch_size, super_args.drop_last, 
-                          super_args.num_dataset_partitions, super_args.workload_kind)
-        
-        if len(dataset) < 1:
-            # logger.error("Dataset is empty or is not accessible. Exiting...")
-            raise Exception("Dataset is empty or is not accessible")
-        else:
-            logger.info(f"Dataset Confirmed. Data Dir: {dataset.data_dir}, Total Files: {len(dataset)}, Total Batches: {dataset.num_batches},Total Partitions: {len(dataset.partitions)}")
-
         # Create an instance of the coordinator class
-        coordinator = SUPERCoordinator(args=super_args, dataset=dataset)
+        coordinator = CentralBatchManager(args=super_args)
 
-        # Warm up batch creation lambda if not in simulate mode
-        if not super_args.simulate_mode:
-            logger.info("Warming up batch creation lambda function..")
-            response = coordinator.lambda_client.warm_up_lambda(super_args.create_batch_lambda) 
-            if response['success']:
-                logger.info(f"Warm up took {response['duration']:.3f}s")
-        else:
-            logger.info("Running in simualtion mode")
+        # # Warm up batch creation lambda if not in simulate mode
+        # if not super_args.simulate_mode:
+        #     logger.info("Warming up batch creation lambda function..")
+        #     response = coordinator.lambda_client.warm_up_lambda(super_args.create_batch_lambda) 
+        #     if response['success']:
+        #         logger.info(f"Warm up took {response['duration']:.3f}s")
+        # else:
+        #     logger.info("Running in simualtion mode")
 
         # Initialize and start the gRPC server
-        cache_service = CacheCoordinatorService(coordinator)
+
+        cache_service = CacheAwareMiniBatchService(coordinator)
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=1))
-        cache_coordinator_pb2_grpc.add_CacheCoordinatorServiceServicer_to_server(cache_service, server)
+        minibatch_service_pb2_grpc.add_MiniBatchServiceServicer_to_server(cache_service, server)
         server.add_insecure_port('[::]:50051')
         server.start()
         logger.info("Server started. Listening on port 50051...")
         
-        cache_service.coordinator.start_prefetcher_service()        
-        cache_service.coordinator.start_keep_batches_alive_service()
+        if not super_args.simulate_mode:
+            cache_service.coordinator.start_prefetcher_service()        
+            cache_service.coordinator.start_keep_batches_alive_service()
 
         # Keep the server running until interrupted
         server.wait_for_termination()

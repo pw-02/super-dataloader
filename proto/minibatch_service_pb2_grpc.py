@@ -3,7 +3,6 @@
 import grpc
 import warnings
 
-from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 from proto import minibatch_service_pb2 as proto_dot_minibatch__service__pb2
 
 GRPC_GENERATED_VERSION = '1.64.1'
@@ -53,25 +52,10 @@ class MiniBatchServiceStub(object):
                 request_serializer=proto_dot_minibatch__service__pb2.RegisterDatasetRequest.SerializeToString,
                 response_deserializer=proto_dot_minibatch__service__pb2.RegisterDatasetResponse.FromString,
                 _registered_method=True)
-        self.RegisterJob = channel.unary_unary(
-                '/MiniBatchService/RegisterJob',
-                request_serializer=proto_dot_minibatch__service__pb2.RegisterJobRequest.SerializeToString,
-                response_deserializer=proto_dot_minibatch__service__pb2.RegisterJobResponse.FromString,
-                _registered_method=True)
-        self.GetNextBatchToProcess = channel.unary_unary(
-                '/MiniBatchService/GetNextBatchToProcess',
-                request_serializer=proto_dot_minibatch__service__pb2.GetNextBatchRequest.SerializeToString,
-                response_deserializer=proto_dot_minibatch__service__pb2.GetNextBatchResponse.FromString,
-                _registered_method=True)
-        self.JobEnded = channel.unary_unary(
-                '/MiniBatchService/JobEnded',
-                request_serializer=proto_dot_minibatch__service__pb2.JobEndedRequest.SerializeToString,
-                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-                _registered_method=True)
-        self.GetDatasetInfo = channel.unary_unary(
-                '/MiniBatchService/GetDatasetInfo',
-                request_serializer=proto_dot_minibatch__service__pb2.DatasetInfoRequest.SerializeToString,
-                response_deserializer=proto_dot_minibatch__service__pb2.DatasetInfoResponse.FromString,
+        self.GetNextBatchForJob = channel.unary_unary(
+                '/MiniBatchService/GetNextBatchForJob',
+                request_serializer=proto_dot_minibatch__service__pb2.GetNextBatchForJobRequest.SerializeToString,
+                response_deserializer=proto_dot_minibatch__service__pb2.GetNextBatchForJobResponse.FromString,
                 _registered_method=True)
 
 
@@ -95,25 +79,7 @@ class MiniBatchServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def RegisterJob(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def GetNextBatchToProcess(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def JobEnded(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def GetDatasetInfo(self, request, context):
+    def GetNextBatchForJob(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -132,25 +98,10 @@ def add_MiniBatchServiceServicer_to_server(servicer, server):
                     request_deserializer=proto_dot_minibatch__service__pb2.RegisterDatasetRequest.FromString,
                     response_serializer=proto_dot_minibatch__service__pb2.RegisterDatasetResponse.SerializeToString,
             ),
-            'RegisterJob': grpc.unary_unary_rpc_method_handler(
-                    servicer.RegisterJob,
-                    request_deserializer=proto_dot_minibatch__service__pb2.RegisterJobRequest.FromString,
-                    response_serializer=proto_dot_minibatch__service__pb2.RegisterJobResponse.SerializeToString,
-            ),
-            'GetNextBatchToProcess': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetNextBatchToProcess,
-                    request_deserializer=proto_dot_minibatch__service__pb2.GetNextBatchRequest.FromString,
-                    response_serializer=proto_dot_minibatch__service__pb2.GetNextBatchResponse.SerializeToString,
-            ),
-            'JobEnded': grpc.unary_unary_rpc_method_handler(
-                    servicer.JobEnded,
-                    request_deserializer=proto_dot_minibatch__service__pb2.JobEndedRequest.FromString,
-                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-            ),
-            'GetDatasetInfo': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetDatasetInfo,
-                    request_deserializer=proto_dot_minibatch__service__pb2.DatasetInfoRequest.FromString,
-                    response_serializer=proto_dot_minibatch__service__pb2.DatasetInfoResponse.SerializeToString,
+            'GetNextBatchForJob': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetNextBatchForJob,
+                    request_deserializer=proto_dot_minibatch__service__pb2.GetNextBatchForJobRequest.FromString,
+                    response_serializer=proto_dot_minibatch__service__pb2.GetNextBatchForJobResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -221,7 +172,7 @@ class MiniBatchService(object):
             _registered_method=True)
 
     @staticmethod
-    def RegisterJob(request,
+    def GetNextBatchForJob(request,
             target,
             options=(),
             channel_credentials=None,
@@ -234,90 +185,9 @@ class MiniBatchService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/MiniBatchService/RegisterJob',
-            proto_dot_minibatch__service__pb2.RegisterJobRequest.SerializeToString,
-            proto_dot_minibatch__service__pb2.RegisterJobResponse.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
-
-    @staticmethod
-    def GetNextBatchToProcess(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/MiniBatchService/GetNextBatchToProcess',
-            proto_dot_minibatch__service__pb2.GetNextBatchRequest.SerializeToString,
-            proto_dot_minibatch__service__pb2.GetNextBatchResponse.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
-
-    @staticmethod
-    def JobEnded(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/MiniBatchService/JobEnded',
-            proto_dot_minibatch__service__pb2.JobEndedRequest.SerializeToString,
-            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
-
-    @staticmethod
-    def GetDatasetInfo(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/MiniBatchService/GetDatasetInfo',
-            proto_dot_minibatch__service__pb2.DatasetInfoRequest.SerializeToString,
-            proto_dot_minibatch__service__pb2.DatasetInfoResponse.FromString,
+            '/MiniBatchService/GetNextBatchForJob',
+            proto_dot_minibatch__service__pb2.GetNextBatchForJobRequest.SerializeToString,
+            proto_dot_minibatch__service__pb2.GetNextBatchForJobResponse.FromString,
             options,
             channel_credentials,
             insecure,

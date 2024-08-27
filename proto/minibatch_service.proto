@@ -11,14 +11,23 @@ service MiniBatchService {
   rpc Ping(PingRequest) returns (PingResponse);
   rpc RegisterDataset(RegisterDatasetRequest) returns (RegisterDatasetResponse);
   rpc GetNextBatchForJob(GetNextBatchForJobRequest) returns (GetNextBatchForJobResponse);
-  
+  rpc JobEnded(JobEndedRequest) returns (google.protobuf.Empty);
+
   /*
+  rpc SendJobPerformanceMetrics(SendJobPerformanceMetricsRequest) returns (google.protobuf.Empty);
   rpc RegisterJob(RegisterJobRequest) returns (RegisterJobResponse);
   rpc GetNextBatchToProcess(GetNextBatchRequest) returns (GetNextBatchResponse);
   rpc JobEnded(JobEndedRequest) returns (google.protobuf.Empty);
   rpc GetDatasetInfo(DatasetInfoRequest) returns (DatasetInfoResponse);
   */
 
+}
+
+ message JobEndedRequest {
+   string job_id = 1;
+  string data_dir = 2;
+   float previous_step_time = 3;
+  bool previous_step_is_cache_hit = 4;
 }
 
 message PingRequest {
@@ -48,6 +57,8 @@ message Batch {
 message GetNextBatchForJobRequest {
   string job_id = 1;
   string data_dir = 2;
+  float previous_step_time = 3;
+  bool previous_step_is_cache_hit = 4;
   }
 
   message GetNextBatchForJobResponse {
@@ -56,6 +67,12 @@ message GetNextBatchForJobRequest {
   Batch batch = 2;
   }
 
+message SendJobPerformanceMetricsRequest {
+  string job_id = 1;
+  string data_dir = 2;
+  float training_step_time = 3;
+  bool is_cache_hit = 4;
+  }
 
 /*
 

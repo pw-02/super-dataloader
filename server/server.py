@@ -36,15 +36,18 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
                                                              total_batches=dataset.num_batches,
                                                              message=message)
     
+
     def GetNextBatchForJob(self, request, context):
         job_id = request.job_id
         data_dir = request.data_dir
+        previous_step_training_time = request.previous_step_time
+        previous_step_is_cache_hit = request.previous_step_is_cache_hit
 
         if data_dir not in self.datasets:
             message = f"Failed to register job with id '{job_id}' because data dir '{data_dir}' was not found in SUPER."
             logger.info(message)
         
-        next_batch = self.datasets[data_dir].get_next_batch(job_id)
+        next_batch = self.datasets[data_dir].get_next_batch(job_id, previous_step_training_time, previous_step_is_cache_hit)
         # Create and return the response
         response = minibatch_service_pb2.GetNextBatchForJobResponse(
             job_id=request.job_id,
@@ -52,6 +55,14 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
             )
         return response
     
+    def JobEnded(self, request, context):
+        job_id = request.job_id
+        data_dir = request.data_dir
+        previous_step_training_time = request.previous_step_time
+        previous_step_is_cache_hit = request.previous_step_is_cache_hit
+        self.datasets[data_dir].handle_job_ended(job_id=job_id, previous_step_training_time=previous_step_training_time, previous_step_is_cache_hit=previous_step_is_cache_hit)
+        return google.protobuf.empty_pb2.Empty()
+
 
     # def GetDatasetInfo(self, request, context):
     #     num_files, num_chunks,chunk_size =  self.coordinator.get_dataset_info(request.data_dir)

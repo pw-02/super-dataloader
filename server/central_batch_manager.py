@@ -6,6 +6,7 @@ from dataset import Dataset
 from batch import Batch
 import time
 from logger_config import logger
+from utils import AverageMeter
 
 class DLTJob:
     def __init__(self, job_id: str, initial_epoch: int):
@@ -15,11 +16,26 @@ class DLTJob:
         self.current_index = -1
         self.future_batches: OrderedDict[str, Batch] = OrderedDict()
         self.cache_hit_window = deque(maxlen=50)  # Sliding window for recent hits
-        self.cache_hit_threshold = 0.9  # Hit rate threshold to decrease prefetch size cap
+        self.training_step_times_on_hit = AverageMeter('Training Step Time on Hit')
+        self.training_step_times_on_miss =  AverageMeter('Training Step Time on Miss')
 
     def __repr__(self):
         return (f"Job(job_id={self.job_id}, current_epoch={self.active_epoch}, "
                 f"current_index={self.current_index})")
+    
+    def total_training_time(self):
+        return self.training_step_times_on_hit.sum + self.training_step_times_on_miss.sum
+    
+    def total_training_steps (self):
+        return self.training_step_times_on_hit.count + self.training_step_times_on_miss.count
+    
+    def update_perf_metrics(self, training_step_time: float, is_cache_hit: bool):
+        if training_step_time > 0: 
+            if is_cache_hit:
+                self.training_step_times_on_hit.update(training_step_time)
+            else:
+                self.training_step_times_on_miss.update(training_step_time)
+
 
 class CentralBatchManager:
     def __init__(self, dataset: Dataset, look_ahead: int = 200, batch_size: int = 128, seed: int = 42):
@@ -39,13 +55,10 @@ class CentralBatchManager:
         self._initialize_batches()
         self.prefetch_event = threading.Event() # Event to indicate prefetching in progress
         self.prefetch_event.set()  # Initially set to indicate no prefetch in progress
-        self.prefetch_concurrency = 20
-        # self.prefetch_size = 100
-        # self.prefetch_size_cap = 100
-        # self.prefetch_event = threading.Event()
-        # self.prefetch_event.set()  # Initially set to indicate no prefetch in progress
-        
- 
+
+        self.prefetch_concurrency = 15
+        self.prefetch_time = None  # execution time for a single invocation of prefetch aws lambda function
+
     def _initialize_batches(self):
         while len(self.epoch_batches[self.current_epoch]) < self.look_ahead:
             try:
@@ -85,19 +98,38 @@ class CentralBatchManager:
             self.prefetch_size = max(0, self.prefetch_size - 1)  # Ensure cap is at least 1
         else:
             self.prefetch_size = min(self.prefetch_size + 1, self.prefetch_size_cap)  # Example max cap
-
-           
-    def get_next_batch(self, job_id: str) -> Optional[Batch]:
+    
+    def update_job_metrics(self, job_id: str, training_step_time: float, is_cache_hit: bool):
         with self.lock:
-
             if job_id in self.jobs:
                 job = self.jobs[job_id]
+                if is_cache_hit:
+                    job.training_step_times_on_hit.update(training_step_time)
+                else:
+                    job.training_step_times_on_miss.update(training_step_time)
+    
+    def handle_job_ended(self, job_id: str, previous_step_training_time: float, previous_step_is_cache_hit: bool):
+        with self.lock:
+            if job_id in self.jobs:
+                job = self.jobs[job_id]
+                job.update_perf_metrics(previous_step_training_time, previous_step_is_cache_hit)
+                logger.info(f"Job '{job_id}' has ended. Total training time: {job.total_training_time()}s, Total training steps: {job.total_training_steps()},total cache hits: {job.training_step_times_on_hit.count},total cache misses: {job.training_step_times_on_miss.count},cache hit rate: {job.training_step_times_on_hit.count / job.total_training_steps()}" )
+                
+                self.jobs.pop(job_id)
+    
+    def get_next_batch(self, job_id: str, previous_step_training_time:float, previous_step_is_cache_hit:bool) -> Optional[Batch]:
+        with self.lock:
+            
+            if job_id in self.jobs:
+                job = self.jobs[job_id]
+                # we have seen this job before so it might have some stats for us
             else:
                 job = DLTJob(job_id, self.current_epoch)
                 self.jobs[job_id] = job
-                logger.info(f"Job '{job_id}' registered with dataset '{self.dataset.data_dir}'")
-
-            job = self.jobs.setdefault(job_id, DLTJob(job_id, self.current_epoch))
+                logger.info(f"Job '{job_id}' registered with initial epoch '{self.current_epoch}'.")
+           
+            job.update_perf_metrics(previous_step_training_time, previous_step_is_cache_hit)
+            # job = self.jobs.setdefault(job_id, DLTJob(job_id, self.current_epoch))
             
             if not job.future_batches or len(job.future_batches) ==0: #reaching end of epoch so start preparing for next epoch
             # if not job.future_batches or len(job.future_batches) < self.look_ahead: #reaching end of epoch so start preparing for next epoch
@@ -153,7 +185,7 @@ class CentralBatchManager:
     def _prefetch_batches(self, to_prefetch: List[Batch]):
         def prefetch():
             # print(f"Prefetching batches: {[batch.batch_id for batch in to_prefetch]}")
-            time.sleep(0.003)  # Simulate the time it takes to prefetch the batches
+            time.sleep(5)  # Simulate the time it takes to prefetch the batches
             for batch in to_prefetch:
                 with batch.lock:
                     batch.is_cached = True
@@ -173,17 +205,19 @@ if __name__ == "__main__":
     job_id = '1'
     cache_hits = 0
     cache_misses = 0
+    end = time.perf_counter()
     for i in range(1000):
         batch = batch_manager.get_next_batch(job_id)
         if batch.is_cached:
             cache_hits += 1
-            time.sleep(0.003)
+            time.sleep(0.25)
         else:
             cache_misses += 1
-            time.sleep(0.006)
+            time.sleep(4.45)
 
             # time.sleep(3)
         hit_rate = cache_hits / (i + 1) if (i + 1) > 0 else 0
         print(f'Batch {i+1}: {batch.batch_id}, Cache Hits: {cache_hits}, Cache Misses:{cache_misses}, Hit Rate: {hit_rate:.2f}')
+    print(f"total duration: {time.perf_counter() - end}")
 
     # print(f"Job Prefetch Size: {batch_manager.jobs[job_id].prefetch_size}")

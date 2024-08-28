@@ -1,8 +1,82 @@
 import math
+import boto3
 
-#the optmial prefetch conccurency can be calculated by the following formula: Tprefetch / Thit. This 
-#ensures that time spent on a cycle of cache hits matches the prefetch time, 
-# maximizing the chances that the next set of batches are ready in the cache when needed.
+ce_client = boto3.client('ce')  # Cost Explorer client
+
+# Function to get current AWS costs using Cost Explorer
+def get_aws_current_costs():
+    ce_client = boto3.client('ce')  # Cost Explorer client
+    response = ce_client.get_cost_and_usage(
+        TimePeriod={'Start': '2024-08-01', 'End': '2024-08-28'},  # Example dates
+        Granularity='DAILY',
+        Metrics=['UnblendedCost']
+    )
+    total_cost = sum(float(day['Total']['UnblendedCost']['Amount']) for day in response['ResultsByTime'])
+    return total_cost
+
+def get_lambda_costs(start_date, end_date):
+    response = ce_client.get_cost_and_usage(
+        TimePeriod={
+            'Start': start_date,  # Start date in 'YYYY-MM-DD' format
+            'End': end_date       # End date in 'YYYY-MM-DD' format
+        },
+        Granularity='DAILY',  # Can be 'DAILY', 'MONTHLY', or 'HOURLY'
+        Metrics=['UnblendedCost'],  # Use 'UnblendedCost' to get the actual cost
+        Filter={
+            'Dimensions': {
+                'Key': 'SERVICE',
+                'Values': ['AWS Lambda']  # Filter for AWS Lambda only
+            }
+        }
+    )
+
+    # Sum up costs for the entire period
+    total_cost = sum(float(day['Total']['UnblendedCost']['Amount']) for day in response['ResultsByTime'])
+    return total_cost
+
+# Function to get costs for a single AWS Lambda function using a tag
+def get_lambda_cost_by_tag(start_date, end_date, tag_key, tag_value):
+    response = ce_client.get_cost_and_usage(
+        TimePeriod={
+            'Start': start_date,  # Start date in 'YYYY-MM-DD' format
+            'End': end_date       # End date in 'YYYY-MM-DD' format
+        },
+        Granularity='DAILY',  # Can be 'DAILY', 'MONTHLY', or 'HOURLY'
+        Metrics=['UnblendedCost'],  # Use 'UnblendedCost' to get the actual cost
+        Filter={
+            'And': [
+                {
+                    'Dimensions': {
+                        'Key': 'SERVICE',
+                        'Values': ['AWS Lambda']  # Filter for AWS Lambda service only
+                    }
+                },
+                {
+                    'Tags': {
+                        'Key': tag_key,  # Specify the tag key
+                        'Values': [tag_value]  # Specify the tag value
+                    }
+                }
+            ]
+        }
+    )
+
+    # Sum up costs for the entire period
+    total_cost = sum(float(day['Total']['UnblendedCost']['Amount']) for day in response['ResultsByTime'])
+    return total_cost
+
+
+print(get_lambda_costs('2024-08-01', '2024-08-28'))  # Example dates
+print(get_lambda_cost_by_tag('2024-08-01', '2024-08-28', 'aws:cloudformation:logical-id', '	CreateVisionBatchFunction'))  # Example tag
+# Define constants
+
+
+
+
+
+
+
+
 
 def find_optimal_prefetch_conncurrency(T_prefetch=5, T_hit=0.25,):
     optimal_prefetch_concurrency = math.ceil(T_prefetch / T_hit)
@@ -51,16 +125,3 @@ def calculate_metrics(T_prefetch=5, N_prefetch=15, T_hit=0.25, T_miss=5.25, B_to
     total_time = int(total_hits) * T_hit + int(total_misses) * T_miss
     return int(total_misses), int(total_hits), total_time
 
-
-T_prefetch=5
-T_hit=0.25
-N_prefetch=15
-T_miss=5
-B_total=79
-
-opt_N_prefetch = find_optimal_prefetch_conncurrency(T_prefetch=5, T_hit=0.25)
-
-misses, hits, total_time = calculate_metrics(T_prefetch, N_prefetch, T_hit, T_miss, B_total)
-print(f"Total cache misses: {misses}")
-print(f"Total cache hits: {hits}")
-print(f"Total Time: {total_time}")

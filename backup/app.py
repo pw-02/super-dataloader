@@ -4,21 +4,21 @@ from io import BytesIO
 import boto3
 import redis
 from PIL import Image
+import numpy as np
 import pickle
+import albumentations as A
 from botocore.config import Config
-import torch
-import torchvision.transforms as transforms
-import base64
+
 # Externalize configuration parameters
 # s3_client = boto3.client('s3')
 
-#  # Create a Config object with a larger pool size
-# config = Config(
-#         max_pool_connections=50  # Adjust this according to your needs
-#     )
+ # Create a Config object with a larger pool size
+config = Config(
+        max_pool_connections=50  # Adjust this according to your needs
+    )
     
     # Create the S3 client with the custom config
-s3_client = boto3.client('s3')
+s3_client = boto3.client('s3', config=config)
     
 
 redis_client = None
@@ -48,26 +48,19 @@ def is_image_file(path: str) -> bool:
 def get_transform(bucket_name: str):
     # Load image
     if 'imagenet1k-sdl' in bucket_name:
-       normalize = transforms.Normalize(
-            mean=[0.485, 0.456, 0.406], 
-            std=[0.229, 0.224, 0.225],
-        )
-       return transforms.Compose([
-            transforms.Resize(256),                    # Resize the image to 256x256 pixels
-            transforms.RandomResizedCrop(224),   # Randomly crop a 224x224 patch
-            transforms.RandomHorizontalFlip(), # Randomly flip the image horizontally
-            transforms.ToTensor(),  # Convert the image to a PyTorch tensor
-            normalize,
+        # Define transformations
+       return A.Compose([
+            A.Resize(256, 256),
+            A.RandomResizedCrop(224, 224), #most resource intesive op
+            A.HorizontalFlip(p=0.5),
+            A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
-
     elif 'sdl-cifar10' in bucket_name:
-        return transforms.Compose([
-            transforms.RandomCrop(32, padding=4),  # Randomly crop the image with padding
-            transforms.RandomHorizontalFlip(),     # Randomly flip the image horizontally
-            transforms.ToTensor(),                 # Convert the image to a PyTorch tensor
-            transforms.Normalize((0.5, 0.5, 0.5),  # Normalize the image
-                                (0.5, 0.5, 0.5))  # Normalize the image
-             ])
+        return  A.Compose([
+            A.RandomCrop(height=32, width=32, p=1.0),
+            A.HorizontalFlip(p=0.5),
+            A.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5)),
+            ])
     else:
         return None
  
@@ -110,9 +103,10 @@ def get_data_sample(bucket_name: str, data_sample: tuple, transform, s3_client) 
     sample_path, sample_label = data_sample
     obj = s3_client.get_object(Bucket=bucket_name, Key=sample_path)
     data = Image.open(BytesIO(obj['Body'].read())).convert("RGB")
+    data = np.array(data)
     # Apply transformations
     if transform:
-        data = transform(data)
+        data = transform(image=data)['image']
     return data, sample_label
 
 def create_minibatch(bucket_name: str, samples: list, transform, s3_client) -> str:
@@ -126,22 +120,15 @@ def create_minibatch(bucket_name: str, samples: list, transform, s3_client) -> s
             data_sample, label = future.result()
             batch_data.append(data_sample)
             batch_labels.append(label)
-            
-    minibatch = torch.stack(batch_data), torch.tensor(batch_labels)
-    with BytesIO() as buffer:
-        torch.save(minibatch, buffer)
-        compressed_minibatch = zlib.compress(buffer.getvalue())
-        # Encode the serialized tensor with base64
-        compressed_minibatch = base64.b64encode(compressed_minibatch).decode('utf-8')
-
-    # minibatch_np = np.stack(batch_data)
-    # labels_np = np.array(batch_labels)
+    
+    minibatch_np = np.stack(batch_data)
+    labels_np = np.array(batch_labels)
     # Ensure correct shape for torch by permuting dimensions
-    # minibatch_np = minibatch_np.transpose(0, 3, 1, 2)  # Convert to [batch_size, channels, height, width]
+    minibatch_np = minibatch_np.transpose(0, 3, 1, 2)  # Convert to [batch_size, channels, height, width]
 
-    # with BytesIO() as buffer:
-    #     pickle.dump((minibatch_np, labels_np), buffer)
-    #     compressed_minibatch = zlib.compress(buffer.getvalue())
+    with BytesIO() as buffer:
+        pickle.dump((minibatch_np, labels_np), buffer)
+        compressed_minibatch = zlib.compress(buffer.getvalue())
 
     # minibatch = torch.stack(bacth_data), torch.tensor(batch_labels)
 

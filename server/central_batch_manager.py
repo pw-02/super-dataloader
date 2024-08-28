@@ -97,7 +97,7 @@ class CentralBatchManager:
                 continue
 
             optimal_prefetch_size = find_optimal_prefetch_conncurrency(self.prefetch_time, job.training_step_times_on_hit.avg)
-
+            
             total_time = 0
             batches_job_will_access_in_next_cycle = []
             job_prefetch_list = []
@@ -188,14 +188,11 @@ class CentralBatchManager:
                 job.epochs_completed_count += 1
             
             # if self.prefetch_event.is_set(): # Check if prefetching already is in progress or not
-            #
             if self.first_job:
                 self.first_job = False
                 self.start_prefetching_thread()
-                time.sleep(1)
-
-            # if self.prefetch_event.is_set(): # Check if prefetching already is in progress or not
-            #     self._start_proactive_prefetching()
+                time.sleep(0.5)
+                
 
             for batch_id, batch in list(job.future_batches.items()):     
                 with batch.lock:
@@ -203,7 +200,6 @@ class CentralBatchManager:
                     if batch.is_cached or not batch.caching_in_progress:
                         # Batch is cached, so it's processed normally
                         job.future_batches.pop(batch_id)
-                        # Now find the next 'prefetch_size' batches that are not cached or not in progress
 
                         if not batch.has_been_accessed_before:
                             batch.has_been_accessed_before = True
@@ -213,7 +209,7 @@ class CentralBatchManager:
                     else:
                         continue
                     
-        #should never reach here but just in case prefetch dies or something
+        #should never reach here but just in case..
         batch = job.future_batches.pop(batch_id)
         if not batch.has_been_accessed_before:
             batch.has_been_accessed_before = True

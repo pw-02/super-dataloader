@@ -1,3 +1,6 @@
 useful_cmds.txt
 server.log
 server.log
+awslambda\lambda_layer
+awslambda/lambda_layer*
+awslambda/torch_layer.zip

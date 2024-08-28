@@ -172,4 +172,15 @@ class AWSLambdaClient():
     def warm_up_lambda(self, function_name):
         event_data = {'task': 'warmup'}
         return self.invoke_function(function_name, json.dumps(event_data))  # Pass the required payload or input parameters
-       
+
+
+# Function to get current AWS costs using Cost Explorer
+def get_current_costs():
+    ce_client = boto3.client('ce')  # Cost Explorer client
+    response = ce_client.get_cost_and_usage(
+        TimePeriod={'Start': '2024-08-01', 'End': '2024-08-28'},  # Example dates
+        Granularity='DAILY',
+        Metrics=['UnblendedCost']
+    )
+    total_cost = sum(float(day['Total']['UnblendedCost']['Amount']) for day in response['ResultsByTime'])
+    return total_cost

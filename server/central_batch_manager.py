@@ -10,7 +10,7 @@ from utils import AverageMeter, find_optimal_prefetch_conncurrency
 
 TIME_ON_CACHE_HIT = 1.25
 TIME_ON_CACHE_MISS = 5.25
-
+PREFETCH_EXECUTION_TIME = 5
 
 class DLTJob:
     def __init__(self, job_id: str, initial_epoch: int):
@@ -56,17 +56,15 @@ class CentralBatchManager:
         self.jobs: Dict[str, DLTJob] = {}
         self.epoch_batches: Dict[int, OrderedDict[str, Batch]] = {}
         self.current_epoch = 1
-        self.sampler = BatchSampler(size=len(self.dataset), epoch_id=self.current_epoch, 
-                                    batch_size=batch_size, shuffle=False, drop_last=False)
+        self.sampler = BatchSampler(size=len(self.dataset), epoch_id=self.current_epoch,  batch_size=batch_size, shuffle=False, drop_last=False)
         
         self.epoch_batches[self.current_epoch] = OrderedDict()
         self.batches_accessed = set()
         self._initialize_batches()
-        self.prefetch_event = threading.Event() # Event to indicate prefetching in progress
-        self.prefetch_event.set()  # Initially set to indicate no prefetch in progress
 
+        self.preftech_stop_event = threading.Event()  # Event to signal preftch stopping
         self.prefetch_concurrency = 1000
-        self.prefetch_time = 5  # execution time for a single invocation of prefetch aws lambda function
+        self.prefetch_time = PREFETCH_EXECUTION_TIME  # execution time for a single invocation of prefetch aws lambda function
         self.first_job = True
 
     def _initialize_batches(self):
@@ -77,103 +75,6 @@ class CentralBatchManager:
             except EndOfEpochException:
                 break
     
-    def _start_proactive_prefetching(self):
-         while True:
-            if not self.prefetch_event.is_set():
-                time.sleep(0.1)
-                continue
-
-            self.prefetch_event.clear()
-
-            to_prefetch = []
-            for job in self.jobs.values():
-
-                if job.training_step_times_on_hit.avg >= job.training_step_times_on_miss.avg:
-                    #no need to prefetch if cache hit time is less than cache miss time
-                    continue
-
-                optimal_preftech_size = find_optimal_prefetch_conncurrency(self.prefetch_time, job.training_step_times_on_hit.avg)
-
-                # optimal_preftech_size = 10
-                #ensure we have the next optimal prfetche batches ready to go in the next prefetch cycele
-                total_time = 0
-                batches_job_will_access_in_next_cycele = []
-                job_prfetch_list = []
-                #compute how many batches the job will access in the next self.prefetch time seconds
-                for future_batch_id, future_batch in job.future_batches.items():
-                    if len(to_prefetch) >= self.prefetch_concurrency:
-                        break
-                    if total_time >= self.prefetch_time:
-                        break
-                    if future_batch.is_cached:
-                        batches_job_will_access_in_next_cycele.append(future_batch_id)
-                        total_time += job.training_step_times_on_hit.avg
-                    else: 
-                        batches_job_will_access_in_next_cycele.append(future_batch_id)
-                        total_time += job.training_step_times_on_miss.avg
-                #we cannot preftch the batches_job_will_access_in_next_cycele since it takes >= than self.prefetch_time, but we can prefetch for the next cycele
-                for future_batch_id, future_batch in job.future_batches.items():
-                    if len(job_prfetch_list) >= optimal_preftech_size: # len(batches_job_will_access_in_next_cycele):
-                        break
-                    
-                    if future_batch_id not in batches_job_will_access_in_next_cycele:      
-                        job_prfetch_list.append(future_batch) 
-
-                # Mark batches for prefetching
-                for batch in job_prfetch_list:
-                    if not batch.is_cached and not batch.caching_in_progress:
-                        batch.caching_in_progress = True
-                        to_prefetch.append(batch)
-            
-            if len(to_prefetch) > 0:
-                    # Simulate prefetch time
-                    time.sleep(5)  # Simulate the time it takes to prefetch the batches
-                    for batch in to_prefetch:
-                        with batch.lock:
-                            batch.is_cached = True
-                            batch.caching_in_progress = False
-            else:
-                time.sleep(0.1)
-            
-            # Signal that prefetching is complete and prepare for the next cycle
-            self.prefetch_event.set()
-            
-    def start_prefetching_thread(self):
-        prefetch_thread = threading.Thread(target=self._start_proactive_prefetching)
-        prefetch_thread.daemon = True  # This allows the thread to exit when the main program exits
-        prefetch_thread.start()
-
-        
-    # def _prefetch_batches(self, to_prefetch: List[Batch]):
-    #         def prefetch():
-    #             # print(f"Prefetching batches: {[batch.batch_id for batch in to_prefetch]}")
-    #             if len(to_prefetch) > 0:
-    #                 time.sleep(5)  # Simulate the time it takes to prefetch the batches
-    #                 for batch in to_prefetch:
-    #                     with batch.lock:
-    #                         batch.is_cached = True
-    #                         batch.caching_in_progress = False
-    #             else:
-    #                 time.sleep(0.1)
-    #                 # print(f"Prefetching complete for batches: {[batch.batch_id for batch in to_prefetch]}")
-    #             self.prefetch_event.set()
-    #             self._start_proactive_prefetching()  # Trigger the next prefetch after completion
-
-    #         # Clear the event to indicate that prefetching is in progress    
-    #         self.prefetch_event.clear()
-    #         # Start the prefetching in a separate thread
-    #         threading.Thread(target=prefetch).start()
-
-    def _adjust_prefetch_concurrency(self, job: DLTJob):
-        # Adjust the prefetch size cap based on the hit rate in the sliding window
-        average_hit_rate = sum(job.cache_hit_window) / len(job.cache_hit_window) if job.cache_hit_window else 0
-
-        if average_hit_rate >= job.cache_hit_threshold:
-            # Decrease cap if hit rate is high
-            self.prefetch_concurrency = max(1, self.prefetch_concurrency - 1)
-        else:
-            self.prefetch_concurrency = min(self.prefetch_concurrency + 1, 100)  # Example max cap of 100
-
     def _generate_new_batch(self):
         try:
             new_batch = next(self.sampler)
@@ -186,17 +87,78 @@ class CentralBatchManager:
             self.epoch_batches[self.current_epoch] = OrderedDict()
             self.sampler.reset(self.current_epoch)
             self._generate_new_batch()
-    
-    def _adjust_prefetch_size(self, job: DLTJob):
-        # Adjust the prefetch size cap based on the hit rate in the sliding window
-        average_hit_rate = sum(job.cache_hit_window) / len(job.cache_hit_window) if job.cache_hit_window else 0
 
-        if average_hit_rate >= job.cache_hit_threshold:
-            # Decrease cap if hit rate is high
-            self.prefetch_size = max(0, self.prefetch_size - 1)  # Ensure cap is at least 1
-        else:
-            self.prefetch_size = min(self.prefetch_size + 1, self.prefetch_size_cap)  # Example max cap
-    
+
+    def _select_batches_to_prefetch(self) -> List[Batch]:
+        to_prefetch = []
+        for job in self.jobs.values():
+            if job.training_step_times_on_hit.avg >= job.training_step_times_on_miss.avg:
+                # No need to prefetch if cache hit time is less than cache miss time
+                continue
+
+            optimal_prefetch_size = find_optimal_prefetch_conncurrency(self.prefetch_time, job.training_step_times_on_hit.avg)
+
+            total_time = 0
+            batches_job_will_access_in_next_cycle = []
+            job_prefetch_list = []
+            # Compute how many batches the job will access in the next self.prefetch time seconds
+            for future_batch_id, future_batch in job.future_batches.items():
+                if len(to_prefetch) >= self.prefetch_concurrency:
+                    break
+                if total_time >= self.prefetch_time:
+                    break
+                if future_batch.is_cached:
+                    batches_job_will_access_in_next_cycle.append(future_batch_id)
+                    total_time += job.training_step_times_on_hit.avg
+                else:
+                    batches_job_will_access_in_next_cycle.append(future_batch_id)
+                    total_time += job.training_step_times_on_miss.avg
+
+            # We cannot prefetch the batches_job_will_access_in_next_cycle since it takes >= than self.prefetch_time,
+            # but we can prefetch for the next cycle
+            for future_batch_id, future_batch in job.future_batches.items():
+                if len(job_prefetch_list) >= optimal_prefetch_size:
+                    break
+                if future_batch_id not in batches_job_will_access_in_next_cycle:
+                    job_prefetch_list.append(future_batch)
+
+            # Mark batches for prefetching
+            for batch in job_prefetch_list:
+                if not batch.is_cached and not batch.caching_in_progress:
+                    batch.caching_in_progress = True
+                    to_prefetch.append(batch)
+
+        return to_prefetch
+
+    def _execute_prefetch(self, to_prefetch: List[Batch]):
+            # Simulate prefetch time
+            time.sleep(self.prefetch_time)  # Simulate the time it takes to prefetch the batches
+            for batch in to_prefetch:
+                with batch.lock:
+                    batch.is_cached = True
+                    batch.caching_in_progress = False
+
+    def _start_proactive_prefetching(self):
+        while not self.preftech_stop_event.is_set():  # Check for stop signal
+            to_prefetch = self._select_batches_to_prefetch()
+
+            if len(to_prefetch) > 0:
+                self._execute_prefetch(to_prefetch)
+            else:
+                time.sleep(0.1)
+        
+        print("Prefetching stopped")
+
+    def stop_prefetching(self):
+        # Signal the thread to stop
+        self.preftech_stop_event.set()
+
+
+    def start_prefetching_thread(self):
+        prefetch_thread = threading.Thread(target=self._start_proactive_prefetching)
+        prefetch_thread.daemon = True  # This allows the thread to exit when the main program exits
+        prefetch_thread.start()
+
 
     def handle_job_ended(self, job_id: str, previous_step_training_time: float, previous_step_is_cache_hit: bool):
         with self.lock:
@@ -247,7 +209,6 @@ class CentralBatchManager:
                             batch.has_been_accessed_before = True
                             self._generate_new_batch()
 
-                        # self._adjust_prefetch_concurrency(job)
                         return batch
                     else:
                         continue
@@ -258,9 +219,6 @@ class CentralBatchManager:
             batch.has_been_accessed_before = True
             self._generate_new_batch()
         return batch
-    
-   
-    
     
 
 if __name__ == "__main__":
@@ -273,7 +231,7 @@ if __name__ == "__main__":
     previous_step_training_time = 0
     previous_step_is_cache_hit = False
     end = time.perf_counter()
-    for i in range(1000):
+    for i in range(5):
         batch = batch_manager.get_next_batch(job_id, previous_step_training_time, previous_step_is_cache_hit)
         if batch.is_cached:
             previous_step_is_cache_hit = True
@@ -289,6 +247,8 @@ if __name__ == "__main__":
             # time.sleep(3)
         hit_rate = cache_hits / (i + 1) if (i + 1) > 0 else 0
         print(f'Batch {i+1}: {batch.batch_id}, Cache Hits: {cache_hits}, Cache Misses:{cache_misses}, Hit Rate: {hit_rate:.2f}')
+    batch_manager.stop_prefetching()
+    time.sleep(10)
     print(f"total duration: {time.perf_counter() - end}")
 
     # print(f"Job Prefetch Size: {batch_manager.jobs[job_id].prefetch_size}")

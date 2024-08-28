@@ -35,30 +35,21 @@ def get_lambda_costs(start_date, end_date):
     return total_cost
 
 # Function to get costs for a single AWS Lambda function using a tag
-def get_lambda_cost_by_tag(start_date, end_date, tag_key, tag_value):
+def get_lambda_cost_by_tag(start_date, end_date, function_name):
+
     response = ce_client.get_cost_and_usage(
-        TimePeriod={
-            'Start': start_date,  # Start date in 'YYYY-MM-DD' format
-            'End': end_date       # End date in 'YYYY-MM-DD' format
-        },
-        Granularity='DAILY',  # Can be 'DAILY', 'MONTHLY', or 'HOURLY'
-        Metrics=['UnblendedCost'],  # Use 'UnblendedCost' to get the actual cost
-        Filter={
-            'And': [
-                {
-                    'Dimensions': {
-                        'Key': 'SERVICE',
-                        'Values': ['AWS Lambda']  # Filter for AWS Lambda service only
-                    }
-                },
-                {
-                    'Tags': {
-                        'Key': tag_key,  # Specify the tag key
-                        'Values': [tag_value]  # Specify the tag value
-                    }
-                }
-            ]
+    TimePeriod={
+        'Start': start_date,
+        'End': end_date
+    },
+    Granularity='MONTHLY',
+    Metrics=['UnblendedCost'],
+    Filter={
+        'Tags': {
+            'Key': 'lambda_name',
+            'Values': [function_name]
         }
+    }
     )
 
     # Sum up costs for the entire period
@@ -67,11 +58,8 @@ def get_lambda_cost_by_tag(start_date, end_date, tag_key, tag_value):
 
 
 print(get_lambda_costs('2024-08-01', '2024-08-28'))  # Example dates
-print(get_lambda_cost_by_tag('2024-08-01', '2024-08-28', 'aws:cloudformation:logical-id', '	CreateVisionBatchFunction'))  # Example tag
+print(get_lambda_cost_by_tag('2024-08-27', '2024-08-28', 'create_vision_batch'))  # Example tag
 # Define constants
-
-
-
 
 
 

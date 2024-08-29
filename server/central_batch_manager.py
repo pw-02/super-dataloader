@@ -215,11 +215,11 @@ class CentralBatchManager:
                             print(f'Invocation error: {e}')   
                 
                 actual_time_taken = time.perf_counter() - start
-                print(f"Prefetching took: {actual_time_taken} seconds for {len(to_prefetch)} batches")
-                remaining_time = expected_time - actual_time_taken
-                if remaining_time > 0:
-                    print(f"Sleeping for {remaining_time:.2f} seconds to match expected time.")
-                    time.sleep(remaining_time)
+                print(f"Prefetching took: {actual_time_taken} seconds for {len(to_prefetch)} batches. Expected time: {expected_time}")
+                # remaining_time = expected_time - actual_time_taken
+                # if remaining_time > 0:
+                #     print(f"Sleeping for {remaining_time:.2f} seconds to match expected time.")
+                #     time.sleep(remaining_time)
         
         print("Prefetching stopped")
 

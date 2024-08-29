@@ -9,7 +9,7 @@ from omegaconf import DictConfig
 from data_objects.batch import Batch
 from typing import Dict, List
 from data_objects.dataset import Dataset
-from central_batch_manager import CentralBatchManager, DLTJob
+from central_batch_manager import CentralBatchManager, DLTJob, PrefetchService
 
 from dataclasses import dataclass
 
@@ -18,7 +18,7 @@ class SUPERArgs:
     prefetch_lambda_name: str
     cache_address:str
     partitions_per_dataset:int
-    cost_cap_per_hour:float
+    prefetch_cost_cap_per_hour:float
     batch_size:int
     lookahead_steps:int
     inital_prefetch_concurrency:int
@@ -28,6 +28,7 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
         self.args:SUPERArgs = args
         self.datasets: Dict[str,CentralBatchManager] = {}
         self.jobs: Dict[DLTJob] = {}
+        self.prefetch_service:PrefetchService = PrefetchService(args.prefetch_lambda_name, args.cache_address, args.prefetch_cost_cap_per_hour)
 
     def Ping(self, request, context):
         return minibatch_service_pb2.PingResponse(message = 'pong')
@@ -42,8 +43,7 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
             self.datasets[request.data_dir] = CentralBatchManager(dataset=dataset, 
                                                                   look_ahead=self.args.lookahead_steps,
                                                                   prefetch_concurrency=self.args.inital_prefetch_concurrency,
-                                                                  prefetch_lambda_name=self.args.prefetch_lambda_name,
-                                                                  cache_address=self.args.cache_address,)
+                                                                  prefetch_service=self.prefetch_service)
             message = f"Dataset '{request.data_dir}' registered with SUPER. Total Files: {len(dataset)}, Total Batches:{dataset.num_batches}, Partitions:{len(dataset.partitions)}"
             success = True
             logger.info(message)
@@ -89,7 +89,7 @@ def serve(config: DictConfig):
             prefetch_lambda_name = config.prefetch_lambda_name,
             cache_address = config.cache_address,
             partitions_per_dataset = config.partitions_per_dataset,
-            cost_cap_per_hour = config.cost_cap_per_hour,
+            prefetch_cost_cap_per_hour = config.prefetch_cost_cap_per_hour,
             batch_size = config.batch_size,
             lookahead_steps=config.lookahead_steps,
             inital_prefetch_concurrency=config.inital_prefetch_concurrency)

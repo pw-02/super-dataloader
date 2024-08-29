@@ -77,6 +77,7 @@ class PrefetchService:
         self.keep_alive_stop_event = threading.Event()  # Event to signal preftch stopping
         self.prefetch_queue = queue.Queue()  # Queue to store lists batches to be prefetched
         self.keep_alive_queue: queue.Queue[Tuple[float, List[Tuple['Batch', Dict[str, str]]]]] = queue.Queue()  # Queue to store lists batches to be prefetched
+        self.cache_address = cache_address
         self.prefetch_lambda = PrefetchLambda(prefetch_lambda_name, cache_address)
         self.max_prefetch_concurrency = 10000
 
@@ -88,7 +89,7 @@ class PrefetchService:
         self.lock = threading.Lock()
         self.keep_alive_time = 1000
         self.prefetch_stop_event.set()
-        self.cost_threshold_per_hour = 0.00000020272686997451454 * 2000
+        self.cost_threshold_per_hour = cost_threshold_per_hour # 0.00000020272686997451454 * 2000
         self.start_time = None
         self.start_time_utc = datetime.now(timezone.utc)
         self.prefetch_delay = 0
@@ -194,7 +195,7 @@ class PrefetchService:
     
     def stop_prefetcher(self):
         self.prefetch_stop_event.set()
-        print("Prefetcher stopped. Total requests: ", self.prefetch_lambda.request_counter, "Total execution time: ", self.prefetch_execution_times.sum, "Total cost: ", self.compute_total_cost())
+        print(f"Prefetcher stopped, total requests: {self.prefetch_lambda.request_counter}, Total execution time: {self.prefetch_execution_times.sum:.2f} seconds, Total cost: ${self.compute_total_cost():.16f}")
     
     def compute_total_cost(self):
         current_total_cost = compute_lambda_cost(self.prefetch_lambda.request_counter, self.prefetch_execution_times.avg, self.prefetch_lambda.configured_memory)
@@ -245,7 +246,7 @@ class DLTJob:
             #cycele is empty so start a new cycle
             time_counter = 0
             prefetch_counter = 0
-            cycle_duration = cycle_duration - prefetch_delay
+            cycle_duration = cycle_duration + prefetch_delay
             if self.training_step_times_on_miss.count == 0:
                 training_step_time_on_miss = cycle_duration
             else:
@@ -307,9 +308,8 @@ class DLTJob:
 
 
 class CentralBatchManager:
-    def __init__(self, dataset: Dataset, look_ahead: int = 50, prefetch_concurrency: int = 10, 
-                 prefetch_lambda_name: str = 'CreateVisionTrainingBatch',
-                 cache_address: str = '10.0.19.221:6378 '):
+    def __init__(self, dataset: Dataset, look_ahead: int = 50, prefetch_concurrency: int = 10, prefetch_service:PrefetchService = None):
+
         self.dataset = dataset
         self.look_ahead = look_ahead
         self.lock = threading.Lock()
@@ -318,9 +318,8 @@ class CentralBatchManager:
         self.current_epoch = 1
         self.sampler = BatchSampler(size=len(self.dataset), epoch_id=self.current_epoch,  batch_size=self.dataset.batch_size, shuffle=False, drop_last=False)
         self.epoch_batches[self.current_epoch] = OrderedDict()
-        self.batches_accessed = set()
-        self.cache_address = cache_address       
-        self.prefetch_service:PrefetchService = PrefetchService(prefetch_lambda_name, self.cache_address)
+        self.batches_accessed = set()    
+        self.prefetch_service:PrefetchService = prefetch_service
         # self.prefetch_concurrency = prefetch_concurrency
         self._initialize_batches()
         
@@ -352,8 +351,10 @@ class CentralBatchManager:
                 job = self.jobs[job_id]
                 job.update_perf_metrics(previous_step_training_time, previous_step_is_cache_hit, previous_step_training_time)
                 logger.info(f"Job '{job_id}' has ended. Total training time: {job.total_training_time()}s, Total training steps: {job.total_training_steps()},total cache hits: {job.training_step_times_on_hit.count},total cache misses: {job.training_step_times_on_miss.count},cache hit rate: {job.training_step_times_on_hit.count / job.total_training_steps()}" )
-                
                 self.jobs.pop(job_id)
+            if len(self.jobs) == 0:
+                logger.info("All jobs have ended. Stopping prefetcher.")
+                self.prefetch_service.stop_prefetcher()
 
     def get_next_batch(self, job_id: str, previous_step_training_time:float, previous_step_is_cache_hit:bool, previous_step_gpu_time:float) -> Optional[Batch]:
         with self.lock:
@@ -378,7 +379,7 @@ class CentralBatchManager:
             
             next_batch, prefetch_list, keep_alive_list = job.next_training_step_batch(cycle_duration=self.prefetch_service.prefetch_execution_times.avg, 
                                                                                       dataset=self.dataset, 
-                                                                                      cache_address=self.cache_address,
+                                                                                      cache_address=self.prefetch_service.cache_address,
                                                                                       prefetch_delay=self.prefetch_service.prefetch_delay)
             if prefetch_list:
                 self.prefetch_service.prefetch_queue.put((time.perf_counter(), prefetch_list))

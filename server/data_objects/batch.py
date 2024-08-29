@@ -12,7 +12,7 @@ class Batch:
         self.is_cached:bool = False
         self.caching_in_progress:bool = False
         self.next_access_time:float = None
-        self.last_accessed_time:float = None #float('inf')
+        self.last_accessed_time:float = 0 #None #float('inf')
         self.has_been_accessed_before = False
         self.lock = threading.Lock()  # Lock for accessing shared resources
 
@@ -31,5 +31,12 @@ class Batch:
     def set_cache_status(self, is_cached:bool):
         with self.lock:
             self.is_cached = is_cached
-
+    
+    def set_caching_in_progress(self, in_progress:bool):
+        with self.lock:
+            self.caching_in_progress = in_progress
+            
+    def set_has_been_accessed_before(self, has_been_accessed_before:bool):
+        with self.lock:
+            self.has_been_accessed_before = has_been_accessed_before
 

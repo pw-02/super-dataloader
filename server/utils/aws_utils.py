@@ -36,7 +36,22 @@ def check_s3_object_exists(file_path:str, s3_client = None):
             return True
     except Exception:
         return False
-    
+
+def get_total_lambda_invocations(function_name, start_time, end_time):
+    client = boto3.client('cloudwatch')
+    response = client.get_metric_statistics(
+        Namespace='AWS/Lambda',
+        MetricName='Invocations',
+        Dimensions=[{'Name': 'FunctionName', 'Value': function_name}],
+        StartTime=start_time,
+        EndTime=end_time,
+        Period=3600 ,  # 1-hour period #
+        Statistics=['Sum']
+    )
+    datapoints = response['Datapoints']
+    total_invocations = sum(dp['Sum'] for dp in datapoints)
+    return total_invocations
+
 
 def get_average_lambda_duration(function_name, start_time=datetime.now(timezone.utc)  - timedelta(minutes=30), end_time = datetime.now(timezone.utc)):
         client = boto3.client('cloudwatch')
@@ -57,43 +72,6 @@ def get_average_lambda_duration(function_name, start_time=datetime.now(timezone.
         else:
             return None
 
-
-
-
-class AWSLambdaClient():
-
-    def __init__(self):
-        self.lambda_client = None
-    
-    def invoke_function(self, function_name:str, payload, simulate = False):
-        start_time = time.perf_counter()
-        if simulate:
-            time.sleep(0.01)
-            response ={}
-            response['duration'] = time.perf_counter() - start_time
-            response['message'] = ""
-            response['success'] = True
-        else:
-            if  self.lambda_client is None:
-                self.lambda_client = boto3.client('lambda') 
-
-            response = self.lambda_client.invoke(FunctionName=function_name,InvocationType='RequestResponse',Payload=payload)
-            response_data = json.loads(response['Payload'].read().decode('utf-8'))
-            if 'errorMessage' in response_data:
-                response['duration'] = time.perf_counter() - start_time
-                response['success'] = False
-                response['message'] = response_data['errorMessage']
-            else:
-                response['duration'] = time.perf_counter() - start_time
-                response['success'] = response_data['success']
-                response['message'] = response_data['message']
-        return response
-    
-    def warm_up_lambda(self, function_name):
-        event_data = {'task': 'warmup'}
-        return self.invoke_function(function_name, json.dumps(event_data))  # Pass the required payload or input parameters
-
-
     # # Function to get current AWS costs using Cost Explorer
     # def get_current_costs():
     #     ce_client = boto3.client('ce')  # Cost Explorer client
@@ -105,12 +83,34 @@ class AWSLambdaClient():
     #     total_cost = sum(float(day['Total']['UnblendedCost']['Amount']) for day in response['ResultsByTime'])
     #     return total_cost
 
-    def get_memory_allocation_of_lambda(function_name):
+def get_memory_allocation_of_lambda(function_name):
         client = boto3.client('lambda')
         response = client.get_function_configuration(FunctionName=function_name)
         return response['MemorySize']
     
+# Function to compute Lambda cost
+def compute_lambda_cost(requests, duration_sec, memory_mb):    
+    if requests < 1 or duration_sec == 0:
+        return 0
+    # AWS Lambda pricing details (replace these with the latest rates from AWS)
+    cost_per_million_requests = 0.20 / 1_000_000  # Example cost per request in dollars
+    cost_per_gb_second = 0.00001667  # Example cost per GB-second in dollars
 
+    # Convert memory in MB to GB
+    memory_gb = memory_mb / 1024
+
+    # Calculate total duration in GB-seconds
+    duration_gb_seconds = (duration_sec / 3600) * memory_gb
+    
+    # Compute request cost
+    request_cost = requests * cost_per_million_requests
+
+    # Compute duration cost
+    duration_cost = duration_gb_seconds * cost_per_gb_second
+
+    # Total cost
+    total_cost = request_cost + duration_cost
+    return total_cost
 
 
 

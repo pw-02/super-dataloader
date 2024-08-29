@@ -1,7 +1,7 @@
 
 from typing import List
 import threading
-from utils import create_unique_id
+from utils.utils import create_unique_id
 import time
 
 class Batch:

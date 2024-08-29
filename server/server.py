@@ -6,11 +6,22 @@ import google.protobuf.empty_pb2
 from logger_config import logger
 import hydra
 from omegaconf import DictConfig
-from args import SUPERArgs
-from batch import Batch
+from data_objects.batch import Batch
 from typing import Dict, List
-from dataset import Dataset
+from data_objects.dataset import Dataset
 from central_batch_manager import CentralBatchManager, DLTJob
+
+from dataclasses import dataclass
+
+@dataclass
+class SUPERArgs:
+    prefetch_lambda_name: str
+    cache_address:str
+    partitions_per_dataset:int
+    cost_cap_per_hour:float
+    batch_size:int
+    lookahead_steps:int
+    inital_prefetch_concurrency:int
 
 class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServicer):
     def __init__(self, args: SUPERArgs):
@@ -27,31 +38,37 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
             message = f"Dataset '{request.data_dir}' registered with SUPER. Total Files: {len(dataset)}, Total Batches: {dataset.num_batches},Total Partitions: {len(dataset.partitions)}"
             success = True
         else:
-            dataset = Dataset(request.data_dir, self.args.batch_size, self.args.drop_last, self.args.num_dataset_partitions, self.args.workload_kind)
-            self.datasets[request.data_dir] = CentralBatchManager(dataset)
+            dataset = Dataset(request.data_dir, self.args.batch_size, False, self.args.partitions_per_dataset)
+            self.datasets[request.data_dir] = CentralBatchManager(dataset=dataset, 
+                                                                  look_ahead=self.args.lookahead_steps,
+                                                                  prefetch_concurrency=self.args.inital_prefetch_concurrency,
+                                                                  prefetch_lambda_name=self.args.prefetch_lambda_name,
+                                                                  cache_address=self.args.cache_address,)
             message = f"Dataset '{request.data_dir}' registered with SUPER. Total Files: {len(dataset)}, Total Batches:{dataset.num_batches}, Partitions:{len(dataset.partitions)}"
             success = True
             logger.info(message)
         return minibatch_service_pb2.RegisterDatasetResponse(dataset_is_registered=success, 
                                                              total_batches=dataset.num_batches,
                                                              message=message)
-    
-
     def GetNextBatchForJob(self, request, context):
         job_id = request.job_id
         data_dir = request.data_dir
         previous_step_training_time = request.previous_step_time
         previous_step_is_cache_hit = request.previous_step_is_cache_hit
-
+        previous_step_gpu_time = request.previous_step_gpu_time
         if data_dir not in self.datasets:
             message = f"Failed to register job with id '{job_id}' because data dir '{data_dir}' was not found in SUPER."
             logger.info(message)
         
-        next_batch = self.datasets[data_dir].get_next_batch(job_id, previous_step_training_time, previous_step_is_cache_hit)
+        next_batch:Batch = self.datasets[data_dir].get_next_batch(job_id, 
+                                                                  previous_step_training_time, 
+                                                                  previous_step_is_cache_hit,
+                                                                  previous_step_gpu_time)
         # Create and return the response
         response = minibatch_service_pb2.GetNextBatchForJobResponse(
             job_id=request.job_id,
-            batch=minibatch_service_pb2.Batch(batch_id=next_batch.batch_id, indicies=next_batch.indicies, is_cached=next_batch.is_cached)
+            batch=minibatch_service_pb2.Batch(batch_id=next_batch.batch_id, 
+                                              indicies=next_batch.indicies, is_cached=next_batch.is_cached)
             )
         return response
     
@@ -64,36 +81,20 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
         return google.protobuf.empty_pb2.Empty()
 
 
-    # def GetDatasetInfo(self, request, context):
-    #     num_files, num_chunks,chunk_size =  self.coordinator.get_dataset_info(request.data_dir)
-    #     return minibatch_service_pb2.DatasetInfoResponse(num_files=num_files, num_chunks=num_chunks,chunk_size=chunk_size)
-
-    
-    # def JobEnded(self, request, context):
-    #     self.coordinator.handle_job_ended(job_id=request.job_id)
-    #     logger.info(f"Job'{request.job_id}' has ended.")
-    #     return google.protobuf.empty_pb2.Empty()
-
-       
 @hydra.main(version_base=None, config_path="../conf", config_name="config")
 def serve(config: DictConfig):
     try:
         logger.info("Starting SUPER Datloading Service")
-        super_args:SUPERArgs = SUPERArgs(
-            workload_kind =config.workload.kind,
-            s3_data_dir = config.workload.s3_data_dir,
-            create_batch_lambda = config.create_batch_lambda,
-            batch_size = config.workload.batch_size,
-            drop_last=config.workload.drop_last,
-            simulate_mode = config.simulate_mode,
-            keep_alive_ping_iterval = config.workload.keep_alive_ping_iterval,
-            max_lookahead_batches = config.workload.max_lookahead_batches,
-            max_prefetch_workers = config.workload.max_prefetch_workers,
+        args:SUPERArgs = SUPERArgs(
+            prefetch_lambda_name = config.prefetch_lambda_name,
             cache_address = config.cache_address,
-            shuffle=config.workload.shuffle,
-            num_dataset_partitions =config.workload.num_dataset_partitions)
+            partitions_per_dataset = config.partitions_per_dataset,
+            cost_cap_per_hour = config.cost_cap_per_hour,
+            batch_size = config.batch_size,
+            lookahead_steps=config.lookahead_steps,
+            inital_prefetch_concurrency=config.inital_prefetch_concurrency)
         
-        cache_service = CacheAwareMiniBatchService(super_args) 
+        cache_service = CacheAwareMiniBatchService(args) 
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=1))
 
         minibatch_service_pb2_grpc.add_MiniBatchServiceServicer_to_server(cache_service, server)

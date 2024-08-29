@@ -59,6 +59,8 @@ message GetNextBatchForJobRequest {
   string data_dir = 2;
   float previous_step_time = 3;
   bool previous_step_is_cache_hit = 4;
+  float previous_step_gpu_time = 5;
+
   }
 
   message GetNextBatchForJobResponse {

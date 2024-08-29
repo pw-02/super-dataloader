@@ -4,3 +4,4 @@ server.log
 awslambda\lambda_layer
 awslambda/lambda_layer*
 awslambda/torch_layer.zip
+cloudwatch/exports

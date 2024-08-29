@@ -1,5 +1,5 @@
 import random
-from batch import Batch
+from data_objects.batch import Batch
 
 class EndOfEpochException(Exception):
     pass

@@ -162,5 +162,5 @@ if __name__ == '__main__':
     destination_folder = 'cloudwatch'
     # empty_log_group(log_group_name)
     # export_logs_to_s3(log_group_name, s3_bucket, export_prefix)
-    # download_exported_logs(s3_bucket, export_prefix, 'cloudwatch')
+    download_exported_logs(s3_bucket, export_prefix, 'cloudwatch')
     prarse_exported_logs(destination_folder,export_prefix, False)

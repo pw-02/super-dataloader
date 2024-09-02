@@ -81,10 +81,12 @@ class PrefetchService:
         self.prefetch_lambda = PrefetchLambda(prefetch_lambda_name, cache_address)
         self.max_prefetch_concurrency = 10000
 
-        if self.prefetch_lambda.get_average_request_duration() > 0:
-            avg_lambda_execution_time = self.prefetch_lambda.get_average_request_duration()
-            print(f"Average execution time for lambda '{prefetch_lambda_name}': {avg_lambda_execution_time}")
-            self.prefetch_execution_times.update(avg_lambda_execution_time)
+        avg_lambda_duration_over_the_past_day = self.prefetch_lambda.get_average_request_duration(start_time=datetime.now(timezone.utc) - timedelta(days=1))
+        if avg_lambda_duration_over_the_past_day is not None and avg_lambda_duration_over_the_past_day > 0:
+            print(f"Average execution time for lambda '{prefetch_lambda_name}': {avg_lambda_duration_over_the_past_day}")
+            self.prefetch_execution_times.update(avg_lambda_duration_over_the_past_day)
+        else:
+            self.prefetch_execution_times.update(4)  # Default value for the first time
 
         self.lock = threading.Lock()
         self.keep_alive_time = 1000

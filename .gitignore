@@ -5,3 +5,7 @@ awslambda\lambda_layer
 awslambda/lambda_layer*
 awslambda/torch_layer.zip
 cloudwatch/exports
+__pycache__/
+__pycache__\*
+*/__pycache__/
+*/__pycache__\*

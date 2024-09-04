@@ -9,15 +9,15 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 # Constants
-TIME_ON_CACHE_HIT = 0.25
-TIME_ON_CACHE_MISS = 8.5
-NUM_JOBS = 5  # Number of parallel jobs to simulate
-BATCHES_PER_JOB = 50  # Number of batches each job will process
-DELAY_BETWEEN_JOBS = 10  # Delay in seconds between the start of each job
+TIME_ON_CACHE_HIT = 0.025
+TIME_ON_CACHE_MISS = 0.25
+NUM_JOBS = 2  # Number of parallel jobs to simulate
+BATCHES_PER_JOB = 100  # Number of batches each job will process
+DELAY_BETWEEN_JOBS = 5  # Delay in seconds between the start of each job
 
 # Shared instances initialized once
 prefetcher = PrefetchService('CreateVisionTrainingBatch', '10.0.28.76:6378', None, True)
-dataset = Dataset('s3://sdl-cifar10/train/', 128, False, 1)
+dataset = Dataset('s3://sdl-cifar10/test/', 128, False, 1)
 batch_manager = CentralBatchManager(dataset, BATCHES_PER_JOB, 10, prefetcher)
 
 def simulate_training_job(job_id: str) -> Tuple[str, int, int, float]:
@@ -53,7 +53,8 @@ def simulate_training_job(job_id: str) -> Tuple[str, int, int, float]:
             previous_step_training_time = TIME_ON_CACHE_MISS
         
         hit_rate = cache_hits / (i + 1) if (i + 1) > 0 else 0
-        logger.info(f'Job {job_id}, Batch {i+1}, {batch.batch_id}, Cache Hits: {cache_hits}, Cache Misses: {cache_misses}, Hit Rate: {hit_rate:.2f}')
+        if i % 10== 0:
+            logger.info(f'Job {job_id}, Batch {i+1}, {batch.batch_id}, Hits: {cache_hits}, Misses: {cache_misses}, Rate: {hit_rate:.2f}')
 
     # Stop prefetcher and compute total duration
     total_duration = time.perf_counter() - start_time

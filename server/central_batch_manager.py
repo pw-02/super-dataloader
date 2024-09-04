@@ -35,7 +35,6 @@ class PrefetchLambda:
     def prefetch_batch(self, item: Tuple[Batch, Dict[str, str]]):
         if self.simulated:
             batch, payload = item
-            time.sleep(4)
             with self.lock:
                 self.request_counter += 1
             batch.set_cache_status(is_cached=True)
@@ -91,13 +90,14 @@ class PrefetchService:
         self.cache_address = cache_address
         self.prefetch_lambda = PrefetchLambda(prefetch_lambda_name, cache_address, simulate_prefetch)
         self.max_prefetch_concurrency = 10000
+        self.simulate_prefetch = simulate_prefetch
 
         avg_lambda_duration_over_the_past_day = self.prefetch_lambda.get_average_request_duration(start_time=datetime.now(timezone.utc) - timedelta(days=1))
         if avg_lambda_duration_over_the_past_day is not None and avg_lambda_duration_over_the_past_day > 0:
             logger.info(f"Average execution time for lambda '{prefetch_lambda_name}': {avg_lambda_duration_over_the_past_day}")
             self.prefetch_execution_times.update(avg_lambda_duration_over_the_past_day)
         else:
-            self.prefetch_execution_times.update(4)  # Default value for the first time
+            self.prefetch_execution_times.update(0.25)  # Default value for the first time
 
         self.lock = threading.Lock()
         self.keep_alive_time = 1000
@@ -187,6 +187,9 @@ class PrefetchService:
 
                 delay_time = self.calculate_delay() * len(set_of_batches)
                 time.sleep(delay_time)  # Delay based on the calculated time to manage costs
+                time.sleep(0.25)
+                if self.simulate_prefetch:
+                    time.sleep(0.25)
 
                 with concurrent.futures.ThreadPoolExecutor() as executor:
                     futures = [executor.submit(self.prefetch_lambda.prefetch_batch, item) for item in set_of_batches]
@@ -200,7 +203,7 @@ class PrefetchService:
                 
                 time_since_queued = time.perf_counter() - queued_time
                 self.prefetch_execution_times.update(time_since_queued - delay_time)
-                logger.info(f"Prefetching took: {time_since_queued} seconds for {len(set_of_batches)} batches. Expected time: {self.prefetch_execution_times.avg + delay_time}")
+                logger.info(f"Prefetching took: {time_since_queued:.4f} seconds for {len(set_of_batches)} batches. Expected time: {self.prefetch_execution_times.avg + delay_time}")
             
             except queue.Empty:
                 # Handle the empty queue case

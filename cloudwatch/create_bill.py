@@ -8,8 +8,8 @@ import csv
 import re
 # Initialize the CloudWatch Logs client
 # Example timestamps (replace these with your experiment start and end times)
-experiment_start_time = '2024-08-27T10:00:00Z'
-experiment_end_time = '2024-08-29T12:00:00Z'
+experiment_start_time = '2024-09-02T10:00:00Z'
+experiment_end_time = '2024-09-03T12:00:00Z'
 # Convert ISO 8601 format to datetime object
 start_time = datetime.fromisoformat(experiment_start_time.replace('Z', '+00:00'))
 end_time = datetime.fromisoformat(experiment_end_time.replace('Z', '+00:00'))
@@ -154,13 +154,23 @@ def prarse_exported_logs(destination_folder = 'cloudwatch', export_prefix = 'exp
         writer.writeheader()
         writer.writerows(log_data)
     
+
+
+
+
+
 if __name__ == '__main__':
+
+
+
     # Get the current AWS costs
     log_group_name = '/aws/lambda/CreateVisionTrainingBatch'
     s3_bucket = 'supercloudwtachexports'
     export_prefix = 'exports'
     destination_folder = 'cloudwatch'
     # empty_log_group(log_group_name)
-    # export_logs_to_s3(log_group_name, s3_bucket, export_prefix)
+    export_logs_to_s3(log_group_name, s3_bucket, export_prefix)
     download_exported_logs(s3_bucket, export_prefix, 'cloudwatch')
     prarse_exported_logs(destination_folder,export_prefix, False)
+    
+    # empty_log_group(log_group_name)

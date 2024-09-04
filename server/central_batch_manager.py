@@ -18,20 +18,31 @@ import redis
 
 
 class PrefetchLambda:
-    def __init__(self, prefetch_lambda_name: str, cache_address: str):
+    def __init__(self, prefetch_lambda_name: str, cache_address: str, simulated: bool = False):
         self.name = prefetch_lambda_name
         self.cache_address = cache_address
         self.client = boto3.client('lambda', config= Config(max_pool_connections=50))
         self.redis_client = None
         self.configured_memory = get_memory_allocation_of_lambda(self.name)
-        print(f"Configured memory for lambda '{self.name}': {self.configured_memory}")
+        logger.info(f"Configured memory for lambda '{self.name}': {self.configured_memory}")
         self.request_counter = 0
+        self.simulated = simulated
         self.lock = threading.Lock()
     
     def create_client(self):
         self.client = boto3.client('lambda', config= Config(max_pool_connections=50))
 
     def prefetch_batch(self, item: Tuple[Batch, Dict[str, str]]):
+        if self.simulated:
+            batch, payload = item
+            time.sleep(4)
+            with self.lock:
+                self.request_counter += 1
+            batch.set_cache_status(is_cached=True)
+            batch.set_caching_in_progress(in_progress=False) 
+            return {'success': True, 'errorMessage': None}
+
+
         batch, payload = item
         response = self.client.invoke( FunctionName=self.name,
                                              InvocationType='RequestResponse',
@@ -71,19 +82,19 @@ class PrefetchLambda:
 
 
 class PrefetchService:
-    def __init__(self, prefetch_lambda_name: str, cache_address: str, cost_threshold_per_hour: float = 10):
+    def __init__(self, prefetch_lambda_name: str, cache_address: str, cost_threshold_per_hour: float = 10, simulate_prefetch: bool = False):
         self.prefetch_execution_times = AverageMeter('Prefetch Execution Time')
         self.prefetch_stop_event = threading.Event()  # Event to signal preftch stopping
         self.keep_alive_stop_event = threading.Event()  # Event to signal preftch stopping
         self.prefetch_queue = queue.Queue()  # Queue to store lists batches to be prefetched
         self.keep_alive_queue: queue.Queue[Tuple[float, List[Tuple['Batch', Dict[str, str]]]]] = queue.Queue()  # Queue to store lists batches to be prefetched
         self.cache_address = cache_address
-        self.prefetch_lambda = PrefetchLambda(prefetch_lambda_name, cache_address)
+        self.prefetch_lambda = PrefetchLambda(prefetch_lambda_name, cache_address, simulate_prefetch)
         self.max_prefetch_concurrency = 10000
 
         avg_lambda_duration_over_the_past_day = self.prefetch_lambda.get_average_request_duration(start_time=datetime.now(timezone.utc) - timedelta(days=1))
         if avg_lambda_duration_over_the_past_day is not None and avg_lambda_duration_over_the_past_day > 0:
-            print(f"Average execution time for lambda '{prefetch_lambda_name}': {avg_lambda_duration_over_the_past_day}")
+            logger.info(f"Average execution time for lambda '{prefetch_lambda_name}': {avg_lambda_duration_over_the_past_day}")
             self.prefetch_execution_times.update(avg_lambda_duration_over_the_past_day)
         else:
             self.prefetch_execution_times.update(4)  # Default value for the first time
@@ -185,11 +196,11 @@ class PrefetchService:
                             response = future.result()
                             # print(f'Invocation response: {response}')
                         except Exception as e:
-                            print(f'Invocation error: {e}')   
+                            print(f'Invocation error: {e}')
                 
                 time_since_queued = time.perf_counter() - queued_time
                 self.prefetch_execution_times.update(time_since_queued - delay_time)
-                print(f"Prefetching took: {time_since_queued} seconds for {len(set_of_batches)} batches. Expected time: {self.prefetch_execution_times.avg + delay_time}")
+                logger.info(f"Prefetching took: {time_since_queued} seconds for {len(set_of_batches)} batches. Expected time: {self.prefetch_execution_times.avg + delay_time}")
             
             except queue.Empty:
                 # Handle the empty queue case
@@ -197,7 +208,7 @@ class PrefetchService:
     
     def stop_prefetcher(self):
         self.prefetch_stop_event.set()
-        print(f"Prefetcher stopped, total requests: {self.prefetch_lambda.request_counter}, Total execution time: {self.prefetch_execution_times.sum:.2f} seconds, Total cost: ${self.compute_total_cost():.16f}")
+        logger.info(f"Prefetcher stopped, total requests: {self.prefetch_lambda.request_counter}, Total execution time: {self.prefetch_execution_times.sum:.2f} seconds, Total cost: ${self.compute_total_cost():.16f}")
     
     def compute_total_cost(self):
         current_total_cost = compute_lambda_cost(self.prefetch_lambda.request_counter, self.prefetch_execution_times.avg, self.prefetch_lambda.configured_memory)
@@ -215,6 +226,7 @@ class DLTJob:
         self.training_step_times_on_miss =  AverageMeter('Training Step Time on Miss')
         self.training_step_gpu_times =  AverageMeter('training_step_gpu_times')
         self.batches_in_cycle = []
+        self.current_batch:Batch = None
 
     def __repr__(self):
         return (f"Job(job_id={self.job_id}, current_epoch={self.active_epoch}, "
@@ -352,23 +364,28 @@ class CentralBatchManager:
             if job_id in self.jobs:
                 job = self.jobs[job_id]
                 job.update_perf_metrics(previous_step_training_time, previous_step_is_cache_hit, previous_step_training_time)
-                logger.info(f"Job '{job_id}' has ended. Total training time: {job.total_training_time()}s, Total training steps: {job.total_training_steps()},total cache hits: {job.training_step_times_on_hit.count},total cache misses: {job.training_step_times_on_miss.count},cache hit rate: {job.training_step_times_on_hit.count / job.total_training_steps()}" )
+                # logger.info(f"Job '{job_id}' has ended. Total training time: {job.total_training_time()}s, Total training steps: {job.total_training_steps()},total cache hits: {job.training_step_times_on_hit.count},total cache misses: {job.training_step_times_on_miss.count},cache hit rate: {job.training_step_times_on_hit.count / job.total_training_steps()}" )
                 self.jobs.pop(job_id)
             if len(self.jobs) == 0:
                 logger.info("All jobs have ended. Stopping prefetcher.")
                 self.prefetch_service.stop_prefetcher()
 
-    def get_next_batch(self, job_id: str, previous_step_training_time:float, previous_step_is_cache_hit:bool, previous_step_gpu_time:float) -> Optional[Batch]:
+    def get_next_batch(self, job_id: str, previous_step_training_time:float, previous_step_is_cache_hit:bool, previous_step_gpu_time:float, cached_batch:bool) -> Optional[Batch]:
         with self.lock:
 
             if self.prefetch_service.prefetch_stop_event.is_set(): #prefetcher has been stopped, start it again
                 self.prefetch_service.start_prefetcher()
        
-
             if job_id in self.jobs:
                 job = self.jobs[job_id]
+                if cached_batch or previous_step_is_cache_hit:
+                    job.current_batch.set_last_accessed_time()
+                    job.current_batch.set_cache_status(True)
+                elif not previous_step_is_cache_hit and job.current_batch.is_cached:
+                    job.current_batch.set_cache_status(False)
                 job.update_perf_metrics(previous_step_training_time, previous_step_is_cache_hit, previous_step_gpu_time) #update the performance metrics for the job
             else:
+                #new job
                 job = DLTJob(job_id, self.current_epoch)
                 self.jobs[job_id] = job
                 logger.info(f"Job '{job_id}' registered with initial epoch '{self.current_epoch}'.")
@@ -392,7 +409,8 @@ class CentralBatchManager:
             if not next_batch.has_been_accessed_before:
                 next_batch.set_has_been_accessed_before(True)
                 self._generate_new_batch()
-         
+
+            job.current_batch = next_batch
                 
             return next_batch
 
@@ -400,11 +418,12 @@ class CentralBatchManager:
 
 if __name__ == "__main__":
     TIME_ON_CACHE_HIT = 0.25
-    TIME_ON_CACHE_MISS = 5.25
+    TIME_ON_CACHE_MISS = 1.5
 
-    dataset = Dataset('s3://sdl-cifar10/train/', 128, False, 1)
-    batch_manager = CentralBatchManager(dataset)
-    batch_manager.prefetch_service.start_prefetcher()
+    prefetcher = PrefetchService('CreateVisionTrainingBatch', '10.0.28.76:6378', None)
+
+    dataset = Dataset('s3://sdl-cifar10/test/', 128, False, 1)
+    batch_manager = CentralBatchManager(dataset,50,10,prefetcher)
 
     job_id = '1'
     cache_hits = 0
@@ -415,7 +434,7 @@ if __name__ == "__main__":
     end = time.perf_counter()
 
     for i in range(50):
-        batch:Batch = batch_manager.get_next_batch(job_id, previous_step_training_time, previous_step_is_cache_hit, TIME_ON_CACHE_HIT)
+        batch:Batch = batch_manager.get_next_batch(job_id, previous_step_training_time, previous_step_is_cache_hit, TIME_ON_CACHE_HIT, False)
         if batch.is_cached:
             previous_step_is_cache_hit = True
             cache_hits += 1

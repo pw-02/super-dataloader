@@ -81,7 +81,7 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
         return google.protobuf.empty_pb2.Empty()
 
 
-@hydra.main(version_base=None, config_path="./conf", config_name="config")
+@hydra.main(version_base=None, config_path="../conf", config_name="config")
 def serve(config: DictConfig):
     try:
         logger.info("Starting SUPER Datloading Service")

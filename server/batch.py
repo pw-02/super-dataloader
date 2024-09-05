@@ -3,6 +3,15 @@ from typing import List
 import threading
 # from utils.utils import create_unique_id
 import time
+from typing import List, Optional, Dict, Tuple
+from collections import deque, OrderedDict
+
+class BatchSet:
+    def __init__(self, id:str):
+        self.id = id
+        self.batches: Dict[str, Batch] = OrderedDict()
+        self.batches_finalized = False
+        self.mark_for_eviction = False
 
 class Batch:
     def __init__(self, batch_indicies, batch_id, epoch_idx, partition_idx):

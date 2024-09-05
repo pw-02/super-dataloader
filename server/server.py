@@ -6,22 +6,12 @@ import google.protobuf.empty_pb2
 from logger_config import logger
 import hydra
 from omegaconf import DictConfig
-from data_objects.batch import Batch
+from batch import Batch
 from typing import Dict, List
-from data_objects.dataset import Dataset
+from dataset import Dataset
 from central_batch_manager import CentralBatchManager, DLTJob, PrefetchService
+from args import SUPERArgs
 
-from dataclasses import dataclass
-
-@dataclass
-class SUPERArgs:
-    prefetch_lambda_name: str
-    cache_address:str
-    partitions_per_dataset:int
-    prefetch_cost_cap_per_hour:float
-    batch_size:int
-    lookahead_steps:int
-    inital_prefetch_concurrency:int
 
 class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServicer):
     def __init__(self, args: SUPERArgs):
@@ -84,15 +74,17 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
 @hydra.main(version_base=None, config_path="../conf", config_name="config")
 def serve(config: DictConfig):
     try:
+          
         logger.info("Starting SUPER Datloading Service")
         args:SUPERArgs = SUPERArgs(
-            prefetch_lambda_name = config.prefetch_lambda_name,
-            cache_address = config.cache_address,
             partitions_per_dataset = config.partitions_per_dataset,
-            prefetch_cost_cap_per_hour = config.prefetch_cost_cap_per_hour,
-            batch_size = config.batch_size,
-            lookahead_steps=config.lookahead_steps,
-            inital_prefetch_concurrency=config.inital_prefetch_concurrency)
+            lookahead_steps = config.lookahead_steps,
+            serverless_cache_address = config.serverless_cache_address,
+            use_prefetching = config.use_prefetching,
+            prefetch_lambda_name = config.prefetch_lambda_name,
+            prefetch_cost_cap_per_hour=config.prefetch_cost_cap_per_hour,
+            cache_evition_ttl_threshold = config.cache_evition_ttl_threshold,
+            prefetch_simulation_time = config.prefetch_simulation_time)
         
         cache_service = CacheAwareMiniBatchService(args) 
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=1))

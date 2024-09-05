@@ -14,7 +14,7 @@ TIME_ON_CACHE_HIT = 0.025
 TIME_ON_CACHE_MISS = 0.5
 PREFETCH_TIME = 0.45
 NUM_JOBS = 5# Number of parallel jobs to simulate
-DELAY_BETWEEN_JOBS = 0  # Delay in seconds between the start of each job
+DELAY_BETWEEN_JOBS = 10  # Delay in seconds between the start of each job
 BATCHES_PER_JOB = 500  # Number of batches each job will process
 
 super_args = SUPERArgs(
@@ -22,12 +22,12 @@ super_args = SUPERArgs(
         use_prefetching = True,
         prefetch_lambda_name = 'CreateVisionTrainingBatch',
         serverless_cache_address = '',
-        prefetch_cost_cap_per_hour = None,
-        prefetch_simulation_time = PREFETCH_TIME,
+        prefetch_cost_cap_per_hour = None, # 0.8839398, #(0.02946466*60)/2 
+        prefetch_simulation_time =  PREFETCH_TIME,
         partitions_per_dataset = 1,
         cache_evition_ttl_threshold=1000)
 
-dataset = Dataset(data_dir='s3://sdl-cifar10/test/', batch_size=5, drop_last=False, num_partitions=super_args.partitions_per_dataset)
+dataset = Dataset(data_dir='s3://sdl-cifar10/train/', batch_size=128, drop_last=False, num_partitions=super_args.partitions_per_dataset)
 batch_manager = CentralBatchManager(dataset=dataset, args=super_args)
 
 
@@ -104,5 +104,4 @@ if __name__ == "__main__":
         logger.info(f"Results for Job {job_id}: Cache Hits = {cache_hits}, Cache Misses = {cache_misses}, Duration = {total_duration:.2f} seconds, Hit Rate = {hit_rate}")
     
     logger.info(f"Total Cache Hits = {total_hits}, Total Cache Misses = {total_misses}, Total Hit Rate = {totatal_ratio:.2f}")
-    
     time.sleep(5)

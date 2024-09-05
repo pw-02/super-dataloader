@@ -38,7 +38,7 @@ class PrefetchService:
         self.simulate_time:float = simulate_time
         self.lock = threading.Lock()
         self.jobs:Dict[str, DLTJob] = jobs
-        self.prefetch_delay:float = 0
+        # self.prefetch_delay:float = 0
         self.cost_threshold_per_hour = cost_threshold_per_hour
         self.start_time = None
         self.start_time_utc = datetime.now(timezone.utc)
@@ -67,12 +67,10 @@ class PrefetchService:
                 prefetch_cycle_started = time.perf_counter()
                 prefetch_list: Set[Tuple[Batch, str]] = set()
 
-                # prefetch_list = set()
-                prefetch_cycle_duration = self.prefetch_lambda_execution_times.avg + self.prefetch_delay if self.prefetch_lambda_execution_times.count > 0 else self.simulate_time
-                # if self.prefetch_cycle_times.count > 0:
-                #     prefetch_cycle_duration = self.prefetch_cycle_times.avg
+                # prefetch_cycle_duration = self.prefetch_cycle_times.avg + self.prefetch_delay if self.prefetch_cycle_times.count > 0 else self.simulate_time
+                prefetch_cycle_duration = self.prefetch_cycle_times.avg if self.prefetch_cycle_times.count > 0 else self.simulate_time if self.simulate_time else 3
+
                 # Take a snapshot
-                
                 # with self.lock:
                 #     jobs_snapshot = list(self.jobs.values())
 
@@ -113,8 +111,7 @@ class PrefetchService:
                                     'task': 'prefetch',
                                 }
                                 prefetch_list.add((batch, json.dumps(payload)))
-               
-                        
+                  
                 # Submit the prefetch list for processing
                 if prefetch_list:
                     with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -124,14 +121,13 @@ class PrefetchService:
 
                         # Calculate the delay before invoking Lambdas
                         delay_time = self._compute_delay_to_satisfy_cost_threshold() * len(prefetch_list)
-                        prefetch_started = time.perf_counter()
 
                         if delay_time > 0:
+                            logger.info(f"Delaying prefetching by {delay_time:.5f} seconds to satisfy cost threshold.")
                             time.sleep(delay_time)
                         
                         if self.simulate_time:
                             time.sleep(self.simulate_time)
-                        
 
                         # Map each future to its corresponding (batch, payload) tuple
                         future_to_batch_payload = {executor.submit(self._prefetch_batch, payload): (batch, payload) for batch, payload in prefetch_list}
@@ -141,6 +137,9 @@ class PrefetchService:
                             try:
                                 response = future.result()
                                 batch.set_caching_in_progress(in_progress=False)
+                                
+                                self.prefetch_lambda_execution_times.update(response['execution_time'])
+                                # self.prefetch_lambda_invocations_count += 1
                                 if response['success']:
                                     # print(f"Batch '{batch.batch_id}' has been prefetched.")
                                     batch.set_cache_status(is_cached=True)
@@ -150,11 +149,9 @@ class PrefetchService:
                                 # print(f'Invocation response: {response}')
                             except Exception as e:
                                 logger.error(f"Error in prefetching batch: {e}", exc_info=True)
-                    self.prefetch_lambda_execution_times.update(time.perf_counter() - prefetch_started)
-                    self.prefetch_cycle_times.update(time.perf_counter() - prefetch_cycle_started)
                     self.prefetch_lambda_invocations_count += len(prefetch_list)
-                    
-                    logger.info(f"Prefetching took: {self.prefetch_lambda_execution_times.val:.4f}s for {len(prefetch_list)} batches. Avg Prefetch Time: {self.prefetch_lambda_execution_times.avg:.4f}s, Avg Cycle Time: {self.prefetch_cycle_times.avg:.4f}s")
+                    self.prefetch_cycle_times.update(time.perf_counter() - prefetch_cycle_started + delay_time)
+                    logger.info(f"Prefetch took: {self.prefetch_cycle_times.val:.4f}s for {len(prefetch_list)} batches. (Avg Prefetch Time: {self.prefetch_cycle_times.avg:.4f}s, Avg Lambda Time: {self.prefetch_lambda_execution_times.avg:.4f}s, Running Cost: ${self._compute_prefeteching_cost():.8f})")
             
                 if len(self.jobs) == 0 or len(prefetch_list) == 0:
                     time.sleep(0.1)  # Sleep for a short while before checking again
@@ -164,13 +161,15 @@ class PrefetchService:
 
     def _prefetch_batch(self, payload):
             if self.simulate_time:
-                return {'success': True, 'errorMessage': None}
+                return {'success': True, 'errorMessage': None, 'execution_time': self.simulate_time}
             
+            request_started = time.perf_counter()
             response = self.prefetch_lambda_client.invoke( FunctionName=self.prefetch_lambda_name,
                                                 InvocationType='RequestResponse',
                                                 Payload=payload)
-            
+
             response_data = json.loads(response['Payload'].read().decode('utf-8'))
+            response_data['execution_time'] = time.perf_counter() - request_started
             return response_data
     
     def _get_average_request_duration(self):
@@ -196,12 +195,13 @@ class PrefetchService:
             return 0
         else:
             #  avg_request_duration = self.prefetch_lambda.get_average_request_duration(self.start_time_utc)
-            current_total_cost = compute_lambda_cost(self.prefetch_lambda.request_counter, self.prefetch_execution_times.avg, self.prefetch_lambda.configured_memory)
-            if current_total_cost == 0:
+            current_prefetch_cost = self._compute_prefeteching_cost()
+            if current_prefetch_cost == 0:
                 return 0
+            # logger.info(f"Current prefetch cost: {current_prefetch_cost:.16f}, Requests: {self.prefetch_lambda_invocations_count}, Execution time: {self.prefetch_lambda_execution_times.sum:.2f} seconds")
             
-            cost_per_request =  current_total_cost / self.prefetch_lambda.request_counter
-            request_rate = self.prefetch_lambda.compute_request_rate(self.start_time) 
+            cost_per_request =  current_prefetch_cost / self.prefetch_lambda_invocations_count
+            request_rate = self._compute_prefetch_lambda_request_rate() 
             requests_per_hour = request_rate * 3600  # Convert request rate to requests per hour
             # Calculate the maximum allowable requests per hour within the cost threshold
             max_requests_per_hour = self.cost_threshold_per_hour / cost_per_request
@@ -213,16 +213,17 @@ class PrefetchService:
             delay_per_request_hours = (1 / max_requests_per_hour) - (1 / requests_per_hour)
             # Convert delay from hours to seconds for practical use
             delay_per_request_seconds = delay_per_request_hours * 3600
-            self.prefetch_delay = max(delay_per_request_seconds, 0)
+            # self.prefetch_delay = max(delay_per_request_seconds, 0)
             return max(delay_per_request_seconds, 0)
-    def _compute_total_cost(self):
-        current_total_cost = compute_lambda_cost(self.prefetch_lambda.request_counter, self.prefetch_execution_times.avg, self.prefetch_lambda.configured_memory)
-        return current_total_cost
+        
+    def _compute_prefeteching_cost(self):
+        current_prefetch_cost = compute_lambda_cost(self.prefetch_lambda_invocations_count, self.prefetch_lambda_execution_times.sum, self.prefetch_lambda_configured_memory)
+        return current_prefetch_cost
     
     def stop_prefetcher(self):
             if not self.prefetch_stop_event.is_set():
                 self.prefetch_stop_event.set()
-                logger.info(f"Prefetcher stopped, total requests: {self.prefetch_lambda_invocations_count}, Total execution time: {self.prefetch_lambda_execution_times.sum:.2f} seconds")
+                logger.info(f"Prefetcher stopped. Total requests: {self.prefetch_lambda_invocations_count}, Total execution time: {self.prefetch_lambda_execution_times.sum:.2f}s, Total cost: ${self._compute_prefeteching_cost():.16f}")
 
                 # logger.info(f"Prefetcher stopped, total requests: {self.prefetch_lambda_invocations_count}, Total execution time: {self.prefetch_lambda_execution_times.sum:.2f} seconds, Total cost: ${self.compute_total_cost():.16f}")
  
@@ -355,7 +356,8 @@ class CentralBatchManager:
                 job = DLTJob(job_id) #new job
                 self.jobs[job_id] = job
                 logger.info(f"Job '{job_id}' registered.")
-
+            
+            # if not job.future_batches or len(job.future_batches) > self.look_ahead:
             if not job.future_batches or len(job.future_batches) == 0: #reached end of partition so start preparing for next one
                 self.allocate_batches_to_job(job)
             

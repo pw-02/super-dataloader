@@ -89,27 +89,29 @@ def get_memory_allocation_of_lambda(function_name):
         return response['MemorySize']
     
 # Function to compute Lambda cost
-def compute_lambda_cost(requests, duration_sec, memory_mb):    
-    if requests < 1 or duration_sec == 0:
-        return 0
-    # AWS Lambda pricing details (replace these with the latest rates from AWS)
-    cost_per_million_requests = 0.20 / 1_000_000  # Example cost per request in dollars
-    cost_per_gb_second = 0.00001667  # Example cost per GB-second in dollars
+# execution_time_sec: Execution time of a single Lambda invocation in milliseconds.
+# memory_mb: Memory allocated to the Lambda function in MB.
+# requests: Total number of Lambda invocations
 
-    # Convert memory in MB to GB
+def compute_lambda_cost(total_requests, total_execution_time_seconds, memory_mb):    
+    # AWS Lambda pricing details (replace these with the latest rates from AWS)
+    REQUEST_COST_PER_MILLION = 0.20  # USD per million requests
+    GB_SECOND_COST = 0.0000166667  # USD per GB-second
+
+    # Compute request cost
+    request_cost = (total_requests / 1_000_000) * REQUEST_COST_PER_MILLION
+
+    # Convert memory from MB to GB
     memory_gb = memory_mb / 1024
 
-    # Calculate total duration in GB-seconds
-    duration_gb_seconds = (duration_sec / 3600) * memory_gb
-    
-    # Compute request cost
-    request_cost = requests * cost_per_million_requests
+    # Calculate total GB-seconds
+    compute_time_gb_seconds = memory_gb * total_execution_time_seconds
 
-    # Compute duration cost
-    duration_cost = duration_gb_seconds * cost_per_gb_second
+    # Calculate compute cost
+    compute_cost = compute_time_gb_seconds * GB_SECOND_COST
 
     # Total cost
-    total_cost = request_cost + duration_cost
+    total_cost = request_cost + compute_cost
     return total_cost
 
 

@@ -3,7 +3,16 @@ from batch import Batch
 from dataset import Dataset, DatasetPartition
 from utils import create_unique_id
 from itertools import cycle
+from typing import List, Optional, Dict, Tuple
+from collections import deque, OrderedDict
 
+class BatchSet:
+    def __init__(self, id:str):
+        self.id = id
+        self.batches: Dict[str, Batch] = OrderedDict()
+        self.batches_finalized = False
+        self.mark_for_eviction = False
+        
 class EndOfPartitionException(Exception):
     pass
 
@@ -88,12 +97,16 @@ class BatchSampler:
                 if not self.drop_last and len(batch) > 0:
                     self.current_idx += 1
                     batch_id = f"{self.epoch_idx}_{self.active_partition.partition_id}_{self.current_idx}_{create_unique_id(batch, 16)}"
+                    next_batch = Batch(batch, batch_id, self.epoch_idx, self.active_partition.partition_id)
+
+                    
                     self.active_partition = next(self.partitions_cycle)  # Move to the next partition
                     self.sampler = self._create_sampler(len(self.active_partition))  # Create a new sampler for the new partition
+                  
                     if self.active_partition.partition_id == 1:
                         self.epoch_idx += 1
                     self.current_idx = 0
-                    return Batch(batch, batch_id, self.epoch_idx, self.active_partition.partition_id)
+                    return next_batch
 
                 else:
                     # When the current partition is exhausted, move to the next partition
@@ -115,13 +128,28 @@ if __name__ == "__main__":
     initial_seed = 42
     num_epochs = 10  # Specify the number of epochs you want to run
 
-    dataset = Dataset(data_dir='s3://sdl-cifar10/test/', batch_size=128, drop_last=False, num_partitions=10)
+    dataset = Dataset(data_dir='s3://sdl-cifar10/test/', batch_size=128, drop_last=False, num_partitions=2)
     batch_sampler_random = BatchSampler(partitions=dataset.partitions.values(), batch_size=batch_size, shuffle=False, drop_last=False)
 
+    active_epoch_idx = 0
+    active_partition_id = 1
+    epoch_partition_batches: Dict[int, Dict[int, BatchSet]] = OrderedDict()  #first key is epoch id, second key is partition id, value is the batches
 
-    for idx in range(100000):
-        batch = next(batch_sampler_random)
-        print(f'Batch {idx + 1} - Batch ID: {batch.batch_id}, Batch Size {len(batch.indicies)}')
+    for idx in range(80):
+        if idx == 79:
+            pass
+        next_batch = next(batch_sampler_random)
+        print(f'Batch {idx + 1} - Batch ID: {next_batch.batch_id}, Batch Size {len(next_batch.indicies)}')
+        if active_partition_id != next_batch.partition_id:
+            active_partition_id = next_batch.partition_id
+
+        if active_epoch_idx != next_batch.epoch_idx:
+            active_epoch_idx = next_batch.epoch_idx
+
+        partition_batches = epoch_partition_batches.setdefault(next_batch.epoch_idx, {})
+        partition_batch_set = partition_batches.setdefault(next_batch.partition_id, BatchSet(f'{next_batch.epoch_idx}_{next_batch.partition_id}'))
+        partition_batch_set.batches[next_batch.batch_id] = next_batch
+
       
 
 

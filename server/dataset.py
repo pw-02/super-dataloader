@@ -110,6 +110,11 @@ class Dataset(BaseDataset):
 
     def _create_partitions(self, num_partitions: int) -> Dict[int, 'DatasetPartition']:
         partitions = partition_dict(self.samples, num_partitions, self.batch_size)
+
+        for partition in partitions:
+            partition_size = sum(len(samples) for samples in partition.values())
+            if partition_size == 0:
+                partitions.remove(partition)
         
         return {idx + 1: DatasetPartition(idx + 1, partition, self.batch_size, self.drop_last)
                 for idx, partition in enumerate(partitions)}

@@ -219,7 +219,7 @@ class PrefetchManager:
                     # Calculate and log the time taken for prefetching
                     time_since_queued = time.perf_counter() - queued_time
                     self.prefetch_execution_times.update(time_since_queued - delay_time)
-                    logger.info(f"Prefetching took: {time_since_queued:.4f} seconds for {len(set_of_batches)} batches. Expected time: {self.prefetch_execution_times.avg + delay_time}")
+                    # logger.info(f"Prefetching took: {time_since_queued:.4f} seconds for {len(set_of_batches)} batches. Expected time: {self.prefetch_execution_times.avg + delay_time}")
 
                 except queue.Empty:
                     # Handle the empty queue case
@@ -503,10 +503,9 @@ class CentralBatchManager:
             start_index = partition_ids.index(self.active_partition_id)
             reordered_ids = partition_ids[start_index:] + partition_ids[:start_index]
             job.partition_id_cycle = cycle(reordered_ids)
-            job.started_partition_index = self.active_partition_id
+            job.started_partition_index = copy.deepcopy(self.active_partition_id)
         
         next_partition_id = next(job.partition_id_cycle)
-
         if next_partition_id == job.started_partition_index:
             job.epochs_completed_count += 1
 
@@ -568,14 +567,14 @@ class CentralBatchManager:
 
 
 if __name__ == "__main__":
-    TIME_ON_CACHE_HIT = 0.25
-    TIME_ON_CACHE_MISS = 8
+    TIME_ON_CACHE_HIT = 0.025
+    TIME_ON_CACHE_MISS = 0.025
 
     prefetcher = PrefetchManager(
         prefetch_lambda_name='CreateVisionTrainingBatch',
         cache_address= '10.0.28.76:6378',
         cost_threshold_per_hour= None, 
-        simulate_time=2)
+        simulate_time=0.025)
 
     partitions_per_dataset = 1
     dataset = Dataset(data_dir='s3://sdl-cifar10/test/', batch_size=128, drop_last=False, num_partitions=partitions_per_dataset)
@@ -589,7 +588,7 @@ if __name__ == "__main__":
 
     end = time.perf_counter()
 
-    for i in range(85):
+    for i in range(500):
         batch:Batch = batch_manager.get_next_batch(job_id, previous_step_training_time, previous_step_is_cache_hit, TIME_ON_CACHE_HIT, False)
         if batch.is_cached:
             previous_step_is_cache_hit = True

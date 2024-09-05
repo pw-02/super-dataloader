@@ -94,7 +94,7 @@ class CacheEvicitonService:
         self.cache_address = cache_address
         self.keep_alive_stop_event = threading.Event()  # Event to signal stopping
         self.keep_alive_queue: queue.Queue[Tuple[float, List[Tuple['Batch', Dict[str, str]]]]] = queue.Queue()  # Queue to store lists batches to be prefetched
-    
+        self.keep_alive_time_threshold = keep_alive_time_threshold
     def start_cache_evictor(self):
         keep_alive_thread = threading.Thread(target=self._keep_alive_process)
         keep_alive_thread.daemon = True
@@ -110,7 +110,7 @@ class CacheEvicitonService:
                 # Get a batch from the queue with a timeout to handle stopping
                 queued_time, set_of_batches = self.keep_alive_queue.get(timeout=1)
                 for batch, payload in set_of_batches:
-                    if batch.last_accessed_time > self.keep_alive_time :
+                    if batch.time_since_last_access() > self.keep_alive_time_threshold:
                         try:
                             if self.redis_client.get(batch.batch_id):  # Check if the batch is still cached
                                 batch.set_last_accessed_time()  # Update the last accessed time
@@ -311,24 +311,20 @@ class DLTJob:
             else:
                 self.training_step_times_on_miss.update(training_step_time)
     
-    def next_training_step_batch(self,
-                                 dataset: Dataset, 
-                                 prefetch_service:PrefetchManager = None, 
-                                 keep_alive_service: CacheEvicitonService = None,
-                                 prefetch_delay:float=0) -> Batch:
+    def next_training_step_batch(
+        self,
+        dataset: Dataset,
+        prefetch_service: PrefetchManager = None,
+        keep_alive_service: CacheEvicitonService = None,
+        prefetch_delay: float = 0,
+    ) -> Batch:
         self.total_steps += 1
-        next_training_batch = None
 
-    
-        # If prefetching is enabled, compute prefetching logic
-        if self.total_steps >= 1 and prefetch_service and len(self.cycle_bacthes)==0:
-            prefetch_cycle_duration = prefetch_service.prefetch_execution_times.avg
+        # Prefetching Logic
+        if self.total_steps >= 1 and prefetch_service and not self.cycle_bacthes:
             prefetch_list = []
-            prefetch_cycle_duration += prefetch_delay
-            time_counter = 0
-            prefetch_counter = 0
+            prefetch_cycle_duration = prefetch_service.prefetch_execution_times.avg + prefetch_delay
 
-            # Calculate optimal concurrency for prefetching
             training_step_time_on_hit = (
                 self.training_step_gpu_times.avg
                 if self.training_step_times_on_hit.count == 0
@@ -339,14 +335,21 @@ class DLTJob:
                 if self.training_step_times_on_miss.count == 0
                 else self.training_step_times_on_miss.avg
             )
-            optimal_prefetch_concurrency = find_optimal_prefetch_conncurrency(prefetch_cycle_duration, training_step_time_on_hit)
+            optimal_prefetch_concurrency = find_optimal_prefetch_conncurrency(
+                prefetch_cycle_duration, training_step_time_on_hit
+            )
 
-            # Plan prefetching
-            for batch_id, batch in self.future_batches.items():
+            # Prefetch and Cache Management
+            prefetch_counter, time_counter = 0, 0
+            for batch in self.future_batches.values():
                 if time_counter <= prefetch_cycle_duration:
                     self.cycle_bacthes.append(batch.batch_id)
-                    time_counter += training_step_time_on_hit if batch.is_cached else training_step_time_on_miss
+                    time_counter += (
+                        training_step_time_on_hit if batch.is_cached else training_step_time_on_miss
+                    )
+                
                 elif prefetch_counter < optimal_prefetch_concurrency:
+                    prefetch_counter += 1
                     if not batch.is_cached and not batch.caching_in_progress:
                         batch.set_caching_in_progress(True)
                         payload = {
@@ -354,35 +357,129 @@ class DLTJob:
                             'batch_id': batch.batch_id,
                             'batch_samples': dataset.get_samples(batch.indicies),
                             'cache_address': prefetch_service.cache_address,
-                            'task': 'prefetch'
+                            'task': 'prefetch',
                         }
                         prefetch_list.append((batch, payload))
-                        prefetch_counter += 1
                 else:
                     break
-            prefetch_service.prefetch_queue.put((time.perf_counter(), prefetch_list))
-        
-         # Identify batches to keep alive
+
+            if len(prefetch_list) > 0:
+                prefetch_service.prefetch_queue.put((time.perf_counter(), prefetch_list))
+
+        # Keep-Alive Logic
         if keep_alive_service:
-            keep_alive_list: List[Batch] = [
-                batch for batch_id, batch in self.future_batches.items()
-                if batch.is_cached and batch.last_accessed_time > 1000
+            keep_alive_list = [
+                batch for batch in self.future_batches.values()
+                if batch.is_cached and batch.time_since_last_access() > 1000
             ]
-            keep_alive_service.keep_alive_queue.put((time.perf_counter(), keep_alive_list))
-        
-            # Find the next training batch to process
-        for batch_id, batch in self.future_batches.items():
+            if keep_alive_list:
+                keep_alive_service.keep_alive_queue.put((time.perf_counter(), keep_alive_list))
+
+        # Find the next training batch to process
+        next_training_batch = None
+        for batch_id, batch in list(self.future_batches.items()):
             if batch.is_cached or not batch.caching_in_progress:
-                self.future_batches.pop(batch_id)
-                next_training_batch = batch
+                next_training_batch = self.future_batches.pop(batch_id)
                 break
-        if next_training_batch is None:
+
+        # If no suitable batch found, get the first available one
+        if not next_training_batch:
             next_training_batch = self.future_batches.pop(next(iter(self.future_batches)))
 
+        # Update cycle batches
         if next_training_batch.batch_id in self.cycle_bacthes:
             self.cycle_bacthes.remove(next_training_batch.batch_id)
 
         return next_training_batch
+
+
+
+
+
+
+
+
+
+
+    # def next_training_step_batch(self,
+    #                              dataset: Dataset, 
+    #                              prefetch_service:PrefetchManager = None, 
+    #                              keep_alive_service: CacheEvicitonService = None,
+    #                              prefetch_delay:float=0) -> Batch:
+        
+
+
+
+
+
+
+    #     self.total_steps += 1
+    #     next_training_batch = None
+
+    
+    #     # If prefetching is enabled, compute prefetching logic
+    #     if self.total_steps >= 1 and prefetch_service and len(self.cycle_bacthes)==0:
+    #         prefetch_cycle_duration = prefetch_service.prefetch_execution_times.avg
+    #         prefetch_list = []
+    #         prefetch_cycle_duration += prefetch_delay
+    #         time_counter = 0
+    #         prefetch_counter = 0
+
+    #         # Calculate optimal concurrency for prefetching
+    #         training_step_time_on_hit = (
+    #             self.training_step_gpu_times.avg
+    #             if self.training_step_times_on_hit.count == 0
+    #             else self.training_step_times_on_hit.avg
+    #         )
+    #         training_step_time_on_miss = (
+    #             prefetch_cycle_duration
+    #             if self.training_step_times_on_miss.count == 0
+    #             else self.training_step_times_on_miss.avg
+    #         )
+    #         optimal_prefetch_concurrency = find_optimal_prefetch_conncurrency(prefetch_cycle_duration, training_step_time_on_hit)
+
+    #         # Plan prefetching
+    #         for batch_id, batch in self.future_batches.items():
+    #             if time_counter <= prefetch_cycle_duration:
+    #                 self.cycle_bacthes.append(batch.batch_id)
+    #                 time_counter += training_step_time_on_hit if batch.is_cached else training_step_time_on_miss
+    #             elif prefetch_counter < optimal_prefetch_concurrency:
+    #                 if not batch.is_cached and not batch.caching_in_progress:
+    #                     batch.set_caching_in_progress(True)
+    #                     payload = {
+    #                         'bucket_name': dataset.bucket_name,
+    #                         'batch_id': batch.batch_id,
+    #                         'batch_samples': dataset.get_samples(batch.indicies),
+    #                         'cache_address': prefetch_service.cache_address,
+    #                         'task': 'prefetch'
+    #                     }
+    #                     prefetch_list.append((batch, payload))
+    #                     prefetch_counter += 1
+    #             else:
+    #                 break
+    #         prefetch_service.prefetch_queue.put((time.perf_counter(), prefetch_list))
+        
+    #      # Identify batches to keep alive
+    #     if keep_alive_service:
+    #         keep_alive_list: List[Batch] = [
+    #             batch for batch_id, batch in self.future_batches.items()
+    #             if batch.is_cached and batch.time_since_last_access() > 1000
+    #         ]
+    #         keep_alive_service.keep_alive_queue.put((time.perf_counter(), keep_alive_list))
+        
+    #         # Find the next training batch to process
+    #     for batch_id, batch in self.future_batches.items():
+    #         if batch.is_cached or not batch.caching_in_progress:
+    #             self.future_batches.pop(batch_id)
+    #             next_training_batch = batch
+    #             break
+    #     if next_training_batch is None:
+    #         next_training_batch = self.future_batches.pop(next(iter(self.future_batches)))
+
+    #     if next_training_batch.batch_id in self.cycle_bacthes:
+    #         self.cycle_bacthes.remove(next_training_batch.batch_id)
+
+    #     return next_training_batch
                
 
             
@@ -573,13 +670,13 @@ class CentralBatchManager:
 
 if __name__ == "__main__":
     TIME_ON_CACHE_HIT = 0.025
-    TIME_ON_CACHE_MISS = 0.025
-
+    TIME_ON_CACHE_MISS = 5
+    PREFETCH_TIME = 4.5
     prefetcher = PrefetchManager(
         prefetch_lambda_name='CreateVisionTrainingBatch',
         cache_address= '10.0.28.76:6378',
         cost_threshold_per_hour= None, 
-        simulate_time=0.025)
+        simulate_time=PREFETCH_TIME)
 
     partitions_per_dataset = 1
     dataset = Dataset(data_dir='s3://sdl-cifar10/test/', batch_size=128, drop_last=False, num_partitions=partitions_per_dataset)

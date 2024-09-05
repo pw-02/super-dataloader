@@ -9,13 +9,13 @@ import logging
 logger = logging.getLogger()
 
 # Constants
-TIME_ON_CACHE_HIT = 0.25
-TIME_ON_CACHE_MISS = 11
+TIME_ON_CACHE_HIT = 0.025
+TIME_ON_CACHE_MISS = 5
 NUM_JOBS = 4# Number of parallel jobs to simulate
 LOOK_AHEAD = 50  # Number of batches each job will process
-DELAY_BETWEEN_JOBS = 0  # Delay in seconds between the start of each job
-PREFETCH_TIME = 5
-BATCHES_PER_JOB = 50  # Number of batches each job will process
+DELAY_BETWEEN_JOBS = 2  # Delay in seconds between the start of each job
+
+BATCHES_PER_JOB = 500  # Number of batches each job will process
 partitions_per_dataset = 1
 # Shared instances initialized once
 prefetcher = PrefetchManager('CreateVisionTrainingBatch', '10.0.28.76:6378', None, PREFETCH_TIME)

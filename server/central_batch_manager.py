@@ -38,7 +38,7 @@ class PrefetchService:
         self.simulate_time:float = simulate_time
         self.lock = threading.Lock()
         self.jobs:Dict[str, DLTJob] = jobs
-        # self.prefetch_delay:float = 0
+        self.prefetch_delay:float = 0
         self.cost_threshold_per_hour = cost_threshold_per_hour
         self.start_time = None
         self.start_time_utc = datetime.now(timezone.utc)
@@ -67,8 +67,8 @@ class PrefetchService:
                 prefetch_cycle_started = time.perf_counter()
                 prefetch_list: Set[Tuple[Batch, str]] = set()
 
-                # prefetch_cycle_duration = self.prefetch_cycle_times.avg + self.prefetch_delay if self.prefetch_cycle_times.count > 0 else self.simulate_time
-                prefetch_cycle_duration = self.prefetch_cycle_times.avg if self.prefetch_cycle_times.count > 0 else self.simulate_time if self.simulate_time else 3
+                prefetch_cycle_duration = self.prefetch_cycle_times.avg + self.prefetch_delay if self.prefetch_cycle_times.count > 0 else self.simulate_time
+                #prefetch_cycle_duration = self.prefetch_cycle_times.avg if self.prefetch_cycle_times.count > 0 else self.simulate_time if self.simulate_time else 3
 
                 # Take a snapshot
                 # with self.lock:
@@ -121,7 +121,7 @@ class PrefetchService:
 
                         # Calculate the delay before invoking Lambdas
                         delay_time = self._compute_delay_to_satisfy_cost_threshold() * len(prefetch_list)
-
+                        
                         if delay_time > 0:
                             logger.info(f"Delaying prefetching by {delay_time:.5f} seconds to satisfy cost threshold.")
                             time.sleep(delay_time)
@@ -213,7 +213,7 @@ class PrefetchService:
             delay_per_request_hours = (1 / max_requests_per_hour) - (1 / requests_per_hour)
             # Convert delay from hours to seconds for practical use
             delay_per_request_seconds = delay_per_request_hours * 3600
-            # self.prefetch_delay = max(delay_per_request_seconds, 0)
+            self.prefetch_delay = max(delay_per_request_seconds, 0)
             return max(delay_per_request_seconds, 0)
         
     def _compute_prefeteching_cost(self):

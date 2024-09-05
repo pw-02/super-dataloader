@@ -1,8 +1,9 @@
 import time
 import concurrent.futures
 from typing import Tuple
-from central_batch_manager import PrefetchManager, Dataset, CentralBatchManager, Batch
+from central_batch_manager import Dataset, CentralBatchManager
 import logging
+from args import SUPERArgs
 
 # Configure logging
 # logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
@@ -10,17 +11,24 @@ logger = logging.getLogger()
 
 # Constants
 TIME_ON_CACHE_HIT = 0.025
-TIME_ON_CACHE_MISS = 5
-NUM_JOBS = 4# Number of parallel jobs to simulate
-LOOK_AHEAD = 50  # Number of batches each job will process
-DELAY_BETWEEN_JOBS = 2  # Delay in seconds between the start of each job
-
+TIME_ON_CACHE_MISS = 0.5
+PREFETCH_TIME = 0.45
+NUM_JOBS = 5# Number of parallel jobs to simulate
+DELAY_BETWEEN_JOBS = 0  # Delay in seconds between the start of each job
 BATCHES_PER_JOB = 500  # Number of batches each job will process
-partitions_per_dataset = 1
-# Shared instances initialized once
-prefetcher = PrefetchManager('CreateVisionTrainingBatch', '10.0.28.76:6378', None, PREFETCH_TIME)
-dataset = Dataset(data_dir='s3://sdl-cifar10/test/', batch_size=128, drop_last=False, num_partitions=partitions_per_dataset)
-batch_manager = CentralBatchManager(dataset=dataset, look_ahead=LOOK_AHEAD, prefetch_service=prefetcher, cache_eviction_service=None)
+
+super_args = SUPERArgs(
+        lookahead_steps = 100,
+        use_prefetching = True,
+        prefetch_lambda_name = 'CreateVisionTrainingBatch',
+        serverless_cache_address = '',
+        prefetch_cost_cap_per_hour = None,
+        prefetch_simulation_time = PREFETCH_TIME,
+        partitions_per_dataset = 1,
+        cache_evition_ttl_threshold=1000)
+
+dataset = Dataset(data_dir='s3://sdl-cifar10/test/', batch_size=5, drop_last=False, num_partitions=super_args.partitions_per_dataset)
+batch_manager = CentralBatchManager(dataset=dataset, args=super_args)
 
 
 def simulate_training_job(job_id: str) -> Tuple[str, int, int, float]:
@@ -56,12 +64,12 @@ def simulate_training_job(job_id: str) -> Tuple[str, int, int, float]:
             previous_step_training_time = TIME_ON_CACHE_MISS
         
         hit_rate = cache_hits / (i + 1) if (i + 1) > 0 else 0
-        if i % 1== 0:
+        if i % 25== 0:
             logger.info(f'Job {job_id}, {batch.batch_id}, Hits: {cache_hits}, Misses: {cache_misses}, Rate: {hit_rate:.2f}')
 
     # Stop prefetcher and compute total duration
     total_duration = time.perf_counter() - start_time
-    batch_manager.handle_job_ended(job_id, previous_step_training_time, previous_step_is_cache_hit)
+    batch_manager.job_ended(job_id, previous_step_training_time, previous_step_is_cache_hit, TIME_ON_CACHE_HIT, cached_missed_batch)
     return job_id, cache_hits, cache_misses, total_duration, hit_rate
 
 
@@ -97,4 +105,4 @@ if __name__ == "__main__":
     
     logger.info(f"Total Cache Hits = {total_hits}, Total Cache Misses = {total_misses}, Total Hit Rate = {totatal_ratio:.2f}")
     
-    time.sleep(1)
+    time.sleep(5)

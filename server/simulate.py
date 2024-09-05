@@ -24,6 +24,7 @@ super_args = SUPERArgs(
         serverless_cache_address = '',
         prefetch_cost_cap_per_hour = None, # 0.8839398, #(0.02946466*60)/2 
         prefetch_simulation_time =  PREFETCH_TIME,
+        evict_from_cache_simulation_time = 0.5,
         partitions_per_dataset = 1,
         cache_evition_ttl_threshold=1000)
 

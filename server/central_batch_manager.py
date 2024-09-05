@@ -121,7 +121,7 @@ class PrefetchService:
 
                         # Calculate the delay before invoking Lambdas
                         delay_time = self._compute_delay_to_satisfy_cost_threshold() * len(prefetch_list)
-                        
+
                         if delay_time > 0:
                             logger.info(f"Delaying prefetching by {delay_time:.5f} seconds to satisfy cost threshold.")
                             time.sleep(delay_time)
@@ -229,43 +229,56 @@ class PrefetchService:
  
 
 class CacheEvictionService:
-    def __init__(self, cache_address: str, keep_alive_time_threshold:int = 1000):
+    def __init__(self, cache_address: str,  jobs:Dict[str, DLTJob], keep_alive_time_threshold:int = 1000, simulate_time: float = None):
         self.cache_address = cache_address
-        self.keep_alive_stop_event = threading.Event()  # Event to signal stopping
-        self.keep_alive_queue: queue.Queue[Tuple[float, List[Tuple['Batch', Dict[str, str]]]]] = queue.Queue()  # Queue to store lists batches to be prefetched
+        self.cache_eviction_stop_event = threading.Event()  # Event to signal stopping
         self.keep_alive_time_threshold = keep_alive_time_threshold
+        self.simulate_time = simulate_time
+        self.jobs:Dict[str, DLTJob] = jobs
+        self.cache_eviction_stop_event.set()
+
     def start_cache_evictor(self):
+        self.cache_eviction_stop_event.clear()
         keep_alive_thread = threading.Thread(target=self._keep_alive_process)
         keep_alive_thread.daemon = True
         keep_alive_thread.start()
-    
+     
+    def stop_cache_evictor(self):
+        if not self.cache_eviction_stop_event.is_set():
+            self.cache_eviction_stop_event.set()
+            logger.info(f"Cache eviction service stopped")
+
     def _keep_alive_process(self):
-        while not self.keep_alive_stop_event.is_set():  # Check for stop signal
+        while not self.cache_eviction_stop_event.is_set():  # Check for stop signal
             try:
                 cache_host, cache_port = self.cache_address.split(":")
 
                 if self.redis_client is None:
                     self.redis_client = redis.StrictRedis(host=cache_host, port=cache_port)
-                # Get a batch from the queue with a timeout to handle stopping
-                queued_time, set_of_batches = self.keep_alive_queue.get(timeout=1)
-                for batch, payload in set_of_batches:
+
+                for job in self.jobs.values():
+                    if job.total_steps == 0:
+                        continue
+                job_batches_snapshot = list(job.future_batches.values())
+                for batch in job_batches_snapshot:
+
                     if batch.time_since_last_access() > self.keep_alive_time_threshold:
                         try:
-                            if self.redis_client.get(batch.batch_id):  # Check if the batch is still cached
-                                batch.set_last_accessed_time()  # Update the last accessed time
-                                batch.set_cache_status(is_cached=True)
-
-                            else:
-                                # If the batch is not in Redis, mark it as not cached
-                                batch.set_cache_status(is_cached=False)
-                                logger.warning(f"Batch '{batch.batch_id}' is not in cache, setting is_cached to False.")
+                                if self.redis_client.get(batch.batch_id):  # Check if the batch is still cached
+                                    batch.set_last_accessed_time()  # Update the last accessed time
+                                    batch.set_cache_status(is_cached=True)
+                                else:
+                                    # If the batch is not in Redis, mark it as not cached
+                                    batch.set_cache_status(is_cached=False)
+                                    logger.warning(f"Batch '{batch.batch_id}' is not in cache, setting is_cached to False.")
                         except Exception as e:
-                            logger.error(f"Error keeping batch '{batch.batch_id}' alive: {e}")
-                            batch.set_cache_status(is_cached=False)
-            except queue.Empty:
-                # Handle the empty queue case
-                time.sleep(4)  # Sleep for a short while before checking the queue again
-    
+                                logger.error(f"Error keeping batch '{batch.batch_id}' alive: {e}")
+                                batch.set_cache_status(is_cached=False)
+                time.sleep(5)  # Sleep for a short while before checking the queue again
+            
+            except Exception as e:
+                logger.error(f"Unexpected error in cache eviction process: {e}", exc_info=True)
+
 
 class CentralBatchManager:
     def __init__(self, dataset: Dataset, args: SUPERArgs):
@@ -298,7 +311,12 @@ class CentralBatchManager:
                 simulate_time=args.prefetch_simulation_time)
         
         #Initialize cache eviction service
-        self.cache_eviction_service: Optional[CacheEvictionService] = None        
+        self.cache_eviction_service: Optional[CacheEvictionService] = CacheEvictionService(
+            cache_address=args.serverless_cache_address,
+            jobs=self.jobs,
+            keep_alive_time_threshold=args.cache_evition_ttl_threshold,
+            simulate_time=args.evict_from_cache_simulation_time
+        )        
         self.lock = threading.Lock()  # Lock for thread safety
 
     
@@ -397,6 +415,7 @@ if __name__ == "__main__":
         serverless_cache_address = '',
         prefetch_cost_cap_per_hour = None,
         prefetch_simulation_time = PREFETCH_TIME,
+        evict_from_cache_simulation_time=0.5,
         partitions_per_dataset = 1,
         cache_evition_ttl_threshold=1000)
 

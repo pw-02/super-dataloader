@@ -84,7 +84,8 @@ def serve(config: DictConfig):
             prefetch_lambda_name = config.prefetch_lambda_name,
             prefetch_cost_cap_per_hour=config.prefetch_cost_cap_per_hour,
             cache_evition_ttl_threshold = config.cache_evition_ttl_threshold,
-            prefetch_simulation_time = config.prefetch_simulation_time)
+            prefetch_simulation_time = config.prefetch_simulation_time,
+            evict_from_cache_simulation_time = config.evict_from_cache_simulation_time,)
         
         cache_service = CacheAwareMiniBatchService(args) 
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=1))

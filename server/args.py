@@ -10,3 +10,4 @@ class SUPERArgs:
     prefetch_lambda_name:str
     prefetch_cost_cap_per_hour:float
     prefetch_simulation_time:float
+    evict_from_cache_simulation_time:float

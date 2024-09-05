@@ -12,8 +12,8 @@ cache_evition_ttl_threshold: 1000 #seconds
 use_prefetching: True
 prefetch_lambda_name: 'CreateVisionTrainingBatch'
 prefetch_cost_cap_per_hour: 0.1
-prefetch_cost_cap_per_hour: null
-
+prefetch_simulation_time: null
+evict_from_cache_simulation_time: null
 
 hydra:
   run:

@@ -1,14 +1,16 @@
 
 from typing import List
 import threading
-from utils.utils import create_unique_id
+# from utils.utils import create_unique_id
 import time
 
 class Batch:
-    def __init__(self, batch_indicies, epoch_seed, idx):
+    def __init__(self, batch_indicies, batch_id, epoch_idx, partition_idx):
         self.indicies: List[int] = batch_indicies
-        self.batch_id:str = f"{epoch_seed}_{idx}_{create_unique_id(self.indicies)}" #create_unique_id(self.indicies)
-        self.epoch_seed:int = epoch_seed
+        self.epoch_idx:int = epoch_idx
+        self.partition_id:int = partition_idx
+        self.batch_id:str = batch_id
+        # self.epoch_seed:int = epoch_seed
         self.is_cached:bool = False
         self.caching_in_progress:bool = False
         self.next_access_time:float = None

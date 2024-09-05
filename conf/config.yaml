@@ -8,7 +8,7 @@ cache_address: 10.0.28.76:6378  #10.0.24.192:6378  #10.0.24.192:6378 # '10.0.24.
 simulate_mode: True
 prefetch_lambda_name: 'CreateVisionTrainingBatch'
 prefetch_cost_cap_per_hour: null
-partitions_per_dataset: 1
+partitions_per_dataset: 10
 batch_size: 128
 lookahead_steps: 50
 inital_prefetch_concurrency: 10

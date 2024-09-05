@@ -1,10 +1,10 @@
 from typing import List, Tuple, Dict
 import functools
-from data_objects.epoch import Epoch
+from epoch import Epoch
 from typing import List, Tuple
 import numpy as np
-from utils.utils import partition_dict
-from utils.aws_utils import S3Url
+from utils import partition_dict
+from aws_utils import S3Url
 import json
 from urllib.parse import urlparse
 import boto3
@@ -110,6 +110,7 @@ class Dataset(BaseDataset):
 
     def _create_partitions(self, num_partitions: int) -> Dict[int, 'DatasetPartition']:
         partitions = partition_dict(self.samples, num_partitions, self.batch_size)
+        
         return {idx + 1: DatasetPartition(idx + 1, partition, self.batch_size, self.drop_last)
                 for idx, partition in enumerate(partitions)}
     
@@ -125,3 +126,6 @@ class DatasetPartition(BaseDataset):
         # Initialize partition-specific properties
         self.partition_id = partition_id
         self.epochs: Dict[int, Epoch] = {}
+    
+    def __len__(self):
+        return super().__len__()

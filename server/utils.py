@@ -106,16 +106,18 @@ class CustomQueue(Queue):
             # item = self._get()
             self.not_full.notify()
             return item
+    
+def gen_partition_epoch_key(epoch_id:int, partition_id:int):
+        return f"{epoch_id}_{partition_id}"
 
-
-def create_unique_id(int_list):
+def create_unique_id(int_list, length = 32):
     # Convert integers to strings and concatenate them
     id_string = ''.join(str(x) for x in int_list)
     
     # Hash the concatenated string to generate a unique ID
-    unique_id = hashlib.sha1(id_string.encode()).hexdigest()
-    
-    return unique_id
+    unique_id = hashlib.md5(id_string.encode()).hexdigest()
+    #Truncate the hash to the desired length
+    return unique_id[:length]
 
 def format_timestamp(current_timestamp, use_utc=True):
     if current_timestamp == math.inf:

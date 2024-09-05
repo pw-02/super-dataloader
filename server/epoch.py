@@ -1,5 +1,5 @@
 from typing import Dict, List
-from data_objects.batch import Batch
+from batch import Batch
 import threading
 from queue import Queue
 import copy

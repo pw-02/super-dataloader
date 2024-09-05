@@ -9,18 +9,18 @@ import logging
 logger = logging.getLogger()
 
 # Constants
-TIME_ON_CACHE_HIT = 0.025
-TIME_ON_CACHE_MISS = 0.25
-NUM_JOBS = 5# Number of parallel jobs to simulate
+TIME_ON_CACHE_HIT = 0.25
+TIME_ON_CACHE_MISS = 11
+NUM_JOBS = 4# Number of parallel jobs to simulate
 LOOK_AHEAD = 50  # Number of batches each job will process
-DELAY_BETWEEN_JOBS = 2  # Delay in seconds between the start of each job
-PREFETCH_TIME = 0.10
-BATCHES_PER_JOB = 100  # Number of batches each job will process
+DELAY_BETWEEN_JOBS = 0  # Delay in seconds between the start of each job
+PREFETCH_TIME = 5
+BATCHES_PER_JOB = 50  # Number of batches each job will process
 partitions_per_dataset = 1
 # Shared instances initialized once
 prefetcher = PrefetchManager('CreateVisionTrainingBatch', '10.0.28.76:6378', None, PREFETCH_TIME)
 dataset = Dataset(data_dir='s3://sdl-cifar10/test/', batch_size=128, drop_last=False, num_partitions=partitions_per_dataset)
-batch_manager = CentralBatchManager(dataset=dataset, look_ahead=LOOK_AHEAD, prefetch_service=None, cache_eviction_service=None)
+batch_manager = CentralBatchManager(dataset=dataset, look_ahead=LOOK_AHEAD, prefetch_service=prefetcher, cache_eviction_service=None)
 
 
 def simulate_training_job(job_id: str) -> Tuple[str, int, int, float]:
@@ -83,7 +83,7 @@ if __name__ == "__main__":
         # Collect and log the results of each job
         for future in concurrent.futures.as_completed(futures):
             job_id, cache_hits, cache_misses, total_duration, hit_rate = future.result()
-            job_results.append( job_id, cache_hits, cache_misses, total_duration, hit_rate)
+            job_results.append((job_id, cache_hits, cache_misses, total_duration, hit_rate))
             # job_results.append(f"Results for Job {job_id}: Cache Hits = {cache_hits}, Cache Misses = {cache_misses}, Duration = {total_duration:.2f} seconds, Hit Rate = {hit_rate:.2f}")
             # job_results.append(f"Results for Job {job_id}: Cache Hits = {cache_hits}, Cache Misses = {cache_misses}, Duration = {total_duration:.2f} seconds")
 

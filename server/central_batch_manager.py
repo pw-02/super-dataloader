@@ -219,7 +219,7 @@ class PrefetchManager:
                     # Calculate and log the time taken for prefetching
                     time_since_queued = time.perf_counter() - queued_time
                     self.prefetch_execution_times.update(time_since_queued - delay_time)
-                    # logger.info(f"Prefetching took: {time_since_queued:.4f} seconds for {len(set_of_batches)} batches. Expected time: {self.prefetch_execution_times.avg + delay_time}")
+                    logger.info(f"Prefetching took: {time_since_queued:.4f} seconds for {len(set_of_batches)} batches. Expected time: {self.prefetch_execution_times.avg + delay_time}")
 
                 except queue.Empty:
                     # Handle the empty queue case

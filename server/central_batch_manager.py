@@ -265,8 +265,9 @@ class PrefetchManager:
     #             time.sleep(0.1)  # Sleep for a short while before checking the queue again
     
     def stop_prefetcher(self):
-        self.prefetch_stop_event.set()
-        logger.info(f"Prefetcher stopped, total requests: {self.prefetch_lambda.request_counter}, Total execution time: {self.prefetch_execution_times.sum:.2f} seconds, Total cost: ${self.compute_total_cost():.16f}")
+        if not self.prefetch_stop_event.is_set():
+            self.prefetch_stop_event.set()
+            logger.info(f"Prefetcher stopped, total requests: {self.prefetch_lambda.request_counter}, Total execution time: {self.prefetch_execution_times.sum:.2f} seconds, Total cost: ${self.compute_total_cost():.16f}")
     
     def compute_total_cost(self):
         current_total_cost = compute_lambda_cost(self.prefetch_lambda.request_counter, self.prefetch_execution_times.avg, self.prefetch_lambda.configured_memory)
@@ -370,12 +371,13 @@ class DLTJob:
             keep_alive_service.keep_alive_queue.put((time.perf_counter(), keep_alive_list))
         
             # Find the next training batch to process
-        # for batch_id, batch in self.future_batches.items():
-        #     if batch.is_cached or not batch.caching_in_progress:
-        #         self.future_batches.pop(batch_id)
-        #         next_training_batch = batch
-        #         break
-        next_training_batch = self.future_batches.pop(next(iter(self.future_batches)))
+        for batch_id, batch in self.future_batches.items():
+            if batch.is_cached or not batch.caching_in_progress:
+                self.future_batches.pop(batch_id)
+                next_training_batch = batch
+                break
+        if next_training_batch is None:
+            next_training_batch = self.future_batches.pop(next(iter(self.future_batches)))
 
         if next_training_batch.batch_id in self.cycle_bacthes:
             self.cycle_bacthes.remove(next_training_batch.batch_id)
@@ -544,6 +546,8 @@ class CentralBatchManager:
                                                       keep_alive_service=self.cache_eviction_service)
             if next_batch.is_cached:
                 next_batch.set_last_accessed_time()
+            else:
+                next_batch.set_caching_in_progress(True)
             
             if not next_batch.has_been_accessed_before:
                 next_batch.set_has_been_accessed_before(True)
@@ -561,7 +565,8 @@ class CentralBatchManager:
                 self.jobs.pop(job_id)
             if len(self.jobs) == 0:
                 logger.info("All jobs have ended. Stopping prefetcher.")
-                self.prefetch_service.stop_prefetcher()
+                if self.prefetch_service:
+                    self.prefetch_service.stop_prefetcher()
     
 
 

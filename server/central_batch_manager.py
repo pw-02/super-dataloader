@@ -237,7 +237,7 @@ class CacheEvictionService:
         self.cache_eviction_stop_event.set()
         self.simulate_keep_alvive = simulate_keep_alvive
         self.redis_client = None
-        
+
     def start_cache_evictor(self):
         self.cache_eviction_stop_event.clear()
         keep_alive_thread = threading.Thread(target=self._keep_alive_process)
@@ -279,7 +279,7 @@ class CacheEvictionService:
                             except Exception as e:
                                     logger.error(f"Error keeping batch '{batch.batch_id}' alive: {e}")
                                     batch.set_cache_status(is_cached=False)
-                    time.sleep(1)  # Sleep for a short while before checking the queue again
+                time.sleep(5)  # Sleep for a short while before checking the queue again
             
             except Exception as e:
                 logger.error(f"Unexpected error in cache eviction process: {e}", exc_info=True)

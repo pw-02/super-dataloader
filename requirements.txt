@@ -5,6 +5,7 @@ awscli
 hydra-core
 numpy
 redis
+heapdict
 # transformers
 # hydra
 # twine

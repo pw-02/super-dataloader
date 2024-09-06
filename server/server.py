@@ -18,7 +18,6 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
         self.args:SUPERArgs = args
         self.datasets: Dict[str,CentralBatchManager] = {}
         self.jobs: Dict[DLTJob] = {}
-        self.prefetch_service:PrefetchService = PrefetchService(args.prefetch_lambda_name, args.cache_address, args.prefetch_cost_cap_per_hour)
 
     def Ping(self, request, context):
         return minibatch_service_pb2.PingResponse(message = 'pong')
@@ -31,9 +30,7 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
         else:
             dataset = Dataset(request.data_dir, self.args.batch_size, False, self.args.partitions_per_dataset)
             self.datasets[request.data_dir] = CentralBatchManager(dataset=dataset, 
-                                                                  look_ahead=self.args.lookahead_steps,
-                                                                  prefetch_concurrency=self.args.inital_prefetch_concurrency,
-                                                                  prefetch_service=self.prefetch_service)
+                                                                  args=self.args,)
             message = f"Dataset '{request.data_dir}' registered with SUPER. Total Files: {len(dataset)}, Total Batches:{dataset.num_batches}, Partitions:{len(dataset.partitions)}"
             success = True
             logger.info(message)
@@ -46,6 +43,7 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
         previous_step_training_time = request.previous_step_time
         previous_step_is_cache_hit = request.previous_step_is_cache_hit
         previous_step_gpu_time = request.previous_step_gpu_time
+        cached_previous_batch = request.cached_previous_batch
         if data_dir not in self.datasets:
             message = f"Failed to register job with id '{job_id}' because data dir '{data_dir}' was not found in SUPER."
             logger.info(message)
@@ -53,7 +51,8 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
         next_batch:Batch = self.datasets[data_dir].get_next_batch(job_id, 
                                                                   previous_step_training_time, 
                                                                   previous_step_is_cache_hit,
-                                                                  previous_step_gpu_time)
+                                                                  previous_step_gpu_time,
+                                                                  cached_previous_batch)
         # Create and return the response
         response = minibatch_service_pb2.GetNextBatchForJobResponse(
             job_id=request.job_id,
@@ -67,7 +66,14 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
         data_dir = request.data_dir
         previous_step_training_time = request.previous_step_time
         previous_step_is_cache_hit = request.previous_step_is_cache_hit
-        self.datasets[data_dir].handle_job_ended(job_id=job_id, previous_step_training_time=previous_step_training_time, previous_step_is_cache_hit=previous_step_is_cache_hit)
+        previous_step_gpu_time = request.previous_step_gpu_time
+        cached_previous_batch = request.cached_previous_batch
+
+        self.datasets[data_dir].job_ended(job_id=job_id, 
+                                          previous_step_training_time=previous_step_training_time, 
+                                          previous_step_is_cache_hit=previous_step_is_cache_hit,
+                                          previous_step_gpu_time=previous_step_gpu_time,
+                                          cached_batch=cached_previous_batch)
         return google.protobuf.empty_pb2.Empty()
 
 
@@ -77,6 +83,7 @@ def serve(config: DictConfig):
           
         logger.info("Starting SUPER Datloading Service")
         args:SUPERArgs = SUPERArgs(
+            batch_size = config.workload.batch_size,
             partitions_per_dataset = config.partitions_per_dataset,
             lookahead_steps = config.lookahead_steps,
             serverless_cache_address = config.serverless_cache_address,

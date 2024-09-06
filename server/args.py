@@ -3,6 +3,7 @@ from dataclasses import dataclass
 @dataclass
 class SUPERArgs:
     partitions_per_dataset:int
+    batch_size:int
     lookahead_steps:int
     serverless_cache_address:str
     cache_evition_ttl_threshold:float

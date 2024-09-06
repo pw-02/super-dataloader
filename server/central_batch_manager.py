@@ -384,8 +384,8 @@ class CentralBatchManager:
             if self.prefetch_service is not None and self.prefetch_service.prefetch_stop_event.is_set():  
                 self.prefetch_service.start_prefetcher() #prefetcher is stopped, start it
             
-            if self.cache_eviction_service.cache_eviction_stop_event.is_set():  
-                self.cache_eviction_service.start_cache_evictor() # is stopped, start it
+            # if self.cache_eviction_service.cache_eviction_stop_event.is_set():  
+            #     self.cache_eviction_service.start_cache_evictor() # is stopped, start it
                 
             if job_id in self.jobs:
                 job = self.jobs[job_id]

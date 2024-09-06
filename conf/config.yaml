@@ -4,14 +4,13 @@ defaults:
   # - override hydra/hydra_logging: disabled  
   # - override hydra/job_logging: disabled
 
-
 partitions_per_dataset: 1
-lookahead_steps: 50
+lookahead_steps: 100
 serverless_cache_address: 10.0.28.76:6378
 cache_evition_ttl_threshold: 1000 #seconds
 use_prefetching: True
 prefetch_lambda_name: 'CreateVisionTrainingBatch'
-prefetch_cost_cap_per_hour: 0.1
+prefetch_cost_cap_per_hour: null
 prefetch_simulation_time: null
 evict_from_cache_simulation_time: null
 

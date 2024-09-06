@@ -304,7 +304,7 @@ class CentralBatchManager:
         self.batch_sampler = BatchSampler(
             partitions=dataset.partitions.values(), 
             batch_size=self.dataset.batch_size, 
-            shuffle=False, 
+            shuffle=True, 
             drop_last=False)
         self.evict_from_cache_simulation_time = args.evict_from_cache_simulation_time
 

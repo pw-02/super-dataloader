@@ -1,0 +1,16 @@
+boto3
+grpcio
+grpcio-tools
+awscli
+hydra-core
+numpy
+# transformers
+# hydra
+# twine
+# pandas
+#nlp workload
+#tiktoken
+#datasets
+#wandb
+#transformers
+#export PYTHONPATH=/workspaces/super-dl

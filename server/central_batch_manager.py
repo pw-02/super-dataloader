@@ -229,14 +229,15 @@ class PrefetchService:
  
 
 class CacheEvictionService:
-    def __init__(self, cache_address: str,  jobs:Dict[str, DLTJob], keep_alive_time_threshold:int = 1000, simulate_time: float = None):
+    def __init__(self, cache_address: str,  jobs:Dict[str, DLTJob], keep_alive_time_threshold:int = 1000, simulate_keep_alvive: bool = False):
         self.cache_address = cache_address
         self.cache_eviction_stop_event = threading.Event()  # Event to signal stopping
         self.keep_alive_time_threshold = keep_alive_time_threshold
-        self.simulate_time = simulate_time
         self.jobs:Dict[str, DLTJob] = jobs
         self.cache_eviction_stop_event.set()
-
+        self.simulate_keep_alvive = simulate_keep_alvive
+        self.redis_client = None
+        
     def start_cache_evictor(self):
         self.cache_eviction_stop_event.clear()
         keep_alive_thread = threading.Thread(target=self._keep_alive_process)
@@ -253,28 +254,32 @@ class CacheEvictionService:
             try:
                 cache_host, cache_port = self.cache_address.split(":")
 
-                if self.redis_client is None:
+                if self.redis_client is None and not self.simulate_keep_alvive:
                     self.redis_client = redis.StrictRedis(host=cache_host, port=cache_port)
 
                 for job in self.jobs.values():
                     if job.total_steps == 0:
                         continue
-                job_batches_snapshot = list(job.future_batches.values())
-                for batch in job_batches_snapshot:
+                    job_batches_snapshot = list(job.future_batches.values())
+                    for batch in job_batches_snapshot:
 
-                    if batch.time_since_last_access() > self.keep_alive_time_threshold:
-                        try:
-                                if self.redis_client.get(batch.batch_id):  # Check if the batch is still cached
-                                    batch.set_last_accessed_time()  # Update the last accessed time
-                                    batch.set_cache_status(is_cached=True)
+                        if batch.time_since_last_access() > self.keep_alive_time_threshold:
+                            try:
+                                if self.simulate_keep_alvive:
+                                        batch.set_cache_status(is_cached=True)
+                                        batch.set_last_accessed_time()
                                 else:
-                                    # If the batch is not in Redis, mark it as not cached
+                                    if self.redis_client.get(batch.batch_id):  # Check if the batch is still cached
+                                            batch.set_last_accessed_time()  # Update the last accessed time
+                                            batch.set_cache_status(is_cached=True)
+                                    else:
+                                            # If the batch is not in Redis, mark it as not cached
+                                            batch.set_cache_status(is_cached=False)
+                                            logger.warning(f"Batch '{batch.batch_id}' is not in cache, setting is_cached to False.")
+                            except Exception as e:
+                                    logger.error(f"Error keeping batch '{batch.batch_id}' alive: {e}")
                                     batch.set_cache_status(is_cached=False)
-                                    logger.warning(f"Batch '{batch.batch_id}' is not in cache, setting is_cached to False.")
-                        except Exception as e:
-                                logger.error(f"Error keeping batch '{batch.batch_id}' alive: {e}")
-                                batch.set_cache_status(is_cached=False)
-                time.sleep(5)  # Sleep for a short while before checking the queue again
+                    time.sleep(1)  # Sleep for a short while before checking the queue again
             
             except Exception as e:
                 logger.error(f"Unexpected error in cache eviction process: {e}", exc_info=True)
@@ -294,11 +299,13 @@ class CentralBatchManager:
             batch_size=self.dataset.batch_size, 
             shuffle=False, 
             drop_last=False)
-        
+        self.evict_from_cache_simulation_time = args.evict_from_cache_simulation_time
+
         # Generate initial batches
         for _ in range(min(self.look_ahead, self.dataset.partitions[1].num_batches)):
             self._generate_new_batch()
         
+
         # Initialize prefetch service
         self.prefetch_service: Optional[PrefetchService] = None
         if args.use_prefetching:
@@ -311,17 +318,22 @@ class CentralBatchManager:
                 simulate_time=args.prefetch_simulation_time)
         
         #Initialize cache eviction service
-        self.cache_eviction_service: Optional[CacheEvictionService] = CacheEvictionService(
+        self.cache_eviction_service:CacheEvictionService = CacheEvictionService(
             cache_address=args.serverless_cache_address,
             jobs=self.jobs,
             keep_alive_time_threshold=args.cache_evition_ttl_threshold,
-            simulate_time=args.evict_from_cache_simulation_time
+            simulate_keep_alvive= True if self.evict_from_cache_simulation_time is not None else False
+            # simulate_time=args.evict_from_cache_simulation_time
         )        
         self.lock = threading.Lock()  # Lock for thread safety
 
     
     def _generate_new_batch(self):
         next_batch:Batch = next(self.batch_sampler)
+
+        if self.evict_from_cache_simulation_time:
+            next_batch.evict_from_cache_simulation_time = self.evict_from_cache_simulation_time
+
         if self.active_partition_id != next_batch.partition_id:
             self.active_partition_id = next_batch.partition_id
 
@@ -366,6 +378,9 @@ class CentralBatchManager:
 
             if self.prefetch_service is not None and self.prefetch_service.prefetch_stop_event.is_set():  
                 self.prefetch_service.start_prefetcher() #prefetcher is stopped, start it
+            
+            if self.cache_eviction_service.cache_eviction_stop_event.is_set():  
+                self.cache_eviction_service.start_cache_evictor() # is stopped, start it
                 
             if job_id in self.jobs:
                 job = self.jobs[job_id]
@@ -412,12 +427,12 @@ if __name__ == "__main__":
         lookahead_steps = 100,
         use_prefetching = True,
         prefetch_lambda_name = 'CreateVisionTrainingBatch',
-        serverless_cache_address = '',
+        serverless_cache_address = '10.0.28.76:6378',
         prefetch_cost_cap_per_hour = None,
         prefetch_simulation_time = PREFETCH_TIME,
-        evict_from_cache_simulation_time=0.5,
+        evict_from_cache_simulation_time=3,
         partitions_per_dataset = 1,
-        cache_evition_ttl_threshold=1000)
+        cache_evition_ttl_threshold=2)
 
     dataset = Dataset(data_dir='s3://sdl-cifar10/train/', batch_size=128, drop_last=False, num_partitions=super_args.partitions_per_dataset)
     batch_manager = CentralBatchManager(dataset=dataset, args=super_args)
@@ -457,4 +472,4 @@ if __name__ == "__main__":
         
     batch_manager.job_ended(job_id, previous_step_total_time, previous_step_is_cache_hit,TIME_ON_CACHE_HIT, cached_previous_batch)
 
-    time.sleep(1)
+    time.sleep(30)

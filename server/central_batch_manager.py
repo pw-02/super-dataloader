@@ -67,7 +67,6 @@ class PrefetchService:
                 prefetch_cycle_started = time.perf_counter()
                 prefetch_list: Set[Tuple[Batch, str]] = set()
 
-                prefetch_cycle_duration = self.prefetch_cycle_times.avg + self.prefetch_delay if self.prefetch_cycle_times.count > 0 else self.simulate_time
                 #prefetch_cycle_duration = self.prefetch_cycle_times.avg if self.prefetch_cycle_times.count > 0 else self.simulate_time if self.simulate_time else 3
 
                 # Take a snapshot
@@ -77,6 +76,9 @@ class PrefetchService:
                 for job in self.jobs.values():
                     if job.total_steps == 0:
                         continue
+                    
+                    prefetch_cycle_duration = self.prefetch_cycle_times.avg + self.prefetch_delay if self.prefetch_cycle_times.count > 0 else self.simulate_time if self.simulate_time else 3
+
                     #add in a check to see if the job is suffering from a data loading delay and benefit from prefetching
                     prefetch_counter, time_counter = 0, 0
                     # Fetch average times for cache hit and miss scenarios for the current job
@@ -415,7 +417,9 @@ class CentralBatchManager:
             if job_id in self.jobs:
                 job = self.jobs[job_id]
                 job.update_perf_metrics(previous_step_training_time, previous_step_is_cache_hit, previous_step_gpu_time, cached_batch)
-                logger.info(f"Job '{job_id}' ended. Total time: {job.total_training_time():.4f}s, Total steps: {job.total_training_steps()}, Cache hits: {job.training_step_times_on_hit.count}, Cache misses: {job.training_step_times_on_miss.count},cache hit rate: {job.training_step_times_on_hit.count / job.total_training_steps()}" )
+                # logger.info(f"Job '{job_id}' ended. Total time: {job.total_training_time():.4f}s, Total steps: {job.total_training_steps()}, Cache hits: {job.training_step_times_on_hit.count}, Cache misses: {job.training_step_times_on_miss.count},cache hit rate: {job.training_step_times_on_hit.count / job.total_training_steps()}" )
+                logger.info(f"Job '{job_id}' ended. Total time: {job.total_training_time():.4f}s, Steps: {job.total_training_steps()}, Hits: {job.training_step_times_on_hit.count}, Misses: {job.training_step_times_on_miss.count}, Rate: {job.training_step_times_on_hit.count / job.total_training_steps()}" )
+
                 self.jobs.pop(job_id)
 
             if len(self.jobs) == 0:

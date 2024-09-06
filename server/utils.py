@@ -185,6 +185,10 @@ def partition_dict(original_dict: Dict[Any, Any], num_partitions, batch_size):
 
 
 def find_optimal_prefetch_conncurrency(T_prefetch=5, T_hit=0.25,):
+    if T_hit == 0:
+        T_hit = 0.05
+    if T_prefetch == 0:
+        T_prefetch = 5
     optimal_prefetch_concurrency = math.ceil(T_prefetch / T_hit)
     return optimal_prefetch_concurrency
 

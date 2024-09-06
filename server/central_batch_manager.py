@@ -237,6 +237,7 @@ class CacheEvictionService:
         self.cache_eviction_stop_event.set()
         self.simulate_keep_alvive = simulate_keep_alvive
         self.redis_client = None
+        self.lock = threading.Lock()
 
     def start_cache_evictor(self):
         self.cache_eviction_stop_event.clear()
@@ -257,12 +258,16 @@ class CacheEvictionService:
                 if self.redis_client is None and not self.simulate_keep_alvive:
                     self.redis_client = redis.StrictRedis(host=cache_host, port=cache_port)
 
-                for job in self.jobs.values():
+                #Take a snapshot
+                with self.lock:
+                    jobs_snapshot = list(self.jobs.values())
+
+                for job in jobs_snapshot:
                     if job.total_steps == 0:
                         continue
-                    job_batches_snapshot = list(job.future_batches.values())
-                    for batch in job_batches_snapshot:
-
+                    # job_batches_snapshot = list(job.future_batches.values())
+                    for batch in job.future_batches.values():
+                        
                         if batch.time_since_last_access() > self.keep_alive_time_threshold:
                             try:
                                 if self.simulate_keep_alvive:

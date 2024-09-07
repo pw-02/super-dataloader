@@ -38,22 +38,22 @@ class DLTJob:
     def update_perf_metrics(self, total_step_time: float, is_cache_hit: bool, gpu_time:float, cached_batch: bool):
         
         self.total_steps += 1
+        if self.total_steps > 1:
+            if cached_batch or is_cache_hit:
+                        self.current_batch.set_last_accessed_time()
+                        self.current_batch.set_cache_status(True)
 
-        if cached_batch or is_cache_hit:
-                    self.current_batch.set_last_accessed_time()
-                    self.current_batch.set_cache_status(True)
+            elif not is_cache_hit and self.current_batch.is_cached:
+                self.current_batch.set_cache_status(False) 
+            
+            if gpu_time > 0:
+                self.training_step_gpu_times.update(gpu_time)
 
-        elif not is_cache_hit and self.current_batch.is_cached:
-             self.current_batch.set_cache_status(False) 
-        
-        if gpu_time > 0:
-            self.training_step_gpu_times.update(gpu_time)
-
-        if total_step_time > 0: 
-            if is_cache_hit:
-                self.training_step_times_on_hit.update(total_step_time)
-            else:
-                self.training_step_times_on_miss.update(total_step_time)
+            if total_step_time > 0: 
+                if is_cache_hit:
+                    self.training_step_times_on_hit.update(total_step_time)
+                else:
+                    self.training_step_times_on_miss.update(total_step_time)
     
     def next_training_step_batch(self):
         with self.lock:

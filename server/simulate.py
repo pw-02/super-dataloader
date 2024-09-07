@@ -10,14 +10,15 @@ from args import SUPERArgs
 logger = logging.getLogger()
 
 # Constants
-TIME_ON_CACHE_HIT = 0.025
-TIME_ON_CACHE_MISS = 0.5
-PREFETCH_TIME = 0.45
-NUM_JOBS = 5# Number of parallel jobs to simulate
+TIME_ON_CACHE_HIT = 0.03
+TIME_ON_CACHE_MISS = 11
+PREFETCH_TIME = 5
+NUM_JOBS = 1# Number of parallel jobs to simulate
 DELAY_BETWEEN_JOBS = 10  # Delay in seconds between the start of each job
 BATCHES_PER_JOB = 500  # Number of batches each job will process
 
 super_args = SUPERArgs(
+        batch_size = 128,
         lookahead_steps = 100,
         use_prefetching = True,
         prefetch_lambda_name = 'CreateVisionTrainingBatch',
@@ -28,7 +29,9 @@ super_args = SUPERArgs(
         partitions_per_dataset = 1,
         cache_evition_ttl_threshold=1000)
 
-dataset = Dataset(data_dir='s3://sdl-cifar10/train/', batch_size=128, drop_last=False, num_partitions=super_args.partitions_per_dataset)
+im1k = 's3://imagenet1k-sdl/train/'
+cf10 = 's3://sdl-cifar10/train/'
+dataset = Dataset(data_dir=im1k, batch_size=128, drop_last=False, num_partitions=super_args.partitions_per_dataset)
 batch_manager = CentralBatchManager(dataset=dataset, args=super_args)
 
 

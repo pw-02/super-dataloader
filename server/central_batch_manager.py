@@ -74,7 +74,7 @@ class PrefetchService:
                 #     jobs_snapshot = list(self.jobs.values())
 
                 for job in self.jobs.values():
-                    if job.total_steps == 0:
+                    if job.total_steps <= 1:
                         continue
                     
                     prefetch_cycle_duration = self.prefetch_cycle_times.avg + self.prefetch_delay if self.prefetch_cycle_times.count > 0 else self.simulate_time if self.simulate_time else 3
@@ -147,7 +147,7 @@ class PrefetchService:
                                     batch.set_cache_status(is_cached=True)
                                 else:
                                     batch.set_cache_status(is_cached=False)
-                                    logger.error(f"Error in prefetching batch '{batch.batch_id}': {response['errorMessage']}")
+                                    logger.error(f"Error in prefetching batch '{batch.batch_id}': {response['message']}")
                                 # print(f'Invocation response: {response}')
                             except Exception as e:
                                 logger.error(f"Error in prefetching batch: {e}", exc_info=True)
@@ -265,7 +265,7 @@ class CacheEvictionService:
                     jobs_snapshot = list(self.jobs.values())
 
                 for job in jobs_snapshot:
-                    if job.total_steps == 0:
+                    if job.total_steps <= 1:
                         continue
                     # job_batches_snapshot = list(job.future_batches.values())
                     for batch in job.future_batches.values():

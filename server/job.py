@@ -6,6 +6,8 @@ from typing import Iterator, Optional
 from batch import Batch
 from dataset import Dataset
 import threading
+from logger_config import logger
+
 class DLTJob:
     def __init__(self, job_id: str):
         self.job_id = job_id
@@ -17,10 +19,13 @@ class DLTJob:
         # self.active_epoch = initial_epoch
         self.total_steps = 0
         self.future_batches: OrderedDict[str, Batch] = OrderedDict()
-        self.cache_hit_window = deque(maxlen=50)  # Sliding window for recent hits
+        self.time_waiting_on_data = AverageMeter('Time Waiting on Data')
+        # self.cache_hit_window = deque(maxlen=50)  # Sliding window for recent hits
         self.training_step_times_on_hit = AverageMeter('Training Step Time on Hit')
         self.training_step_times_on_miss =  AverageMeter('Training Step Time on Miss')
         self.training_step_gpu_times =  AverageMeter('training_step_gpu_times')
+        self.dataload_time_on_miss  = AverageMeter('Dataload Time on Miss')
+        self.dataload_time_on_hit = AverageMeter('Dataload Time on Hit')    
         self.current_batch:Batch = None
         self.cycle_bacthes = []
         self.lock = threading.Lock()
@@ -33,27 +38,25 @@ class DLTJob:
         return self.training_step_times_on_hit.sum + self.training_step_times_on_miss.sum
     
     def total_training_steps (self):
-        return self.training_step_times_on_hit.count + self.training_step_times_on_miss.count
-    
-    def update_perf_metrics(self, total_step_time: float, is_cache_hit: bool, gpu_time:float, cached_batch: bool):
-        
-        self.total_steps += 1
-        if self.total_steps > 1:
-            if cached_batch or is_cache_hit:
-                        self.current_batch.set_last_accessed_time()
-                        self.current_batch.set_cache_status(True)
+        return self.total_steps
 
-            elif not is_cache_hit and self.current_batch.is_cached:
-                self.current_batch.set_cache_status(False) 
-            
-            if gpu_time > 0:
+    def update_perf_metrics(self, time_waiting_on_data: float, is_cache_hit: bool, gpu_time:float, cached_batch: bool):
+         if gpu_time > 0:
+             self.total_steps += 1
+             if self.total_steps>1:
                 self.training_step_gpu_times.update(gpu_time)
-
-            if total_step_time > 0: 
                 if is_cache_hit:
-                    self.training_step_times_on_hit.update(total_step_time)
+                    self.training_step_times_on_hit.update(time_waiting_on_data + gpu_time)
+                    self.training_step_times_on_hit.update(gpu_time + time_waiting_on_data)
                 else:
-                    self.training_step_times_on_miss.update(total_step_time)
+                    self.dataload_time_on_miss.update(time_waiting_on_data)
+                    self.training_step_times_on_miss.update(time_waiting_on_data + gpu_time)
+            
+
+        # if cached_batch or is_cache_hit:
+        #     self.current_batch.set_last_accessed_time()
+        #     self.current_batch.set_cache_status(True)
+
     
     def next_training_step_batch(self):
         with self.lock:

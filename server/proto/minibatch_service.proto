@@ -12,6 +12,7 @@ service MiniBatchService {
   rpc RegisterDataset(RegisterDatasetRequest) returns (RegisterDatasetResponse);
   rpc GetNextBatchForJob(GetNextBatchForJobRequest) returns (GetNextBatchForJobResponse);
   rpc JobEnded(JobEndedRequest) returns (google.protobuf.Empty);
+  rpc JobUpdate(JobUpdateRequest) returns (google.protobuf.Empty);
 
   /*
   rpc SendJobPerformanceMetrics(SendJobPerformanceMetricsRequest) returns (google.protobuf.Empty);
@@ -23,14 +24,24 @@ service MiniBatchService {
 
 }
 
+message GetNextBatchForJobRequest {
+  string job_id = 1;
+  string data_dir = 2;
+  }
+
+ message JobUpdateRequest {
+  string job_id = 1;
+  string data_dir = 2;
+  string previous_step_batch_id = 3;
+  float previous_step_wait_for_data_time = 4;
+  bool previous_step_is_cache_hit = 5;
+  float previous_step_gpu_time = 6;
+  bool cached_previous_batch = 7;
+}
+
  message JobEndedRequest {
   string job_id = 1;
   string data_dir = 2;
-  float previous_step_time = 3;
-  bool previous_step_is_cache_hit = 4;
-  float previous_step_gpu_time = 5;
-  bool cached_previous_batch = 6;
-
 }
 
 message PingRequest {
@@ -57,15 +68,7 @@ message Batch {
   bool is_cached = 3;
 }
 
-message GetNextBatchForJobRequest {
-  string job_id = 1;
-  string data_dir = 2;
-  float previous_step_idx = 3;
-  float previous_step_wait_for_data_time = 4;
-  bool previous_step_is_cache_hit = 5;
-  float previous_step_gpu_time = 6;
-  bool cached_previous_batch = 7;
-  }
+
 
   message GetNextBatchForJobResponse {
   string job_id = 1;

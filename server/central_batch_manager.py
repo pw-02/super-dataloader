@@ -80,11 +80,11 @@ class PrefetchService:
                         continue
                     
                     max_bacthes_per_second = math.ceil(1 / job.training_step_gpu_times.avg)
-                    no_caching_batches_per_second = math.floor(1 / job.dataload_time_on_miss.avg)
+                    no_caching_batches_per_second =  math.floor(1 / job.dataload_time_on_miss.avg) if job.dataload_time_on_miss.count > 0 else 0
                     required_prefetch_bacthes_per_second = max_bacthes_per_second - no_caching_batches_per_second
 
                     if required_prefetch_bacthes_per_second < 1:
-                        return
+                        continue
                     
                     prefetch_cycle_duration = self.prefetch_cycle_times.avg + self.prefetch_delay if self.prefetch_cycle_times.count > 0 else self.simulate_time if self.simulate_time else 3
                     prefetch_conncurrency =  required_prefetch_bacthes_per_second * prefetch_cycle_duration
@@ -379,29 +379,43 @@ class CentralBatchManager:
                 job.future_batches.update(batch_set.batches)
                 job.active_batch_set_id = batch_set.id
                 break
+    
+    def update_job_progess(self, 
+                           job_id,
+                           previous_step_batch_id,
+                           previous_step_wait_for_data_time,
+                           previous_step_is_cache_hit,
+                           previous_step_gpu_time,
+                           previous_batch_cached_on_miss):
 
-    def get_next_batch(self, job_id: str, 
-                       previous_step_idx:int,
-                       previous_step_wait_for_data_time:float, 
-                       previous_step_is_cache_hit:bool, 
-                       previous_step_gpu_time:float, 
-                       cached_previous_batch:bool) -> Optional[Batch]:
-         
-         with self.lock:
+     with self.lock:
+        parts = previous_step_batch_id.split('_')
+        epoch_id = int(parts[0])
+        partition_id = int(parts[1])
+        batch = self.epoch_partition_batches[epoch_id][partition_id].batches[previous_step_batch_id]
+        if previous_step_is_cache_hit or previous_batch_cached_on_miss:
+            batch.set_last_accessed_time()
+            batch.set_cache_status(True)
+        else:
+            batch.set_cache_status(False)
 
+        self.jobs[job_id].update_perf_metrics(previous_step_wait_for_data_time, previous_step_is_cache_hit, previous_step_gpu_time)
+
+
+
+    def get_next_batch(self, job_id: str) -> Optional[Batch]:
+        
+        with self.lock:
+            
             if self.prefetch_service is not None and self.prefetch_service.prefetch_stop_event.is_set():  
                 self.prefetch_service.start_prefetcher() #prefetcher is stopped, start it
             
             if self.use_keep_alive and self.cache_eviction_service.cache_eviction_stop_event.is_set():
                 self.cache_eviction_service.start_cache_evictor()
-                
-            if job_id in self.jobs:
-                job = self.jobs[job_id]
-                job.update_perf_metrics(previous_step_idx, previous_step_wait_for_data_time, previous_step_is_cache_hit, previous_step_gpu_time, cached_previous_batch) #update the performance metrics for the job   
-            else:
-                job = DLTJob(job_id) #new job
-                self.jobs[job_id] = job
-                logger.info(f"Job '{job_id}' registered.")
+            
+            if job_id not in self.jobs:
+                logger.info(f"Registering job '{job_id}'")
+            job = self.jobs.setdefault(job_id, DLTJob(job_id))
             
             # if not job.future_batches or len(job.future_batches) > self.look_ahead:
             if not job.future_batches or len(job.future_batches) == 0: #reached end of partition so start preparing for next one
@@ -419,14 +433,11 @@ class CentralBatchManager:
             # logger.info(f"Job '{job_id}' given batch '{next_batch.batch_id}' from partition '{next_batch.partition_id}' in epoch '{next_batch.epoch_idx}'")
             return next_batch
         
-    def job_ended(self, job_id: str, previous_step_training_time: float, previous_step_is_cache_hit: bool, previous_step_gpu_time: float, cached_batch: float):
+    def job_ended(self, job_id):
         with self.lock:
             if job_id in self.jobs:
                 job = self.jobs[job_id]
-                job.update_perf_metrics(previous_step_training_time, previous_step_is_cache_hit, previous_step_gpu_time, cached_batch)
-                # logger.info(f"Job '{job_id}' ended. Total time: {job.total_training_time():.4f}s, Total steps: {job.total_training_steps()}, Cache hits: {job.training_step_times_on_hit.count}, Cache misses: {job.training_step_times_on_miss.count},cache hit rate: {job.training_step_times_on_hit.count / job.total_training_steps()}" )
-                logger.info(f"Job '{job_id}' ended. Total time: {job.total_training_time():.4f}s, Steps: {job.total_training_steps()}, Hits: {job.training_step_times_on_hit.count}, Misses: {job.training_step_times_on_miss.count}, Rate: {job.training_step_times_on_hit.count / job.total_training_steps()}" )
-
+                logger.info(f"Job '{job_id}' ended. Total time: {job.total_training_time():.4f}s, Steps: {job.total_training_steps()}, Hits: {job.training_step_times_on_hit.count}, Misses: {job.training_step_times_on_miss.count}, Rate: {job.training_step_times_on_hit.count / job.total_training_steps():.4f}" )
                 self.jobs.pop(job_id)
 
             if len(self.jobs) == 0:

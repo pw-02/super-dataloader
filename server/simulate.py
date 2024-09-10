@@ -10,28 +10,32 @@ from args import SUPERArgs
 logger = logging.getLogger()
 
 # Constants
-TIME_ON_CACHE_HIT = 0.03
-TIME_ON_CACHE_MISS = 11
-PREFETCH_TIME = 5
-NUM_JOBS = 1# Number of parallel jobs to simulate
-DELAY_BETWEEN_JOBS = 10  # Delay in seconds between the start of each job
-BATCHES_PER_JOB = 500  # Number of batches each job will process
+MISS_WAIT_FOR_DATA_TIME = 0.25
+HIT_WAIT_FOR_DATA_TIME = 0.01
+PREFETCH_TIME = 1.29
+NUM_JOBS = 4 # Number of parallel jobs to simulate
+DELAY_BETWEEN_JOBS = 2  # Delay in seconds between the start of each job
+BATCHES_PER_JOB = 390  # Number of batches each job will process
+GPU_TIME = 0.01
 
 super_args = SUPERArgs(
-        batch_size = 128,
-        lookahead_steps = 100,
-        use_prefetching = True,
-        prefetch_lambda_name = 'CreateVisionTrainingBatch',
-        serverless_cache_address = '',
-        prefetch_cost_cap_per_hour = None, # 0.8839398, #(0.02946466*60)/2 
-        prefetch_simulation_time =  PREFETCH_TIME,
-        evict_from_cache_simulation_time = 0.5,
-        partitions_per_dataset = 1,
-        cache_evition_ttl_threshold=1000)
+    partitions_per_dataset=1,
+    cache_evition_ttl_threshold=1000,
+    prefetch_cost_cap_per_hour=None,
+    prefetch_lambda_name='CreateVisionTrainingBatch',
+    prefetch_simulation_time=PREFETCH_TIME,
+    serverless_cache_address='',
+    use_prefetching=False,
+    batch_size=128,
+    shuffle=False,
+    drop_last=False,
+    lookahead_steps=100,
+    evict_from_cache_simulation_time=None,
+    use_keep_alive=False)
 
 im1k = 's3://imagenet1k-sdl/train/'
 cf10 = 's3://sdl-cifar10/train/'
-dataset = Dataset(data_dir=im1k, batch_size=128, drop_last=False, num_partitions=super_args.partitions_per_dataset)
+dataset = Dataset(data_dir=cf10, batch_size=128, drop_last=False, num_partitions=super_args.partitions_per_dataset)
 batch_manager = CentralBatchManager(dataset=dataset, args=super_args)
 
 
@@ -45,35 +49,31 @@ def simulate_training_job(job_id: str) -> Tuple[str, int, int, float]:
 
     cache_hits = 0
     cache_misses = 0
-    previous_step_training_time = 0
-    previous_step_is_cache_hit = False
-    cached_missed_batch = False
-
     start_time = time.perf_counter()  # Start time for job duration measurement
-
     # Process each batch for the job
     for i in range(BATCHES_PER_JOB):
-        batch = batch_manager.get_next_batch(job_id, previous_step_training_time, previous_step_is_cache_hit, TIME_ON_CACHE_HIT, cached_missed_batch)
+        batch = batch_manager.get_next_batch(job_id)
         if batch.is_cached:
+            previous_step_wait_for_data_time = HIT_WAIT_FOR_DATA_TIME
             previous_step_is_cache_hit = True
             cache_hits += 1
-            time.sleep(TIME_ON_CACHE_HIT)
+            time.sleep(previous_step_wait_for_data_time + GPU_TIME)
             cached_missed_batch = False
-            previous_step_training_time = TIME_ON_CACHE_HIT
         else:
-            cached_missed_batch = True
+            previous_step_wait_for_data_time = MISS_WAIT_FOR_DATA_TIME
             previous_step_is_cache_hit = False
             cache_misses += 1
-            time.sleep(TIME_ON_CACHE_MISS)
-            previous_step_training_time = TIME_ON_CACHE_MISS
-        
+            cached_missed_batch = False
+            time.sleep(previous_step_wait_for_data_time + GPU_TIME)
+
+        batch_manager.update_job_progess(job_id, batch.batch_id, previous_step_wait_for_data_time, previous_step_is_cache_hit, GPU_TIME, cached_missed_batch)
         hit_rate = cache_hits / (i + 1) if (i + 1) > 0 else 0
-        if i % 25== 0:
+        if i % 1== 0:
             logger.info(f'Job {job_id}, {batch.batch_id}, Hits: {cache_hits}, Misses: {cache_misses}, Rate: {hit_rate:.2f}')
 
     # Stop prefetcher and compute total duration
     total_duration = time.perf_counter() - start_time
-    batch_manager.job_ended(job_id, previous_step_training_time, previous_step_is_cache_hit, TIME_ON_CACHE_HIT, cached_missed_batch)
+    batch_manager.job_ended(job_id)
     return job_id, cache_hits, cache_misses, total_duration, hit_rate
 
 
@@ -81,14 +81,12 @@ if __name__ == "__main__":
     # Using ThreadPoolExecutor to run jobs in parallel
     job_results = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=NUM_JOBS) as executor:
-        futures = []
-        
+        futures = [] 
         for job_id in range(1, NUM_JOBS + 1):
             # Submit job with a delay
             logger.info(f"Starting job {job_id} after {DELAY_BETWEEN_JOBS * (job_id - 1)} seconds delay.")
             future = executor.submit(simulate_training_job, str(job_id))
             futures.append(future)
-            
             # Delay the start of the next job
             time.sleep(DELAY_BETWEEN_JOBS)
 

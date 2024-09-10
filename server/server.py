@@ -37,24 +37,33 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
         return minibatch_service_pb2.RegisterDatasetResponse(dataset_is_registered=success, 
                                                              total_batches=dataset.num_batches,
                                                              message=message)
-    def GetNextBatchForJob(self, request, context):
+    def JobUpdate(self, request, context):
         job_id = request.job_id
         data_dir = request.data_dir
-        previous_step_idx = request.previous_step_idx
+        previous_step_batch_id = request.previous_step_batch_id
         previous_step_wait_for_data_time = request.previous_step_wait_for_data_time
         previous_step_is_cache_hit = request.previous_step_is_cache_hit
         previous_step_gpu_time = request.previous_step_gpu_time
         cached_previous_batch = request.cached_previous_batch
+        
+        self.datasets[data_dir].update_job_progess(job_id,
+                                                   previous_step_batch_id,
+                                                   previous_step_wait_for_data_time,
+                                                   previous_step_is_cache_hit,
+                                                   previous_step_gpu_time,
+                                                   cached_previous_batch)
+        return google.protobuf.empty_pb2.Empty()
+
+
+    def GetNextBatchForJob(self, request, context):
+        job_id = request.job_id
+        data_dir = request.data_dir
+       
         if data_dir not in self.datasets:
             message = f"Failed to register job with id '{job_id}' because data dir '{data_dir}' was not found in SUPER."
             logger.info(message)
         
-        next_batch:Batch = self.datasets[data_dir].get_next_batch(job_id,
-                                                                  previous_step_idx,
-                                                                  previous_step_wait_for_data_time, 
-                                                                  previous_step_is_cache_hit,
-                                                                  previous_step_gpu_time,
-                                                                  cached_previous_batch)
+        next_batch:Batch = self.datasets[data_dir].get_next_batch(job_id)
         # Create and return the response
         response = minibatch_service_pb2.GetNextBatchForJobResponse(
             job_id=request.job_id,
@@ -66,16 +75,8 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
     def JobEnded(self, request, context):
         job_id = request.job_id
         data_dir = request.data_dir
-        previous_step_training_time = request.previous_step_time
-        previous_step_is_cache_hit = request.previous_step_is_cache_hit
-        previous_step_gpu_time = request.previous_step_gpu_time
-        cached_previous_batch = request.cached_previous_batch
-
-        self.datasets[data_dir].job_ended(job_id=job_id, 
-                                          previous_step_training_time=previous_step_training_time, 
-                                          previous_step_is_cache_hit=previous_step_is_cache_hit,
-                                          previous_step_gpu_time=previous_step_gpu_time,
-                                          cached_batch=cached_previous_batch)
+       
+        self.datasets[data_dir].job_ended(job_id=job_id)
         return google.protobuf.empty_pb2.Empty()
 
 

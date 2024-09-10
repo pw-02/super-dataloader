@@ -381,7 +381,8 @@ class CentralBatchManager:
                 break
 
     def get_next_batch(self, job_id: str, 
-                       previous_step_total_time:float, 
+                       previous_step_idx:int,
+                       previous_step_wait_for_data_time:float, 
                        previous_step_is_cache_hit:bool, 
                        previous_step_gpu_time:float, 
                        cached_previous_batch:bool) -> Optional[Batch]:
@@ -396,7 +397,7 @@ class CentralBatchManager:
                 
             if job_id in self.jobs:
                 job = self.jobs[job_id]
-                job.update_perf_metrics(previous_step_total_time, previous_step_is_cache_hit, previous_step_gpu_time, cached_previous_batch) #update the performance metrics for the job   
+                job.update_perf_metrics(previous_step_idx, previous_step_wait_for_data_time, previous_step_is_cache_hit, previous_step_gpu_time, cached_previous_batch) #update the performance metrics for the job   
             else:
                 job = DLTJob(job_id) #new job
                 self.jobs[job_id] = job

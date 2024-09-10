@@ -40,7 +40,8 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
     def GetNextBatchForJob(self, request, context):
         job_id = request.job_id
         data_dir = request.data_dir
-        previous_step_training_time = request.previous_step_time
+        previous_step_idx = request.previous_step_idx
+        previous_step_wait_for_data_time = request.previous_step_wait_for_data_time
         previous_step_is_cache_hit = request.previous_step_is_cache_hit
         previous_step_gpu_time = request.previous_step_gpu_time
         cached_previous_batch = request.cached_previous_batch
@@ -48,8 +49,9 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
             message = f"Failed to register job with id '{job_id}' because data dir '{data_dir}' was not found in SUPER."
             logger.info(message)
         
-        next_batch:Batch = self.datasets[data_dir].get_next_batch(job_id, 
-                                                                  previous_step_training_time, 
+        next_batch:Batch = self.datasets[data_dir].get_next_batch(job_id,
+                                                                  previous_step_idx,
+                                                                  previous_step_wait_for_data_time, 
                                                                   previous_step_is_cache_hit,
                                                                   previous_step_gpu_time,
                                                                   cached_previous_batch)

@@ -4,6 +4,6 @@ batch_size: 128 #chunk_size  = number of files per chunk
 # max_lookahead_batches: 10
 # max_prefetch_workers: 10
 # keep_alive_ping_iterval: 15
-shuffle: False
+shuffle: True
 drop_last: False
 # num_dataset_partitions: 1

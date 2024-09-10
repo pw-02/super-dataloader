@@ -29,6 +29,7 @@ class DLTJob:
         self.current_batch:Batch = None
         self.cycle_bacthes = []
         self.lock = threading.Lock()
+        self.step_idx = None
 
     def __repr__(self):
         return (f"Job(job_id={self.job_id}, current_epoch={self.active_epoch}, "
@@ -40,8 +41,9 @@ class DLTJob:
     def total_training_steps (self):
         return self.total_steps
 
-    def update_perf_metrics(self, time_waiting_on_data: float, is_cache_hit: bool, gpu_time:float, cached_batch: bool):
-         if gpu_time > 0:
+    def update_perf_metrics(self, previous_step_idx, time_waiting_on_data: float, is_cache_hit: bool, gpu_time:float, cached_batch: bool):
+         if gpu_time > 0 and previous_step_idx != self.step_idx:
+             self.step_idx = previous_step_idx
              self.total_steps += 1
              if self.total_steps>1:
                 self.training_step_gpu_times.update(gpu_time)

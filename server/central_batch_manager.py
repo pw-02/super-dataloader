@@ -171,7 +171,7 @@ class PrefetchService:
 
     def _prefetch_batch(self, payload):
             if self.simulate_time:
-                return {'success': True, 'errorMessage': None, 'execution_time': self.simulate_time}
+                return {'success': True, 'message': None, 'execution_time': self.simulate_time}
             
             request_started = time.perf_counter()
             response = self.prefetch_lambda_client.invoke( FunctionName=self.prefetch_lambda_name,

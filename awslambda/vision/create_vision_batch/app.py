@@ -11,7 +11,7 @@ import botocore.config
 
 # Create the S3 client with the custom config
 s3_client = boto3.client('s3', config=botocore.config.Config(
-    max_pool_connections=50
+    max_pool_connections=51
 ))
 redis_client = None
 

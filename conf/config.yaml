@@ -8,7 +8,7 @@ partitions_per_dataset: 1
 lookahead_steps: 100
 serverless_cache_address: 10.0.17.5:6378  #10.0.28.76:6378
 cache_evition_ttl_threshold: 1000 #seconds
-use_prefetching: True
+use_prefetching: False
 use_keep_alive: False
 prefetch_lambda_name: 'CreateVisionTrainingBatch'
 prefetch_cost_cap_per_hour: null

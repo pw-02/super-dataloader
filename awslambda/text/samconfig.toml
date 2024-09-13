@@ -4,7 +4,7 @@ version = 0.1
 
 [default]
 [default.global.parameters]
-stack_name = "superlanguagefunction"
+stack_name = "supertextfunction"
 aws_region = "us-west-2"
 confirm_changeset = true
 allow_sam_cli_role_creation = true
@@ -22,11 +22,11 @@ lint = true
 [default.deploy.parameters]
 capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"  # Add CAPABILITY_NAMED_IAM here
 resolve_s3 = true
-s3_prefix = "superlanguagefunction"
+s3_prefix = "supertextfunction"
 region = "us-west-2"
 # image_repositories = ["CreateVisionBatchFunction=590178426343.dkr.ecr.us-west-2.amazonaws.com/superdataloaderc0e05835/createvisionbatchfunctiona9a93187repo"]
 force_upload = true
-image_repositories = ["CreateVisionLanguageFunction=590178426343.dkr.ecr.us-west-2.amazonaws.com/superlanguagefunction31012d32/createlanguagebatchfunction44a1e0adrepo"]
+image_repositories = ["CreateVisiontextFunction=590178426343.dkr.ecr.us-west-2.amazonaws.com/supertextfunction31012d32/createtextbatchfunction44a1e0adrepo"]
 [default.package.parameters]
 resolve_s3 = true
 

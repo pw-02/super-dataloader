@@ -10,7 +10,7 @@ import lz4.frame
 
 model_name = "EleutherAI/pythia-14m"
 cache_client = redis.StrictRedis(host="localhost", port=6379)
-tokenizer = AutoTokenizer.from_pretrained('awslambda\language\create_language_batch\pythia-14m-tokenizer')
+tokenizer = AutoTokenizer.from_pretrained('awslambda\text\create_text_batch\pythia-14m-tokenizer')
 batch_size = 5
 max_length = 512
 

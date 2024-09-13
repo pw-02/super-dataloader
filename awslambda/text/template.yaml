@@ -16,7 +16,7 @@ Resources:
   CreateVisionBatchFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: CreateLanguageTrainingBatch  # Set your custom function name here
+      FunctionName: CreatetextTrainingBatch  # Set your custom function name here
       PackageType: Image
       Architectures:
         - x86_64 #arm64 #x86_64
@@ -37,7 +37,7 @@ Resources:
       #   Size: 10240  # Set ephemeral storage to 10 GB
     Metadata:
       Dockerfile: Dockerfile
-      DockerContext: ./create_language_batch
+      DockerContext: ./create_text_batch
       DockerTag: python3.9-v1
       
 # Outputs:

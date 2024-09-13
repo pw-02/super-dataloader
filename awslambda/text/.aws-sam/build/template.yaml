@@ -16,7 +16,7 @@ Resources:
   CreateVisionBatchFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: CreateLanguageTrainingBatch
+      FunctionName: CreatetextTrainingBatch
       PackageType: Image
       Architectures:
       - x86_64
@@ -29,7 +29,7 @@ Resources:
         - subnet-076f5a2c0e07e6b1e
       ImageUri: createvisionbatchfunction:python3.9-v1
     Metadata:
-      DockerContext: /workspaces/super-dataloader/awslambda/vision/create_language_batch
+      DockerContext: /workspaces/super-dataloader/awslambda/vision/create_text_batch
       DockerTag: python3.9-v1
       Dockerfile: Dockerfile
       SamResourceId: CreateVisionBatchFunction

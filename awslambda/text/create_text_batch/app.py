@@ -153,15 +153,25 @@ redis_client = None
 
 tokenizer = Tokenizer("/var/task/pythia-14m-tokenizer")
 
-def save_tokenized_data(tokenized_data):
-    # Create a BytesIO buffer to hold the bytes
-    buffer = BytesIO()
-    # Save the tokenized data (list of tensors) to the buffer
-    torch.save(tokenized_data, buffer)
-    # Get the byte data from the buffer
-    byte_data = buffer.getvalue()
+def gen_samples(tokenized_data, block_size=512):
+        # Create a list to hold samples of size self.context_size
+        samples = []
+        for item in tokenized_data:
+            chunk_size = block_size + 1  # Define the chunk size
+            # Split ids into chunks of size block_size+1
+            for i in range(0, item.size(0), chunk_size):
+                # Extract a chunk from the ids
+                chunk = item[i:i + chunk_size]
+                # Pad the last chunk if it is smaller than block_size+1
+                if chunk.size(0) < chunk_size:
+                    padding_length = chunk_size - chunk.size(0)
+                    padding = torch.full((padding_length,), fill_value=0, dtype=torch.long)
+                    chunk = torch.cat((chunk, padding))
 
-    return byte_data
+                input_ids = chunk[0:block_size].contiguous().long()
+                targets = chunk[1:block_size + 1].contiguous().long()
+                samples.append((input_ids, targets))
+        return samples
 
 def prepare_data_chunk(bucket_name, data_path, s3_client):
     global tokenizer
@@ -192,12 +202,14 @@ def prepare_data_chunk(bucket_name, data_path, s3_client):
         index += 1
         tokenized_docs.append(tokenizer.encode(data, eos=True))
     
-    return save_tokenized_data(tokenized_docs)
+    tokenized_samples = gen_samples(tokenized_docs, block_size=512)
+    
+    return tokenized_samples
 
-def bytes_to_torch_batch(tokenized_data) -> tuple:
+def _torch_tenors_to_bytes(tokenized_data) -> tuple:
     with BytesIO() as buffer:
-        torch.save(tokenized_data, buffer)
-        compressed_byte_data = lz4.frame.compress(buffer.getvalue())
+            torch.save(tokenized_data, buffer)
+            compressed_byte_data = lz4.frame.compress(buffer.getvalue())
     return compressed_byte_data
 
 
@@ -224,7 +236,7 @@ def lambda_handler(event, context):
         for sample in batch_samples:
             data_path, _ = sample
             tokenized_samples = prepare_data_chunk(bucket_name, data_path, s3_client)
-            tokens_as_bytes = bytes_to_torch_batch(tokenized_samples)
+            tokens_as_bytes = _torch_tenors_to_bytes(tokenized_samples)
             redis_client.set(chunk_id, tokens_as_bytes)
 
         return {

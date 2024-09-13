@@ -143,7 +143,9 @@ class Tokenizer:
 
 
 def main():
-    cache_client = redis.StrictRedis(host="localhost", port=6379)
+    # cache_client = redis.StrictRedis(host="localhost", port=6379)
+    cache_client = redis.StrictRedis(host="34.221.12.143", port=6378)
+
     tokenizer = Tokenizer('tests\pythia-14m-tokenizer')
     max_length = 512
     

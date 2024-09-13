@@ -13,7 +13,7 @@ Globals:
       - image/jpg
       - image/jpeg
 Resources:
-  CreateVisionBatchFunction:
+  CreateTextBatchFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: CreatetextTrainingBatch  # Set your custom function name here
@@ -24,7 +24,7 @@ Resources:
       #   CreateBatch:
       #     Type: Api
       #     Properties:
-      #       Path: /create_vision_batch
+      #       Path: /create_Text_batch
       #       Method: post
       Role: arn:aws:iam::590178426343:role/SIONLambdaRole
       VpcConfig:  # Add VPC configuration here
@@ -44,9 +44,9 @@ Resources:
   # CreateBatchApi:
   #   Description: "API Gateway endpoint URL for Prod stage for CreateBatch function"
   #   Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/create_batch/"
-  # CreateVisionBatchFunction:
+  # CreateTextBatchFunction:
   #   Description: "CreateBatch Lambda Function ARN"
-  #   Value: !GetAtt CreateVisionBatchFunction.Arn
-  # CreateVisionBatchFunction:
+  #   Value: !GetAtt CreateTextBatchFunction.Arn
+  # CreateTextBatchFunction:
   #   Description: "IAM Role created for CreateBatch function"
-  #   Value: !GetAtt CreateVisionBatchFunction.Arn
+  #   Value: !GetAtt CreateTextBatchFunction.Arn

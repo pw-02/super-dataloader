@@ -52,7 +52,7 @@ class Dataset(BaseDataset):
             )
         else:
             samples = self.load_paired_s3_object_keys(
-            data_dir, False, True
+                data_dir, False, True
             )
             
         self.bucket_name =  S3Url(data_dir).bucket

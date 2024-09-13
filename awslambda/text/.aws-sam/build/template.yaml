@@ -13,7 +13,7 @@ Globals:
     - image/jpg
     - image/jpeg
 Resources:
-  CreateVisionBatchFunction:
+  CreateTextBatchFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: CreatetextTrainingBatch
@@ -27,9 +27,9 @@ Resources:
         SubnetIds:
         - subnet-0719017fb24af22ac
         - subnet-076f5a2c0e07e6b1e
-      ImageUri: createvisionbatchfunction:python3.9-v1
+      ImageUri: createtextbatchfunction:python3.9-v1
     Metadata:
-      DockerContext: /workspaces/super-dataloader/awslambda/vision/create_text_batch
+      DockerContext: /workspaces/super-dataloader/awslambda/text/create_text_batch
       DockerTag: python3.9-v1
       Dockerfile: Dockerfile
-      SamResourceId: CreateVisionBatchFunction
+      SamResourceId: CreateTextBatchFunction

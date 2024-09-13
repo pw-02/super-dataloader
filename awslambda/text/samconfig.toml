@@ -9,7 +9,7 @@ aws_region = "us-west-2"
 confirm_changeset = true
 allow_sam_cli_role_creation = true
 disable_rollback = true
-createvisionbatchfunction_authentication = true
+createtextbatchfunction_authentication = true
 save_arguments = false
 
 [default.build.parameters]
@@ -24,9 +24,8 @@ capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"  # Add CAPABILITY_NAMED_IAM
 resolve_s3 = true
 s3_prefix = "supertextfunction"
 region = "us-west-2"
-# image_repositories = ["CreateVisionBatchFunction=590178426343.dkr.ecr.us-west-2.amazonaws.com/superdataloaderc0e05835/createvisionbatchfunctiona9a93187repo"]
 force_upload = true
-image_repositories = ["CreateVisiontextFunction=590178426343.dkr.ecr.us-west-2.amazonaws.com/supertextfunction31012d32/createtextbatchfunction44a1e0adrepo"]
+# image_repositories = ["CreateVisiontextFunction=590178426343.dkr.ecr.us-west-2.amazonaws.com/supertextfunction31012d32/createtextbatchfunction44a1e0adrepo"]
 [default.package.parameters]
 resolve_s3 = true
 

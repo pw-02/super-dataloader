@@ -2,4 +2,6 @@ kind: 'vision'
 batch_size: 128 #chunk_size  = number of files per chunk
 shuffle: True
 drop_last: False
+prefetch_lambda_name: 'CreateVisionTrainingBatch'
+
 # num_dataset_partitions: 1

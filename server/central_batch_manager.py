@@ -155,7 +155,7 @@ class PrefetchService:
                                     batch.set_cache_status(is_cached=True)
                                 else:
                                     batch.set_cache_status(is_cached=False)
-                                    logger.error(f"Error in prefetching batch '{batch.batch_id}': {response['message']}")
+                                    logger.error(f"Error prefetching batch '{batch.batch_id}': {response['message']}")
                                 # print(f'Invocation response: {response}')
                             except Exception as e:
                                 logger.error(f"Error in prefetching batch: {e}", exc_info=True)

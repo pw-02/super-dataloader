@@ -93,7 +93,7 @@ def serve(config: DictConfig):
             serverless_cache_address = config.serverless_cache_address,
             use_prefetching = config.use_prefetching,
             use_keep_alive = config.use_keep_alive,
-            prefetch_lambda_name = config.prefetch_lambda_name,
+            prefetch_lambda_name = config.workload.prefetch_lambda_name,
             prefetch_cost_cap_per_hour=config.prefetch_cost_cap_per_hour,
             cache_evition_ttl_threshold = config.cache_evition_ttl_threshold,
             prefetch_simulation_time = config.prefetch_simulation_time,

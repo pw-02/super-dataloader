@@ -93,7 +93,7 @@ class PrefetchService:
                     prefetch_counter, time_counter = 0, 0
                     # Fetch average times for cache hit and miss scenarios for the current job
                     avg_time_on_hit = job.training_step_times_on_hit.avg if job.training_step_times_on_hit.count > 0 else job.training_step_gpu_times.avg
-                    avg_time_on_miss = job.training_step_times_on_miss.avg
+                    avg_time_on_miss = job.training_step_times_on_miss.avg if job.training_step_times_on_miss.count > 0 else job.training_step_gpu_times.avg
 
                     # Iterate over future batches to determine access during the prefetch cycle duration
                     job_batches_snapshot = list(job.future_batches.values())

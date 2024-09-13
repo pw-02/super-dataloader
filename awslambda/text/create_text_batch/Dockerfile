@@ -10,8 +10,8 @@ COPY app.py ./
 # # Set environment variable for NLTK data
 # ENV NLTK_DATA=${LAMBDA_TASK_ROOT}/nltk_data
 # Copy NLTK data
-COPY pythia-14m-tokenizer /var/task/pythia-14m-tokenizer/
-
+COPY pythia-14m-tokenizer /var/task/pythia-14m-tokenizer
+# ENV TOKENIZET=/var/task/nltk_data
 
 #COPY model /opt/ml/model
 CMD ["app.lambda_handler"]

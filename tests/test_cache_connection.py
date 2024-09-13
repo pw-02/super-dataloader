@@ -3,7 +3,7 @@ import redis
 # cache_address: 44.243.2.122:6378 #null
 
 
-cache_client =redis.StrictRedis = redis.StrictRedis(host="34.219.214.22", port=6378)
+cache_client =redis.StrictRedis = redis.StrictRedis(host="34.221.12.143", port=6378)
 
 def put_in_cache(batch_id):
      try:
@@ -21,7 +21,8 @@ def fetch_from_cache(batch_id):
         
 
 if __name__ == "__main__":
-   put_in_cache("1")
-   respsonse = fetch_from_cache("1")
+   respsonse = fetch_from_cache("1_1_8_8f14e45fceea167a")
+
+   
    
    print(respsonse)

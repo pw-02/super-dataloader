@@ -9,7 +9,7 @@ import numpy as np
 import json
 from pathlib import Path
 from typing import Union, Optional
-
+import lz4.frame
 class Tokenizer:
     def __init__(self, checkpoint_dir: Union[Path, str]) -> None:
         checkpoint_dir = Path(checkpoint_dir)
@@ -151,7 +151,7 @@ redis_client = None
 # os.environ['HF_HOME'] = '/tmp'
 # tokenizer=AutoTokenizer.from_pretrained('pythia-14m-tokenizer')
 
-tokenizer = Tokenizer("/tmp/pythia-14m-tokenizer")
+tokenizer = Tokenizer("/var/task/pythia-14m-tokenizer")
 
 def save_tokenized_data(tokenized_data):
     # Create a BytesIO buffer to hold the bytes
@@ -164,23 +164,22 @@ def save_tokenized_data(tokenized_data):
     return byte_data
 
 def prepare_data_chunk(bucket_name, data_path, s3_client):
-
     global tokenizer
     response = s3_client.get_object(Bucket=bucket_name, Key=data_path)
-    content = response['Body'].read()
-    binary_stream = BytesIO(content)
+    data_chunk = response['Body'].read()
+    data_chunk = BytesIO(data_chunk)
     tokenized_docs = []
     index = 0
     while True:
         offset = (1 + (index - 0) if index >= 0 else index + 1) * 4
         # Read the entire content of the binary file
-        binary_stream.seek(offset)
-        pair = binary_stream.read(8)
+        data_chunk.seek(offset)
+        pair = data_chunk.read(8)
         begin, end = np.frombuffer(pair, np.uint32)
-        if begin.item() == len(binary_stream.getvalue()):
+        if begin.item() == len(data_chunk.getvalue()):
             break
-        binary_stream.seek(begin)
-        raw_item_data = binary_stream.read(end - begin)
+        data_chunk.seek(begin)
+        raw_item_data = data_chunk.read(end - begin)
 
         shift_idx = 4
         sizes = np.frombuffer(raw_item_data[:shift_idx], np.uint32)
@@ -191,9 +190,15 @@ def prepare_data_chunk(bucket_name, data_path, s3_client):
             data += data_bytes.decode('utf-8')
             shift_idx += size
         index += 1
-        tokenized_docs.append(tokenizer(data, return_tensors='pt'))
+        tokenized_docs.append(tokenizer.encode(data, eos=True))
     
     return save_tokenized_data(tokenized_docs)
+
+def bytes_to_torch_batch(tokenized_data) -> tuple:
+    with BytesIO() as buffer:
+        torch.save(tokenized_data, buffer)
+        compressed_byte_data = lz4.frame.compress(buffer.getvalue())
+    return compressed_byte_data
 
 
 def lambda_handler(event, context):
@@ -206,24 +211,26 @@ def lambda_handler(event, context):
         
         bucket_name = event.get('bucket_name')
         batch_samples = event.get('batch_samples')
-        batch_id = event.get('batch_id')
+        chunk_id = event.get('batch_id')
         cache_address = event.get('cache_address', None)
         
-        if not all([bucket_name, batch_samples, batch_id, cache_address]):
+        if not all([bucket_name, batch_samples, chunk_id, cache_address]):
             return {'success': False, 'message': 'Missing parameters'}
         
         cache_host, cache_port = cache_address.split(":")
         if redis_client is None:
             redis_client = redis.StrictRedis(host=cache_host, port=int(cache_port))
 
-        for data_path in batch_samples:
-            tokenized_docs = prepare_data_chunk(bucket_name, data_path, s3_client)
-            redis_client.set(batch_id, tokenized_docs)
+        for sample in batch_samples:
+            data_path, _ = sample
+            tokenized_samples = prepare_data_chunk(bucket_name, data_path, s3_client)
+            tokens_as_bytes = bytes_to_torch_batch(tokenized_samples)
+            redis_client.set(chunk_id, tokens_as_bytes)
 
         return {
             'success': True,
             'is_cached': True,
-            'message': f"Successfully cached '{batch_id}'"
+            'message': f"Successfully cached '{chunk_id}'"
         }
     except Exception as e:
         return {

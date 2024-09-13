@@ -46,9 +46,15 @@ class Dataset(BaseDataset):
         # Load samples from data directory
         self.data_dir = data_dir
         self.batch_size = batch_size
-        samples = self.load_paired_s3_object_keys(
+        if kind == 'vision':
+            samples = self.load_paired_s3_object_keys(
             data_dir, True, True
-        )
+            )
+        else:
+            samples = self.load_paired_s3_object_keys(
+            data_dir, False, True
+            )
+            
         self.bucket_name =  S3Url(data_dir).bucket
         super().__init__(samples, batch_size, drop_last)
         # Call the base class initializer

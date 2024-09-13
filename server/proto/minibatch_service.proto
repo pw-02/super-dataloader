@@ -53,7 +53,9 @@ message PingResponse {
 }
 
 message RegisterDatasetRequest {
-  string data_dir = 2;
+  string data_dir = 1;
+  string dataset_kind = 2;
+
   }
 
 message RegisterDatasetResponse {

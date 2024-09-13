@@ -15,3 +15,4 @@ class SUPERArgs:
     evict_from_cache_simulation_time:float
     shuffle:bool
     drop_last:bool
+    workload_kind:str

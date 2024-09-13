@@ -28,7 +28,7 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
             message = f"Dataset '{request.data_dir}' registered with SUPER. Total Files: {len(dataset)}, Total Batches: {dataset.num_batches},Total Partitions: {len(dataset.partitions)}"
             success = True
         else:
-            dataset = Dataset(request.data_dir, self.args.batch_size, False, self.args.partitions_per_dataset)
+            dataset = Dataset(request.data_dir, self.args.batch_size, False, self.args.partitions_per_dataset, self.args.workload_kind)
             self.datasets[request.data_dir] = CentralBatchManager(dataset=dataset, 
                                                                   args=self.args,)
             message = f"Dataset '{request.data_dir}' registered with SUPER. Total Files: {len(dataset)}, Total Batches:{dataset.num_batches}, Partitions:{len(dataset.partitions)}"
@@ -98,7 +98,8 @@ def serve(config: DictConfig):
             prefetch_simulation_time = config.prefetch_simulation_time,
             evict_from_cache_simulation_time = config.evict_from_cache_simulation_time,
             shuffle = config.workload.shuffle,
-            drop_last = config.workload.drop_last)
+            drop_last = config.workload.drop_last,
+            workload_kind = config.workload.kind)
         
         cache_service = CacheAwareMiniBatchService(args) 
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=1))

@@ -1,9 +1,9 @@
 requests
+pillow
+redis
 -f https://download.pytorch.org/whl/torch_stable.html
 torch==1.13.1+cpu
 torchvision==0.14.1+cpu
-pillow
-boto3
-redis
-nltk
+numpy<2.0
+lz4
 transformers

@@ -300,7 +300,7 @@ class CacheEvictionService:
 class CentralBatchManager:
     def __init__(self, dataset: Dataset, args: SUPERArgs):
         self.dataset = dataset
-        self.look_ahead = args.lookahead_steps
+        self.look_ahead = min(args.lookahead_steps, self.dataset.partitions[1].num_batches)
         self.jobs: Dict[str, DLTJob] = {}
         self.active_epoch_idx = 1
         self.active_partition_id = None
@@ -314,7 +314,7 @@ class CentralBatchManager:
         self.evict_from_cache_simulation_time = args.evict_from_cache_simulation_time
 
         # Generate initial batches
-        for _ in range(min(self.look_ahead, self.dataset.partitions[1].num_batches)):
+        for _ in range(self.look_ahead):
             self._generate_new_batch()
         
         self.use_keep_alive = args.use_keep_alive

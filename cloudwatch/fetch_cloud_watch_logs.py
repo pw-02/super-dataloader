@@ -1,23 +1,32 @@
 import boto3
-import time
 import os
+import time
+import argparse
+from datetime import datetime
+from datetime import datetime, timezone
+import concurrent.futures
+from create_bill import prarse_exported_logs
 
-# Initialize AWS clients
+def export_logs_to_s3(log_group_name, s3_bucket_name, s3_prefix, start_time_str, end_time = None):
 
-
-def export_logs_to_s3(log_group_name, s3_bucket_name, s3_prefix):
+    start_time_ms = convert_to_milliseconds(start_time_str)
+    # end_time_ms = int(time.time() * 1000)  # Current time in milliseconds
+    if end_time:
+        end_time_ms = convert_to_milliseconds(end_time)
+    else:
+        end_time_ms = int(time.time() * 1000)
     logs_client = boto3.client('logs')
 
     """Exports CloudWatch logs to S3."""
     # Create a unique export task name
     task_name = f"export-{log_group_name}-{int(time.time())}"
-
+    
     # Define the export task
     response = logs_client.create_export_task(
         taskName=task_name,
         logGroupName=log_group_name,
-        fromTime=0,  # Export logs from the past day
-        to=int(time.time() * 1000),  # Export logs up to now
+        fromTime=start_time_ms,  # Export logs from the past day
+        to=end_time_ms,  # Export logs up to now
         destination=s3_bucket_name,
         destinationPrefix=s3_prefix
     )
@@ -32,10 +41,8 @@ def export_logs_to_s3(log_group_name, s3_bucket_name, s3_prefix):
         if status in ['COMPLETED', 'FAILED']:
             break  
         # Wait for a while before checking the status again
-        time.sleep(5)
+        time.sleep(10)
     print(f"Export task created: {response['taskId']} for log group {log_group_name}")
-
-
 
 def download_logs_from_s3(s3_bucket_name, s3_prefix, download_path):
     s3_client = boto3.client('s3')
@@ -60,111 +67,56 @@ def download_logs_from_s3(s3_bucket_name, s3_prefix, download_path):
         os.makedirs(local_dirname, exist_ok=True)
         
         # Download the S3 object to the local path
-        print(f"Downloading {s3_key} to {local_path}")
         s3_client.download_file(s3_bucket_name, s3_key, local_path)
 
-    # for obj in response['Contents']:
-    #     file_name = obj['Key'].split('/')[-1]
-
-    #     s3_client.download_file(s3_bucket_name, obj['Key'], os.path.join(download_path, file_name))
-    #     print(f"Downloaded: {file_name}")
-
-def delete_log_group(log_group_name):
+def get_cloud_watch_logs_for_experiment(download_dir, s3_bucket_name, start_time_str, end_time_str=None):
     logs_client = boto3.client('logs')
-    """Deletes a CloudWatch log group."""
-    response = logs_client.delete_log_group(logGroupName=log_group_name)
-    print(f"Deleted log group: {log_group_name}")
-
-def delete_all_groups():
-    logs_client = boto3.client('logs')
-    
+    os.makedirs(download_dir, exist_ok=True)
     log_groups = logs_client.describe_log_groups(logGroupNamePrefix='/')['logGroups']
-
-    for log_group in log_groups:
-        log_group_name = log_group['logGroupName']
-        delete_log_group(log_group_name)
-        # print(f"Deleted log group: {log_group_name}")
-
-def empty_s3_bucket(bucket_name):
-    s3_client = boto3.client('s3')
     
-    # List objects in the bucket
-    response = s3_client.list_objects_v2(Bucket=bucket_name)
-    
-    if 'Contents' not in response:
-        print(f"No objects found in bucket '{bucket_name}'.")
-        return
-    
-    # Delete all objects
-    objects_to_delete = [{'Key': obj['Key']} for obj in response['Contents']]
-    
-    # Delete the objects
-    if objects_to_delete:
-        print(f"Deleting {len(objects_to_delete)} objects from bucket '{bucket_name}'.")
-        s3_client.delete_objects(
-            Bucket=bucket_name,
-            Delete={
-                'Objects': objects_to_delete,
-                'Quiet': True
-            }
-        )
-    
-    # Check if there are more objects to delete (pagination)
-    while response.get('IsTruncated'):  # Continue if there are more pages
-        continuation_token = response.get('NextContinuationToken')
-        response = s3_client.list_objects_v2(
-            Bucket=bucket_name,
-            ContinuationToken=continuation_token
-        )
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+        # Export logs in parallel
+        futures = []
+        for log_group in log_groups:
+            log_group_name = log_group['logGroupName']
+            s3_prefix = f'cloudwatchlogs/{log_group_name.replace("/", "_")}'
+            futures.append(executor.submit(export_logs_to_s3, log_group_name, s3_bucket_name, s3_prefix, start_time_str, end_time_str))
         
-        objects_to_delete = [{'Key': obj['Key']} for obj in response['Contents']]
-        
-        if objects_to_delete:
-            print(f"Deleting {len(objects_to_delete)} more objects from bucket '{bucket_name}'.")
-            s3_client.delete_objects(
-                Bucket=bucket_name,
-                Delete={
-                    'Objects': objects_to_delete,
-                    'Quiet': True
-                }
-            )
+        # Wait for all export tasks to complete
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                future.result()  # re-raise any exceptions that occurred during export
+            except Exception as e:
+                print(f'Exception during log export: {e}')
+
+        # Download logs from S3 in parallel
+        for log_group in log_groups:
+            log_group_name = log_group['logGroupName']
+            s3_prefix = f'cloudwatchlogs/{log_group_name.replace("/", "_")}'
+            executor.submit(download_logs_from_s3, s3_bucket_name, s3_prefix, download_dir)
+            
+        # Wait for all download tasks to complete
+        # (You may need to use additional synchronization here depending on your needs)
+
+
+
+def convert_to_milliseconds(date_str):
+    # Parse the input string as a naive datetime object
+    dt = datetime.strptime(date_str, '%Y-%m-%d_%H-%M-%S')
     
-    print(f"Bucket '{bucket_name}' has been emptied.")
-
-
-def main():
-
-    logs_client = boto3.client('logs')
-
-    # Configuration
-    s3_bucket_name = 'supercloudwtachexports'  # Replace with your S3 bucket name
-    log_group_prefix = '/'  # Replace with the desired log group prefix to filter
-    s3_download_path = 'cloudwatch\downloaded_logs'  # Directory where logs will be downloaded
-
-    # Ensure the download path exists
-    os.makedirs(s3_download_path, exist_ok=True)
-
-    # List all CloudWatch log groups
-    log_groups = logs_client.describe_log_groups(logGroupNamePrefix=log_group_prefix)['logGroups']
-
-    for log_group in log_groups:
-        log_group_name = log_group['logGroupName']
-        print(f"Processing log group: {log_group_name}")
-
-        # Export logs to S3
-        s3_prefix = f'exported-logs/{log_group_name.replace("/", "_")}'
-        export_logs_to_s3(log_group_name, s3_bucket_name, s3_prefix)
-
-        # Wait for the export to complete (this can be replaced with more sophisticated checking)
-        print("Waiting for export to complete...")
-
-        # Download logs from S3
-        download_logs_from_s3(s3_bucket_name, s3_prefix, s3_download_path)
-
-        # # Delete logs from CloudWatch
-        # delete_log_group(log_group_name)
+    # Make the datetime object timezone-aware (UTC)
+    dt_utc = dt.replace(tzinfo=timezone.utc)
+    
+    # Convert to milliseconds since the Unix epoch
+    return int(dt_utc.timestamp() * 1000)
 
 if __name__ == "__main__":
-    empty_s3_bucket('supercloudwtachexports')
-    delete_all_groups()
+    parser = argparse.ArgumentParser(description="Export CloudWatch logs to S3 and download them.")
+    parser.add_argument("--download_dir", help="Directory to download the logs to", default="logs")
+    parser.add_argument("--s3_bucket_name", help="S3 bucket name for exporting logs", default="supercloudwtachexports")
+    parser.add_argument("--start_time", help="", default='2024-09-17_20-03-03')
+    parser.add_argument("--end_time", help="",  default='2024-09-17_23-04-04')
 
+    args = parser.parse_args()
+    get_cloud_watch_logs_for_experiment(args.download_dir, args.s3_bucket_name, args.start_time, args.end_time)
+    prarse_exported_logs(args.download_dir)

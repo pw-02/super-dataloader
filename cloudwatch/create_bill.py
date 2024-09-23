@@ -8,79 +8,107 @@ import csv
 import re
 # Initialize the CloudWatch Logs client
 # Example timestamps (replace these with your experiment start and end times)
-experiment_start_time = '2024-09-02T10:00:00Z'
-experiment_end_time = '2024-09-03T12:00:00Z'
-# Convert ISO 8601 format to datetime object
-start_time = datetime.fromisoformat(experiment_start_time.replace('Z', '+00:00'))
-end_time = datetime.fromisoformat(experiment_end_time.replace('Z', '+00:00'))
+# experiment_start_time = '2024-09-02T10:00:00Z'
+# experiment_end_time = '2024-09-03T12:00:00Z'
+# # Convert ISO 8601 format to datetime object
+# start_time = datetime.fromisoformat(experiment_start_time.replace('Z', '+00:00'))
+# end_time = datetime.fromisoformat(experiment_end_time.replace('Z', '+00:00'))
 
-# Convert datetime to Unix timestamp (milliseconds)
-start_timestamp = int(start_time.timestamp() * 1000)
-end_timestamp = int(end_time.timestamp() * 1000)
-
-def empty_log_group(log_group_name = 'CreateVisionTrainingBatch'):
-    logs_client = boto3.client('logs')
-    paginator = logs_client.get_paginator('describe_log_streams')
-    for page in paginator.paginate(logGroupName=log_group_name):
-        for stream in page['logStreams']:
-            logs_client.delete_log_stream(logGroupName=log_group_name, logStreamName=stream['logStreamName'])
-    logs_client.delete_log_group(logGroupName=log_group_name)
-
-def export_logs_to_s3(log_group_name = '/aws/lambda/CreateVisionTrainingBatch', s3_bucket = 'supercloudwtachexports', s3_prefix = 'logs'):
-    logs_client = boto3.client('logs')
-    response = logs_client.create_export_task(
-        logGroupName=log_group_name,
-        fromTime=start_timestamp,
-        to=end_timestamp,
-        destination=s3_bucket,
-        destinationPrefix=s3_prefix
-    )
-    task_id = response['taskId']
-    # Monitor the status of the export task
-    while True:
-        request = logs_client.describe_export_tasks(taskId=task_id)
-        status = request['exportTasks'][0]['status']['code']
-        print(f'Task ID {task_id} status: {status}')
-
-        if status in ['COMPLETED', 'FAILED']:
-            break
-    
-        # Wait for a while before checking the status again
-        time.sleep(5)
-    return response['taskId']
-
-def download_exported_logs(s3_bucket = 'supercloudwtachexports', export_prefix = 'exports/1', destination_folder = 'cloudwatch'):
-    base_dir = os.path.join(destination_folder, export_prefix)
-    # Create the base directory if it does not exist
-    os.makedirs(base_dir, exist_ok=True)
-
-    s3_client = boto3.client('s3')
-    paginator = s3_client.get_paginator('list_objects_v2')
-    for page in paginator.paginate(Bucket=s3_bucket, Prefix=export_prefix):
-        for obj in page.get('Contents', []):
-            object_key = obj['Key']
-            local_path = os.path.join(destination_folder, object_key)
-            local_dir = os.path.dirname(local_path)
-             # Create local directory if it does not exist
-            os.makedirs(local_dir, exist_ok=True)
-            print(f'Downloading object: s3://{s3_bucket}/{object_key}')
-            s3_client.download_file(s3_bucket, object_key, local_path)
-    else:
-        print('Export task failed or is still in progress.')
-
+# # Convert datetime to Unix timestamp (milliseconds)
+# start_timestamp = int(start_time.timestamp() * 1000)
+# end_timestamp = int(end_time.timestamp() * 1000)
 
 # Function to get current AWS costs using Cost Explorer
+
+def get_lambda_cost_last_day():
+    # Create a Cost Explorer client
+    client = boto3.client('ce')
+
+    # Define the date range for the last day
+    end_date = datetime.utcnow().date()  # Current date in UTC
+    start_date = end_date - timedelta(days=1)  # One day before the current date
+
+    # Convert dates to string format
+    start_date_str = start_date.strftime('%Y-%m-%d')
+    end_date_str = end_date.strftime('%Y-%m-%d')
+
+    # Query Cost Explorer
+    response = client.get_cost_and_usage(
+        TimePeriod={
+            'Start': start_date_str,
+            'End': end_date_str
+        },
+        Granularity='DAILY',
+        Metrics=['UnblendedCost'],
+        GroupBy=[
+            {
+                'Type': 'DIMENSION',
+                'Key': 'SERVICE'
+            }
+        ]
+    )
+
+    # Extract Lambda costs
+    cost_data = response.get('ResultsByTime', [])
+    lambda_cost = 0.0
+
+    for result in cost_data:
+        groups = result.get('Groups', [])
+        for group in groups:
+            service_name = group.get('Keys', [])[0]
+            if service_name == 'AWS Lambda':
+                lambda_cost = float(group.get('Metrics', {}).get('UnblendedCost', {}).get('Amount', 0.0))
+
+    return lambda_cost
+
+
+
+
+
 def get_current_aws_costs():
     ce_client = boto3.client('ce')  # Cost Explorer client
     response = ce_client.get_cost_and_usage(
-        TimePeriod={'Start': '2024-08-01', 'End': '2024-08-28'},  # Example dates
+        TimePeriod={'Start': '2024-09-16', 'End': '2024-09-17'},  # Example dates
         Granularity='DAILY',
         Metrics=['UnblendedCost']
     )
     total_cost = sum(float(day['Total']['UnblendedCost']['Amount']) for day in response['ResultsByTime'])
     return total_cost
 
-def prarse_exported_logs(destination_folder = 'cloudwatch', export_prefix = 'exports', skip_unzip = False):
+
+def compute_lambda_costs(total_requests, cost_per_request=0.20, memory_size_mb=128, duration_ms=100):
+    """
+    Compute the cost of AWS Lambda invocations.
+
+    Parameters:
+    - total_requests (int): The total number of Lambda invocations.
+    - cost_per_request (float): The cost per million Lambda requests (default is $0.20).
+    - memory_size_mb (int): The amount of memory allocated to the Lambda function (default is 128 MB).
+    - duration_ms (int): The duration of each Lambda execution in milliseconds (default is 100 ms).
+
+    Returns:
+    - total_cost (float): The total cost of Lambda invocations.
+    """
+
+    # Cost per request calculation
+    cost_per_request_total = (total_requests / 1_000_000) * cost_per_request
+    
+    # Convert duration to GB-seconds (memory_size_mb / 1024 = memory_size_gb)
+    memory_size_gb = memory_size_mb / 1024
+    duration_seconds = duration_ms / 1000
+    cost_per_invocation = memory_size_gb * duration_seconds * 0.00001667  # $0.00001667 per GB-second
+
+    # Total invocation cost
+    invocation_cost_total = total_requests * cost_per_invocation
+    
+    # Combine the cost per request and the cost per invocation
+    total_cost = cost_per_request_total + invocation_cost_total
+
+    return cost_per_request_total, invocation_cost_total, total_cost
+
+
+
+def prarse_exported_logs(destination_folder = 'cloudwatch', export_prefix = 'cloudwatchlogs', skip_unzip = False):
     base_dir = os.path.join(destination_folder, export_prefix)
     output_file = os.path.join(base_dir, "bill.csv")
     decompressed_file_paths = []
@@ -119,6 +147,7 @@ def prarse_exported_logs(destination_folder = 'cloudwatch', export_prefix = 'exp
                 if start_match:
                     request_id = start_match.group(1)
                     current_request = {
+                        'System':'InfiniSore' if 'CacheNode' in str(log_file) else 'PREFETCH',
                         'Timestamp': '',
                         'RequestId': request_id,
                         'Duration': '0',
@@ -142,6 +171,16 @@ def prarse_exported_logs(destination_folder = 'cloudwatch', export_prefix = 'exp
                             'Max Memory Used': max_memory_used,
                             'Init Duration': init_duration if init_duration else '0'
                         })
+                        compute_cost, request_cost, total_cost = compute_lambda_costs(
+                            total_requests=1,
+                            cost_per_request=0.20,
+                            memory_size_mb=int(memory_size),
+                            duration_ms=int(billed_duration))
+                                
+                        current_request['Compute Cost'] = compute_cost
+                        current_request['Request Cost'] = request_cost
+                        current_request['Total Cost'] = total_cost
+
                         # Append data when report is fully parsed
                         log_data.append(current_request)
                         current_request = {}
@@ -149,28 +188,21 @@ def prarse_exported_logs(destination_folder = 'cloudwatch', export_prefix = 'exp
     
     # Write parsed data to CSV
     with open(output_file, 'w', newline='') as csv_file:
-        fieldnames = ['Timestamp', 'RequestId', 'Duration', 'Billed Duration', 'Memory Size', 'Max Memory Used', 'Init Duration']
+        fieldnames = log_data[0].keys()
+        # fieldnames = ['System', 'Timestamp', 'RequestId', 'Duration', 'Billed Duration', 'Memory Size', 'Max Memory Used', 'Init Duration']
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(log_data)
     
-
-
-
-
-
 if __name__ == '__main__':
 
-
-
-    # Get the current AWS costs
-    log_group_name = '/aws/lambda/CreateVisionTrainingBatch'
-    s3_bucket = 'supercloudwtachexports'
-    export_prefix = 'exports'
-    destination_folder = 'cloudwatch'
-    # empty_log_group(log_group_name)
-    export_logs_to_s3(log_group_name, s3_bucket, export_prefix)
-    download_exported_logs(s3_bucket, export_prefix, 'cloudwatch')
-    prarse_exported_logs(destination_folder,export_prefix, False)
+    # test = compute_lambda_costs(total_requests=1071,
+    #                             cost_per_request=0.20,
+    #                             memory_size_mb=3072,
+    #                             duration_ms=931)
     
-    # empty_log_group(log_group_name)
+    # cost = get_lambda_cost_last_day()
+
+    export_prefix = 'cloudwatchlogs'
+    destination_folder = 'logs'
+    prarse_exported_logs(destination_folder,export_prefix, False)

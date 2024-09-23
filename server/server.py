@@ -32,7 +32,10 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
             dataset = Dataset(request.data_dir, self.args.batch_size, False, self.args.partitions_per_dataset, request.dataset_kind)
             self.datasets[request.data_dir] = CentralBatchManager(dataset=dataset, 
                                                                   args=self.args,)
-            message = f"Dataset '{request.data_dir}' registered with SUPER. Total Files: {len(dataset)}, Total Batches:{dataset.num_batches}, Partitions:{len(dataset.partitions)}"
+            if request.dataset_kind == 'vision':
+                message = f"Dataset '{request.data_dir}' registered with SUPER. Total Files: {len(dataset)}, Total Batches:{dataset.num_batches}, Partitions:{len(dataset.partitions)}"
+            else:
+                message = f"Dataset '{request.data_dir}' registered with SUPER. Total Files: {len(dataset)}"
             success = True
             logger.info(message)
         return minibatch_service_pb2.RegisterDatasetResponse(dataset_is_registered=success, 

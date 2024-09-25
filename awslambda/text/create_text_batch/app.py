@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 from typing import Union, Optional
 import lz4.frame
+
 class Tokenizer:
     def __init__(self, checkpoint_dir: Union[Path, str]) -> None:
         checkpoint_dir = Path(checkpoint_dir)

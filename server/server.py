@@ -25,7 +25,10 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
     def RegisterDataset(self, request, context):
         if request.data_dir in self.datasets:
             dataset =  self.datasets[request.data_dir].dataset
-            message = f"Dataset '{request.data_dir}' registered with SUPER. Total Files: {len(dataset)}, Total Batches: {dataset.num_batches},Total Partitions: {len(dataset.partitions)}"
+            if request.dataset_kind == 'vision':
+                message = f"Dataset '{request.data_dir}' registered with SUPER. Total Files: {len(dataset)}, Total Batches: {dataset.num_batches},Total Partitions: {len(dataset.partitions)}"
+            else:
+                message = f"Dataset '{request.data_dir}' registered with SUPER. Total Files: {len(dataset)}"
             success = True
         else:
 

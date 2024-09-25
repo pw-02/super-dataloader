@@ -41,7 +41,7 @@ def export_logs_to_s3(log_group_name, s3_bucket_name, s3_prefix, start_time_str,
         if status in ['COMPLETED', 'FAILED']:
             break  
         # Wait for a while before checking the status again
-        time.sleep(10)
+        time.sleep(5)
     print(f"Export task created: {response['taskId']} for log group {log_group_name}")
 
 def download_logs_from_s3(s3_bucket_name, s3_prefix, download_path):
@@ -68,13 +68,34 @@ def download_logs_from_s3(s3_bucket_name, s3_prefix, download_path):
         
         # Download the S3 object to the local path
         s3_client.download_file(s3_bucket_name, s3_key, local_path)
+# Function to retrieve all log groups
+def get_all_log_groups():
+    log_groups = []
+    next_token = None
+    client = boto3.client('logs')
+
+    while True:
+        # Fetch log groups with pagination
+        response = client.describe_log_groups(nextToken=next_token) if next_token else client.describe_log_groups()
+        
+        # Append log groups to the list
+        log_groups.extend(response['logGroups'])
+        
+        # Check if there's another page of results
+        next_token = response.get('nextToken')
+        if not next_token:
+            break
+    
+    return log_groups
 
 def get_cloud_watch_logs_for_experiment(download_dir, s3_bucket_name, start_time_str, end_time_str=None):
     logs_client = boto3.client('logs')
     os.makedirs(download_dir, exist_ok=True)
-    log_groups = logs_client.describe_log_groups(logGroupNamePrefix='/')['logGroups']
-    
-    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+    # log_groups = logs_client.describe_log_groups(logGroupNamePrefix='/aws/lambda/CreateVisionTrainingBatch')['logGroups']
+    log_groups = get_all_log_groups()
+
+    # log_groups.append({'logGroupName': '/aws/lambda/lambda_function'})
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
         # Export logs in parallel
         futures = []
         for log_group in log_groups:
@@ -114,8 +135,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Export CloudWatch logs to S3 and download them.")
     parser.add_argument("--download_dir", help="Directory to download the logs to", default="logs")
     parser.add_argument("--s3_bucket_name", help="S3 bucket name for exporting logs", default="supercloudwtachexports")
-    parser.add_argument("--start_time", help="", default='2024-09-17_20-03-03')
-    parser.add_argument("--end_time", help="",  default='2024-09-17_23-04-04')
+    parser.add_argument("--start_time", help="", default='2024-09-24_00-09-40')
+    parser.add_argument("--end_time", help="",  default='2024-09-24_00-14-44')
 
     args = parser.parse_args()
     get_cloud_watch_logs_for_experiment(args.download_dir, args.s3_bucket_name, args.start_time, args.end_time)

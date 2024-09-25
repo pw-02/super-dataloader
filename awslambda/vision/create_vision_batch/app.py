@@ -60,6 +60,13 @@ def get_transform(bucket_name: str):
             transforms.Normalize((0.5, 0.5, 0.5),  # Normalize the image
                                 (0.5, 0.5, 0.5))  # Normalize the image
              ])
+    elif 'coco' in bucket_name:
+        return transforms.Compose([
+            transforms.Resize(256),                    # Resize the image to 256x256 pixels
+            transforms.RandomResizedCrop(224),   # Randomly crop a 224x224 patch
+            transforms.RandomHorizontalFlip(), # Randomly flip the image horizontally
+            transforms.ToTensor(),  # Convert the image to a PyTorch tensor
+        ])
     else:
         return None
  

@@ -47,9 +47,17 @@ class Dataset(BaseDataset):
         self.data_dir = data_dir
         self.batch_size = batch_size
         if kind == 'vision':
-            samples = self.load_paired_s3_object_keys(
-            data_dir, True, True
-            )
+            if 'coco' in data_dir:
+                samples = self.load_coco_samples(
+                    data_dir
+                )
+            else:
+                samples = self.load_paired_s3_object_keys(
+                    data_dir, True, True
+                )
+            # samples = self.load_paired_s3_object_keys(
+            # data_dir, True, True
+            # )
         else:
             samples = self.load_paired_s3_object_keys(
                 data_dir, False, True
@@ -63,6 +71,16 @@ class Dataset(BaseDataset):
     
     def is_image_file(self, path: str):
         return any(path.endswith(extension) for extension in ['.jpg', '.JPG', '.jpeg', '.JPEG', '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP'])
+    
+    def load_coco_samples(self, s3_uri:str):
+        s3_client = boto3.client('s3')
+        s3url = S3Url(s3_uri)
+        index_object = s3_client.get_object(Bucket=s3url.bucket, Key='coco_train.json')
+        file_content = index_object['Body'].read().decode('utf-8')
+        # samples = json.loads(file_content)
+        paired_samples = json.loads(file_content)
+        return paired_samples
+
 
     def load_paired_s3_object_keys(self, s3_uri:str, images_only:bool, use_index_file:bool = True):
         paired_samples = {}

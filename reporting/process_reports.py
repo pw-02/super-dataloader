@@ -35,11 +35,13 @@ def get_subfolder_names(folder_path, include_children = False):
     return basenames
 
 
+
 def get_training_summary(folder_path):
     metrics = OrderedDict({
          "num_jobs": 0,
          "total_batches": 0,
          "total_samples": 0,
+          "total_tokens": 0,
          "total_time(s)": 0,
          "wait_on_data_time(s)": 0,
          "gpu_processing_time(s)": 0,
@@ -52,7 +54,14 @@ def get_training_summary(folder_path):
         csv_data = convert_csv_to_dict(metrics_csv)
         metrics["num_jobs"] += 1
         metrics["total_batches"] += len(csv_data["Batch Index"])
-        metrics["total_samples"] += sum(csv_data["Batch Size"])
+        if "Batch Size" in csv_data:
+            metrics["total_samples"] += sum(csv_data["Batch Size"])
+        else:
+            metrics["total_samples"] += (len(csv_data["Batch Index"]) * 32) #batch size was 32
+
+            metrics["total_tokens"] += sum(csv_data["Batch Size (Tokens)"])
+ 
+        # metrics["total_samples"] += sum(csv_data["Batch Size"])
         metrics["total_time(s)"] += sum(csv_data["Iteration Time (s)"])
         metrics["wait_on_data_time(s)"] += sum(csv_data["Iteration Time (s)"]) - sum(csv_data["GPU Processing Time (s)"])
         metrics["gpu_processing_time(s)"] += sum(csv_data["GPU Processing Time (s)"])
@@ -66,6 +75,7 @@ def get_training_summary(folder_path):
         
         metrics["throughput(batches/s)"] = metrics["total_batches"] / metrics["total_time(s)"]
         metrics["throughput(samples/s)"] = metrics["total_samples"] / metrics["total_time(s)"]
+        
         metrics["cache_hit(%)"] = metrics["cache_hits"] / metrics["total_samples"]
         metrics["compute_time(%)"] = metrics["gpu_processing_time(s)"] / metrics["total_time(s)"]
         metrics["waiting_on_data_time(%)"] = metrics["wait_on_data_time(s)"] / metrics["total_time(s)"]
@@ -79,8 +89,13 @@ def compute_ec2_costs(instance_type: str, time_seconds: float):
         't2.medium':  0.0464,
         'p3.8xlarge':  12.24,
         'c5n.xlarge': 0.4,
+        'cache.t3.medium':  0.068,
+        'cache.m7g.4xlarge': 1.257
     }
-     # Convert seconds to hours
+    #  # Convert seconds to hours
+    # if 'cache' in instance_type:
+    #     hours = max(time_seconds / 3600, 1)
+    # else:
     hours = time_seconds / 3600
     hourly_rate = instance_prices[instance_type]
     instance_cost = hourly_rate * hours
@@ -141,13 +156,13 @@ def get_cost_summary(folder_path, exp_duration, num_samples):
              ValueError("Unknown dataset")
         metrics["total_cost"] = metrics["training_compute_cost"] + metrics["redis_cache_cost"]
     else:
-        metrics["redis_cache_cost"] = compute_ec2_costs('c5n.xlarge' ,exp_duration)
+        metrics["redis_cache_cost"] = compute_ec2_costs('cache.m7g.4xlarge' ,exp_duration)
         metrics["total_cost"] = metrics["training_compute_cost"] + metrics["redis_cache_cost"]
 
     return metrics
 
 if __name__ == "__main__":
-    folder_path = "C:\\Users\\pw\\Desktop\\super_project_results\\\cifar10_resnet18"
+    folder_path = "C:\\Users\\pw\\Desktop\\system-comparison\\on_gpu(p38xlarge)\\lora_finetune_owt"
     base_name = os.path.basename(os.path.normpath(folder_path))
     exp_names = get_subfolder_names(folder_path, include_children = False)
     overall_summary = []

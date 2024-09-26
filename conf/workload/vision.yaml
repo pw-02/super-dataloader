@@ -1,5 +1,5 @@
 kind: 'vision'
-batch_size: 4 #chunk_size  = number of files per chunk
+batch_size: 128 #chunk_size  = number of files per chunk
 shuffle: True
 drop_last: False
 prefetch_lambda_name: 'CreateVisionTrainingBatch'

@@ -45,15 +45,15 @@ def get_training_summary(folder_path):
          "total_time(s)": 0,
          "wait_on_data_time(s)": 0,
          "gpu_processing_time(s)": 0,
-         "data_loading_time(s)": 0,
+         "data_fetch_time(s)": 0,
          "transformation_time(s)": 0,
          "cache_hits": 0,
          "avg_gpu_time(s)": 0,
-         "avg_data_loading_time(s)": 0,
+         "avg_data_fetch_time(s)": 0,
         "avg_data_transformation_time_on_hit(s)": 0,
         "avg_data_transformation_time_on_miss(s)": 0,
-        "avg_data_loading_time_on_hit(s)": 0,
-        "avg_data_loading_time_on_miss(s)": 0,
+        "avg_data_fetch_time_on_hit(s)": 0,
+        "avg_data_fetch_time_on_miss(s)": 0,
         "avg_transformation_time(s)": 0,
         "avg_wait_on_data_time(s)": 0,
     })
@@ -73,17 +73,17 @@ def get_training_summary(folder_path):
         metrics["total_time(s)"] += sum(csv_data["Iteration Time (s)"])
         metrics["wait_on_data_time(s)"] += sum(csv_data["Iteration Time (s)"]) - sum(csv_data["GPU Processing Time (s)"])
         metrics["gpu_processing_time(s)"] += sum(csv_data["GPU Processing Time (s)"])
-        metrics["data_loading_time(s)"] += sum(csv_data["Data Load Time (s)"])
+        metrics["data_fetch_time(s)"] += sum(csv_data["Data Load Time (s)"])
         metrics["transformation_time(s)"] += sum(csv_data["Transformation Time (s)"])
         metrics["cache_hits"] += sum(csv_data["Cache_Hits (Samples)"])
     
     metrics["avg_gpu_time(s)"] = metrics["gpu_processing_time(s)"] / metrics["total_batches"]
-    metrics["avg_data_loading_time(s)"] = metrics["data_loading_time(s)"] / metrics["total_batches"]
+    metrics["avg_data_fetch_time(s)"] = metrics["data_fetch_time(s)"] / metrics["total_batches"]
     metrics["avg_transformation_time(s)"] = metrics["transformation_time(s)"] / metrics["total_batches"]
     metrics["avg_wait_on_data_time(s)"] = metrics["wait_on_data_time(s)"] / metrics["total_batches"]
 
     if metrics['num_jobs'] > 0:
-        for key in ['total_time(s)', "wait_on_data_time(s)", "gpu_processing_time(s)", "data_loading_time(s)", "transformation_time(s)"]:
+        for key in ['total_time(s)', "wait_on_data_time(s)", "gpu_processing_time(s)", "data_fetch_time(s)", "transformation_time(s)"]:
             metrics[key] = metrics[key] / metrics['num_jobs']
         
         metrics["throughput(batches/s)"] = metrics["total_batches"] / metrics["total_time(s)"]
@@ -92,9 +92,12 @@ def get_training_summary(folder_path):
         metrics["cache_hit(%)"] = metrics["cache_hits"] / metrics["total_samples"]
         metrics["compute_time(%)"] = metrics["gpu_processing_time(s)"] / metrics["total_time(s)"]
         metrics["waiting_on_data_time(%)"] = metrics["wait_on_data_time(s)"] / metrics["total_time(s)"]
-        metrics["transform_time(%)"] = metrics["transformation_time(s)"] / (metrics["transformation_time(s)"] + metrics["data_loading_time(s)"])
-        metrics["data_loading_time(%)"] = metrics["data_loading_time(s)"] / (metrics["transformation_time(s)"] + metrics["data_loading_time(s)"])
-        return metrics
+        metrics["transform_time(%)"] = metrics["transformation_time(s)"] / (metrics["transformation_time(s)"] + metrics["data_fetch_time(s)"])
+        metrics["data_fetch_time(%)"] = metrics["data_fetch_time(s)"] / (metrics["transformation_time(s)"] + metrics["data_fetch_time(s)"])
+        metrics["transform_delay(%)"] = metrics["transform_time(%)"] *  metrics["waiting_on_data_time(%)"] 
+        metrics["data_fetch_delay(%)"] = metrics["data_fetch_time(%)"]*  metrics["waiting_on_data_time(%)"] 
+    
+    return metrics
 
 def compute_ec2_costs(instance_type: str, time_seconds: float):
     instance_prices = {
@@ -142,7 +145,7 @@ def get_cost_summary(folder_path, exp_duration, num_samples):
     })
     metrics["training_compute_cost"] = compute_ec2_costs('p3.8xlarge', exp_duration)
 
-    if 'super(' in folder_path:
+    if 'super' in folder_path:
         search_pattern = os.path.join(folder_path, '**', 'bill.csv')
         for cost_csv in glob.iglob(search_pattern, recursive=True):
             #comute data loading costs
@@ -174,7 +177,7 @@ def get_cost_summary(folder_path, exp_duration, num_samples):
     return metrics
 
 if __name__ == "__main__":
-    folder_path = "C:\\Users\\pw\\Desktop\\system-comparison\\on_gpu(p38xlarge)\\cifar10_resnet18"
+    folder_path = "C:\\Users\\pw\\Desktop\\system-comparison\\on_sim_cpu(m5n.8xlarge)\\albef_retrieval"
     base_name = os.path.basename(os.path.normpath(folder_path))
     exp_names = get_subfolder_names(folder_path, include_children = False)
     overall_summary = []

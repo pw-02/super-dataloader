@@ -150,7 +150,8 @@ class PrefetchService:
                                 
                                 self.prefetch_lambda_execution_times.update(response['execution_time'])
                                 # self.prefetch_lambda_invocations_count += 1
-                                if response['success']:
+                                
+                                if 'success' in response.keys() and response['success']:
                                     # print(f"Batch '{batch.batch_id}' has been prefetched.")
                                     batch.set_cache_status(is_cached=True)
                                 else:

@@ -346,11 +346,11 @@ class CentralBatchManager:
             )        
         self.lock = threading.Lock()  # Lock for thread safety
         
-        if self.prefetch_service is not None and self.prefetch_service.prefetch_stop_event.is_set():  
-                self.prefetch_service.start_prefetcher() #prefetcher is stopped, start it
+        # if self.prefetch_service is not None and self.prefetch_service.prefetch_stop_event.is_set():  
+        #         self.prefetch_service.start_prefetcher() #prefetcher is stopped, start it
             
-        if self.use_keep_alive and self.cache_eviction_service.cache_eviction_stop_event.is_set():
-                self.cache_eviction_service.start_cache_evictor()
+        # if self.use_keep_alive and self.cache_eviction_service.cache_eviction_stop_event.is_set():
+        #         self.cache_eviction_service.start_cache_evictor()
     
     def _generate_new_batch(self):
         next_batch:Batch = next(self.batch_sampler)
@@ -419,11 +419,11 @@ class CentralBatchManager:
         
         with self.lock:
 
-            # if self.prefetch_service is not None and self.prefetch_service.prefetch_stop_event.is_set():  
-            #     self.prefetch_service.start_prefetcher() #prefetcher is stopped, start it
+            if self.prefetch_service is not None and self.prefetch_service.prefetch_stop_event.is_set():  
+                self.prefetch_service.start_prefetcher() #prefetcher is stopped, start it
             
-            # if self.use_keep_alive and self.cache_eviction_service.cache_eviction_stop_event.is_set():
-            #     self.cache_eviction_service.start_cache_evictor()
+            if self.use_keep_alive and self.cache_eviction_service.cache_eviction_stop_event.is_set():
+                self.cache_eviction_service.start_cache_evictor()
             
             if job_id not in self.jobs:
                 logger.info(f"Registering job '{job_id}'")

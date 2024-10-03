@@ -159,7 +159,10 @@ class PrefetchService:
                                     batch.set_cache_status(is_cached=True)
                                 else:
                                     batch.set_cache_status(is_cached=False)
-                                    logger.error(f"Error prefetching batch '{batch.batch_id}': {response['message']}")
+                                    if 'message' in response.keys():
+                                        logger.error(f"Error prefetching batch '{batch.batch_id}': {response['message']}")
+                                    else:
+                                        logger.error(f"Error prefetching batch '{batch.batch_id}'.")
                                 # print(f'Invocation response: {response}')
                             except Exception as e:
                                 logger.error(f"Error in prefetching batch: {e}", exc_info=True)
@@ -181,7 +184,7 @@ class PrefetchService:
             response = self.prefetch_lambda_client.invoke( FunctionName=self.prefetch_lambda_name,
                                                 InvocationType='RequestResponse',
                                                 Payload=payload)
-
+            
             response_data = json.loads(response['Payload'].read().decode('utf-8'))
             response_data['execution_time'] = time.perf_counter() - request_started
             return response_data

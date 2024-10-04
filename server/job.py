@@ -14,8 +14,8 @@ class DLTJob:
         self.partition_id_cycle: Optional[Iterator[int]] = None
         self.epochs_completed_count = -1
         self.started_partition_index = None
-        self.active_batch_set_ids = set()
-
+        # self.active_batch_set_ids = set()
+        self.active_batch_set_id = None
         # self.active_epoch = initial_epoch
         self.total_steps = 0
         self.future_batches: OrderedDict[str, Batch] = OrderedDict()

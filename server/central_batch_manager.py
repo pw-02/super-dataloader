@@ -136,6 +136,7 @@ class PrefetchService:
                     prefetch_cycle_duration = self.prefetch_cycle_times.avg + self.prefetch_delay if self.prefetch_cycle_times.count > 0 else self.simulate_time if self.simulate_time else 3
                     prefetch_conncurrency =  math.ceil(required_prefetch_bacthes_per_second * prefetch_cycle_duration)
 
+                    logger.info(f'prefetch_conncurrency: {prefetch_conncurrency}, prefetch_cycle_duration: {prefetch_cycle_duration}, required_prefetch_bacthes_per_second: {required_prefetch_bacthes_per_second}')
                     #add in a check to see if the job is suffering from a data loading delay and benefit from prefetching
                     prefetch_counter, time_counter = 0, 0
                     # Fetch average times for cache hit and miss scenarios for the current job
@@ -380,8 +381,8 @@ class CentralBatchManager:
         for epoch_id in self.epoch_partition_batches.keys():
             for partition_id in self.epoch_partition_batches[epoch_id].keys():
                 for batch in self.epoch_partition_batches[epoch_id][partition_id].batches.values():
-                    if len(prefetch_list) >= max_batches:
-                        break
+                    # if len(prefetch_list) >= max_batches:
+                    #     break
                     payload = {
                         'bucket_name': self.dataset.bucket_name,
                         'batch_id': batch.batch_id,
@@ -390,13 +391,14 @@ class CentralBatchManager:
                         'task': 'prefetch',
                     }
                     prefetch_list[batch.batch_id] = (batch, json.dumps(payload))
-                    # prefetch_list.add((batch, json.dumps(payload)))
-            #         if len(prefetch_list) >= max_batches:
-            #             break
-            # if len(prefetch_list) >= max_batches:
-            #             break
+                    prefetch_list.add((batch, json.dumps(payload)))
+                    if len(prefetch_list) >= max_batches:
+                        break
+            if len(prefetch_list) >= max_batches:
+                        break
         logger.info(f"Warming up cache with {len(prefetch_list)} batches.")
         self.prefetch_service.prefetch_batches_from_list(prefetch_list, warm_up_started)
+        logger.info(f"Prefetch took: {self.prefetch_service.prefetch_cycle_times.val:.4f}s for {len(prefetch_list)} batches. (Avg Prefetch Time: {self.prefetch_service.prefetch_cycle_times.avg:.4f}s, Avg Lambda Time: {self.prefetch_service.prefetch_lambda_execution_times.avg:.4f}s, Running Cost: ${self.prefetch_service._compute_prefeteching_cost():.4f})")
 
 
 

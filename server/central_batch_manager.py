@@ -69,6 +69,114 @@ class PrefetchService:
         required_concurrency = potential_batches_during_delay / batches_loaded_per_conccurency_unit 
         return required_concurrency
 
+    # def _prefetching_process(self):
+    #     while not self.prefetch_stop_event.is_set():
+    #         try:
+    #             prefetch_cycle_started = time.perf_counter()
+    #             prefetch_list: Set[Tuple[Batch, str]] = set()        
+    #             #prefetch_cycle_duration = self.prefetch_cycle_times.avg if self.prefetch_cycle_times.count > 0 else self.simulate_time if self.simulate_time else 3
+    #             for job in self.jobs.values():
+    #                 if job.total_steps <= 1: #ignore first two steps for GPU warm up
+    #                     continue
+
+    #                 max_bacthes_per_second = math.ceil(1 / job.training_step_gpu_times.avg)
+    #                 no_caching_batches_per_second =  math.floor(1 / job.dataload_time_on_miss.avg) if job.dataload_time_on_miss.count > 0 else 0
+    #                 required_prefetch_bacthes_per_second = max_bacthes_per_second - no_caching_batches_per_second
+
+    #                 if required_prefetch_bacthes_per_second < 1:
+    #                     continue
+                    
+    #                 prefetch_cycle_duration = self.prefetch_cycle_times.avg + self.prefetch_delay if self.prefetch_cycle_times.count > 0 else self.simulate_time if self.simulate_time else 3
+    #                 prefetch_conncurrency =  math.ceil(required_prefetch_bacthes_per_second * prefetch_cycle_duration)
+
+    #                 #add in a check to see if the job is suffering from a data loading delay and benefit from prefetching
+    #                 prefetch_counter, time_counter = 0, 0
+    #                 # Fetch average times for cache hit and miss scenarios for the current job
+    #                 avg_time_on_hit = job.training_step_times_on_hit.avg if job.training_step_times_on_hit.count > 0 else job.training_step_gpu_times.avg
+    #                 avg_time_on_miss = job.training_step_times_on_miss.avg if job.training_step_times_on_miss.count > 0 else job.training_step_gpu_times.avg
+
+    #                 if len(job.future_batches) < prefetch_conncurrency:
+    #                     logger.info(f"Job '{job.job_id}' has {len(job.future_batches)} batches, less than the required prefetch concurrency of {prefetch_conncurrency}.")
+
+    #                 # Iterate over future batches to determine access during the prefetch cycle duration
+    #                 job_batches_snapshot = list(job.future_batches.values())
+    #                 for batch in job_batches_snapshot:
+    #                     if time_counter <= prefetch_cycle_duration:
+    #                             # If accessed within the cycle, add its time to the counter
+    #                             if batch.is_cached or batch.caching_in_progress:
+    #                                 time_counter += avg_time_on_hit
+    #                             else:
+    #                                 time_counter += avg_time_on_miss
+    #                             continue
+                        
+    #                     elif prefetch_counter >= prefetch_conncurrency:
+    #                         break
+
+    #                     else: 
+    #                         prefetch_counter += 1
+    #                         if not batch.is_cached and not batch.caching_in_progress:
+    #                             batch.set_caching_in_progress(True)
+    #                             payload = {
+    #                                 'bucket_name': self.dataset.bucket_name,
+    #                                 'batch_id': batch.batch_id,
+    #                                 'batch_samples': self.dataset.get_samples(batch.indicies),
+    #                                 'cache_address': self.cache_address,
+    #                                 'task': 'prefetch',
+    #                             }
+    #                             prefetch_list.add((batch, json.dumps(payload)))
+                  
+    #             # Submit the prefetch list for processing
+    #             if prefetch_list:
+    #                 with concurrent.futures.ThreadPoolExecutor() as executor:
+    #                     # Create client if not already initialized
+    #                     if self.prefetch_lambda_client is None:
+    #                         self.prefetch_lambda_client = boto3.client('lambda', config= Config(max_pool_connections=50))
+
+    #                     # Calculate the delay before invoking Lambdas
+    #                     delay_time = self._compute_delay_to_satisfy_cost_threshold() * len(prefetch_list)
+
+    #                     if delay_time > 0:
+    #                         logger.info(f"Delaying prefetching by {delay_time:.5f} seconds to satisfy cost threshold.")
+    #                         time.sleep(delay_time)
+                        
+    #                     if self.simulate_time:
+    #                         time.sleep(self.simulate_time)
+
+    #                     # Map each future to its corresponding (batch, payload) tuple
+    #                     future_to_batch_payload = {executor.submit(self._prefetch_batch, payload): (batch, payload) for batch, payload in prefetch_list}
+
+    #                     for future in concurrent.futures.as_completed(future_to_batch_payload):
+    #                         batch, payload = future_to_batch_payload[future]
+    #                         try:
+    #                             response = future.result()
+    #                             batch.set_caching_in_progress(in_progress=False)
+                                
+    #                             self.prefetch_lambda_execution_times.update(response['execution_time'])
+    #                             # self.prefetch_lambda_invocations_count += 1
+                                
+    #                             if 'success' in response.keys() and response['success']:
+    #                                 # print(f"Batch '{batch.batch_id}' has been prefetched.")
+    #                                 batch.set_cache_status(is_cached=True)
+    #                             else:
+    #                                 batch.set_cache_status(is_cached=False)
+    #                                 if 'message' in response.keys():
+    #                                     logger.error(f"Error prefetching batch '{batch.batch_id}': {response['message']}")
+    #                                 else:
+    #                                     logger.error(f"Error prefetching batch '{batch.batch_id}'.")
+    #                             # print(f'Invocation response: {response}')
+    #                         except Exception as e:
+    #                             logger.error(f"Error in prefetching batch: {e}", exc_info=True)
+    #                 self.prefetch_lambda_invocations_count += len(prefetch_list)
+    #                 self.prefetch_cycle_times.update(time.perf_counter() - prefetch_cycle_started + delay_time)
+    #                 logger.info(f"Prefetch took: {self.prefetch_cycle_times.val:.4f}s for {len(prefetch_list)} batches. (Avg Prefetch Time: {self.prefetch_cycle_times.avg:.4f}s, Avg Lambda Time: {self.prefetch_lambda_execution_times.avg:.4f}s, Running Cost: ${self._compute_prefeteching_cost():.4f})")
+            
+    #             if len(self.jobs) == 0 or len(prefetch_list) == 0:
+    #                 time.sleep(0.1)  # Sleep for a short while before checking again
+
+    #         except Exception as e:
+    #             logger.error(f"Unexpected error in prefetching process: {e}", exc_info=True)
+
+    
     def _prefetching_process(self):
         while not self.prefetch_stop_event.is_set():
             try:
@@ -101,20 +209,20 @@ class PrefetchService:
                     # Iterate over future batches to determine access during the prefetch cycle duration
                     job_batches_snapshot = list(job.future_batches.values())
                     for batch in job_batches_snapshot:
-                        if time_counter <= prefetch_cycle_duration:
-                                # If accessed within the cycle, add its time to the counter
-                                if batch.is_cached or batch.caching_in_progress:
-                                    time_counter += avg_time_on_hit
-                                else:
-                                    time_counter += avg_time_on_miss
-                                continue
+                        # if time_counter <= prefetch_cycle_duration:
+                        #         # If accessed within the cycle, add its time to the counter
+                        #         if batch.is_cached or batch.caching_in_progress:
+                        #             time_counter += avg_time_on_hit
+                        #         else:
+                        #             time_counter += avg_time_on_miss
+                        #         continue
                         
-                        elif prefetch_counter >= prefetch_conncurrency:
+                        if prefetch_counter >= prefetch_conncurrency:
                             break
 
                         else: 
-                            prefetch_counter += 1
                             if not batch.is_cached and not batch.caching_in_progress:
+                                prefetch_counter += 1
                                 batch.set_caching_in_progress(True)
                                 payload = {
                                     'bucket_name': self.dataset.bucket_name,

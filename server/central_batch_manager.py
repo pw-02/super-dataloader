@@ -487,7 +487,7 @@ class CentralBatchManager:
         partition_batch_set.batches[next_batch.batch_id] = next_batch
 
         for job in self.jobs.values():
-            if partition_batch_set.id in job.active_batch_set_ids:
+            if partition_batch_set.id == job.active_batch_set_id:
                 job.future_batches[next_batch.batch_id] = next_batch
             # else:
             #     job.future_batches[next_batch.batch_id] = next_batch

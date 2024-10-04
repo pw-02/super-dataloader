@@ -25,4 +25,4 @@ def fetch_from_cache(batch_id):
 
 if __name__ == "__main__":
       put_in_cache('batch_id')
-      print(fetch_from_cache('2_1_287_3b9019a164bd4a34'))
+      print(fetch_from_cache('4_1_80_4a5293ab5360614c'))

@@ -163,6 +163,7 @@ class PrefetchService:
 
                                 if 'success' in response.keys() and response['success']:
                                     # print(f"Batch '{batch.batch_id}' has been prefetched.")
+                                    logger.info(f"Batch '{batch.batch_id}' has been prefetched.")
                                     batch.set_cache_status(is_cached=True)
                                 else:
                                     batch.set_cache_status(is_cached=False)

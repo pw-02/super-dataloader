@@ -14,7 +14,7 @@ class DLTJob:
         self.partition_id_cycle: Optional[Iterator[int]] = None
         self.epochs_completed_count = -1
         self.started_partition_index = None
-        self.active_batch_set_id = None
+        self.active_batch_set_ids = set()
 
         # self.active_epoch = initial_epoch
         self.total_steps = 0
@@ -30,6 +30,11 @@ class DLTJob:
         self.cycle_bacthes = []
         self.lock = threading.Lock()
         self.step_idx = None
+
+        # self.future_batches: OrderedDict[int,OrderedDict[str, Batch]] = OrderedDict()
+    
+    def get_total_batches_assigned_to_job(self):
+        return len(self.future_batches)
 
     def __repr__(self):
         return (f"Job(job_id={self.job_id}, current_epoch={self.active_epoch}, "
@@ -59,13 +64,14 @@ class DLTJob:
             next_training_batch = None
             for batch_id, batch in list(self.future_batches.items()):
                 if batch.is_cached or not batch.caching_in_progress:
+           
                     next_training_batch = self.future_batches.pop(batch_id)
                     break
 
             # If no suitable batch found, get the first available one
             if not next_training_batch:
                 next_training_batch = self.future_batches.pop(next(iter(self.future_batches)))
-            
+
             self.current_batch = next_training_batch
             return next_training_batch
 

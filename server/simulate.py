@@ -12,7 +12,7 @@ logger = logging.getLogger()
 # Constants
 MISS_WAIT_FOR_DATA_TIME = 1.4
 HIT_WAIT_FOR_DATA_TIME = 0.001
-PREFETCH_TIME = 2.29
+PREFETCH_TIME = 3
 NUM_JOBS = 1 # Number of parallel jobs to simulate
 DELAY_BETWEEN_JOBS = 0.1  # Delay in seconds between the start of each job
 BATCHES_PER_JOB = 2346  # Number of batches each job will process
@@ -21,7 +21,7 @@ GPU_TIME = 0.01
 super_args:SUPERArgs = SUPERArgs(
             batch_size = 128,
             partitions_per_dataset = 1,
-            lookahead_steps = 390,
+            lookahead_steps = 1000,
             serverless_cache_address = '',
             use_prefetching = True,
             use_keep_alive = False,
@@ -30,7 +30,7 @@ super_args:SUPERArgs = SUPERArgs(
             cache_evition_ttl_threshold = 1000,
             prefetch_simulation_time = PREFETCH_TIME,
             evict_from_cache_simulation_time = None,
-            shuffle = True,
+            shuffle = False,
             drop_last = False,
             workload_kind = 'vision')
 
@@ -68,8 +68,8 @@ def simulate_training_job(job_id: str) -> Tuple[str, int, int, float]:
 
         batch_manager.update_job_progess(job_id, batch.batch_id, previous_step_wait_for_data_time, previous_step_is_cache_hit, GPU_TIME, cached_missed_batch)
         hit_rate = cache_hits / (i + 1) if (i + 1) > 0 else 0
-        if i % 50000== 0 or not previous_step_is_cache_hit:
-            logger.info(f'Job {job_id}, {batch.batch_id}, Hits: {cache_hits}, Misses: {cache_misses}, Rate: {hit_rate:.2f}')
+        if i % 100== 0 or not previous_step_is_cache_hit:
+            logger.info(f'Setp {i+1}, Job {job_id}, {batch.batch_id}, Hits: {cache_hits}, Misses: {cache_misses}, Rate: {hit_rate:.2f}')
 
     # Stop prefetcher and compute total duration
     total_duration = time.perf_counter() - start_time

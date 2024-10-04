@@ -71,7 +71,7 @@ class PrefetchService:
         required_concurrency = potential_batches_during_delay / batches_loaded_per_conccurency_unit 
         return required_concurrency
         
-    def prefetch_batches_from_list(self, prefetch_list: TypingOrderedDict[str, Tuple[Batch, str]], prefetch_cycle_started: float):
+    def prefetch_batches_from_list(self, prefetch_list: TypingOrderedDict[str, Tuple[Batch, str]], prefetch_cycle_started: float, is_warm_up: bool = False):
         with concurrent.futures.ThreadPoolExecutor() as executor:
             # Create client if not already initialized
             if self.prefetch_lambda_client is None:
@@ -113,7 +113,8 @@ class PrefetchService:
                 except Exception as e:
                     logger.error(f"Error in prefetching batch: {e}", exc_info=True)
         self.prefetch_lambda_invocations_count += len(prefetch_list)
-        self.prefetch_cycle_times.update(time.perf_counter() - prefetch_cycle_started + delay_time)
+        if not is_warm_up:
+            self.prefetch_cycle_times.update(time.perf_counter() - prefetch_cycle_started + delay_time)
 
     def _prefetching_process(self):
         while not self.prefetch_stop_event.is_set():
@@ -396,8 +397,8 @@ class CentralBatchManager:
             if len(prefetch_list) >= max_batches:
                         break
         logger.info(f"Warming up cache with {len(prefetch_list)} batches.")
-        self.prefetch_service.prefetch_batches_from_list(prefetch_list, warm_up_started)
-        logger.info(f"Prefetch took: {self.prefetch_service.prefetch_cycle_times.val:.4f}s for {len(prefetch_list)} batches. (Avg Prefetch Time: {self.prefetch_service.prefetch_cycle_times.avg:.4f}s, Avg Lambda Time: {self.prefetch_service.prefetch_lambda_execution_times.avg:.4f}s, Running Cost: ${self.prefetch_service._compute_prefeteching_cost():.4f})")
+        self.prefetch_service.prefetch_batches_from_list(prefetch_list, warm_up_started, True)
+        logger.info(f"Prefetch took: {time.perf_counter()-warm_up_started:.4f}s for {len(prefetch_list)} batches.")
 
 
 

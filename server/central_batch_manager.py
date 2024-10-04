@@ -377,7 +377,7 @@ class CentralBatchManager:
 
     def _warm_up_cache(self):
         warm_up_started = time.perf_counter()
-        max_batches = 1173
+        max_batches = 10
         prefetch_list: TypingOrderedDict[str, Tuple[Batch, str]] = OrderedDict()
         for epoch_id in self.epoch_partition_batches.keys():
             for partition_id in self.epoch_partition_batches[epoch_id].keys():

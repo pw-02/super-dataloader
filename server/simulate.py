@@ -15,7 +15,7 @@ HIT_WAIT_FOR_DATA_TIME = 0.001
 PREFETCH_TIME = 3
 NUM_JOBS = 1 # Number of parallel jobs to simulate
 DELAY_BETWEEN_JOBS = 0.1  # Delay in seconds between the start of each job
-BATCHES_PER_JOB = 2346  # Number of batches each job will process
+BATCHES_PER_JOB = 782  # Number of batches each job will process
 GPU_TIME = 0.01
 
 super_args:SUPERArgs = SUPERArgs(
@@ -68,7 +68,7 @@ def simulate_training_job(job_id: str) -> Tuple[str, int, int, float]:
 
         batch_manager.update_job_progess(job_id, batch.batch_id, previous_step_wait_for_data_time, previous_step_is_cache_hit, GPU_TIME, cached_missed_batch)
         hit_rate = cache_hits / (i + 1) if (i + 1) > 0 else 0
-        if i % 100== 0 or not previous_step_is_cache_hit:
+        if i % 1== 0 or not previous_step_is_cache_hit:
             logger.info(f'Setp {i+1}, Job {job_id}, {batch.batch_id}, Hits: {cache_hits}, Misses: {cache_misses}, Rate: {hit_rate:.2f}')
 
     # Stop prefetcher and compute total duration

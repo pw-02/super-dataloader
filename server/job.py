@@ -70,6 +70,8 @@ class DLTJob:
                     if batch.is_cached or not batch.caching_in_progress:
                         next_training_batch = self.future_batches.pop(batch_id)
                         break
+                else:
+                    logger.debug(f"Batch {batch_id} is not in the active batch set {active_batch_set_id}")
    
             # If no suitable batch found, get the first available one
             if not next_training_batch:

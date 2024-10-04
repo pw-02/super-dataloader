@@ -107,7 +107,9 @@ class PrefetchService:
                                     time_counter += avg_time_on_hit
                                 else:
                                     time_counter += avg_time_on_miss
+                                logger.info(f"batch '{batch.batch_id}' wont be prefetched in time. Skipping.")
                                 continue
+                    
                         
                         elif prefetch_counter >= prefetch_conncurrency:
                             break
@@ -115,6 +117,8 @@ class PrefetchService:
                         else: 
                             prefetch_counter += 1
                             if not batch.is_cached and not batch.caching_in_progress:
+                                logger.info(f"prefetching batch '{batch.batch_id}'")
+
                                 batch.set_caching_in_progress(True)
                                 payload = {
                                     'bucket_name': self.dataset.bucket_name,
@@ -124,6 +128,8 @@ class PrefetchService:
                                     'task': 'prefetch',
                                 }
                                 prefetch_list.add((batch, json.dumps(payload)))
+                            else:
+                                logger.info(f"batch '{batch.batch_id}' is already being prefetched")
                   
                 # Submit the prefetch list for processing
                 if prefetch_list:
@@ -149,11 +155,12 @@ class PrefetchService:
                             batch, payload = future_to_batch_payload[future]
                             try:
                                 response = future.result()
+
                                 batch.set_caching_in_progress(in_progress=False)
                                 
                                 self.prefetch_lambda_execution_times.update(response['execution_time'])
                                 # self.prefetch_lambda_invocations_count += 1
-                                
+
                                 if 'success' in response.keys() and response['success']:
                                     # print(f"Batch '{batch.batch_id}' has been prefetched.")
                                     batch.set_cache_status(is_cached=True)

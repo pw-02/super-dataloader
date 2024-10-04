@@ -376,7 +376,7 @@ class CentralBatchManager:
 
     def _warm_up_cache(self):
         warm_up_started = time.perf_counter()
-        max_batches = 1713
+        max_batches = 200
         prefetch_list: TypingOrderedDict[str, Tuple[Batch, str]] = OrderedDict()
         for epoch_id in self.epoch_partition_batches.keys():
             for partition_id in self.epoch_partition_batches[epoch_id].keys():
@@ -391,7 +391,6 @@ class CentralBatchManager:
                         'task': 'prefetch',
                     }
                     prefetch_list[batch.batch_id] = (batch, json.dumps(payload))
-                    prefetch_list.add((batch, json.dumps(payload)))
                     if len(prefetch_list) >= max_batches:
                         break
             if len(prefetch_list) >= max_batches:

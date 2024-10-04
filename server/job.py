@@ -64,7 +64,8 @@ class DLTJob:
         with self.lock:
             next_training_batch = None
             active_batch_set_id = next(iter(self.future_batches.items()))[1].batch_partition_id
-        
+            if active_batch_set_id not in self.active_batch_set_ids or active_batch_set_id != '1_1':
+                pass
             for batch_id, batch in list(self.future_batches.items()):
                 if batch.batch_partition_id == active_batch_set_id:
                     if batch.is_cached or not batch.caching_in_progress:

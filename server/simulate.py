@@ -10,12 +10,12 @@ from args import SUPERArgs
 logger = logging.getLogger()
 
 # Constants
-MISS_WAIT_FOR_DATA_TIME = 1.4
+MISS_WAIT_FOR_DATA_TIME = 0.0004
 HIT_WAIT_FOR_DATA_TIME = 0.001
 PREFETCH_TIME = 3
-NUM_JOBS = 1 # Number of parallel jobs to simulate
+NUM_JOBS =4 # Number of parallel jobs to simulate
 DELAY_BETWEEN_JOBS = 0.1  # Delay in seconds between the start of each job
-BATCHES_PER_JOB = 782  # Number of batches each job will process
+BATCHES_PER_JOB = 392  # Number of batches each job will process
 GPU_TIME = 0.01
 
 super_args:SUPERArgs = SUPERArgs(
@@ -23,7 +23,7 @@ super_args:SUPERArgs = SUPERArgs(
             partitions_per_dataset = 1,
             lookahead_steps = 1000,
             serverless_cache_address = '',
-            use_prefetching = True,
+            use_prefetching = False,
             use_keep_alive = False,
             prefetch_lambda_name = 'CreateVisionTrainingBatch',
             prefetch_cost_cap_per_hour=None,
@@ -47,6 +47,7 @@ def simulate_training_job(job_id: str) -> Tuple[str, int, int, float]:
     :param job_id: A unique identifier for the job.
     :return: A tuple containing job_id, number of cache hits, number of cache misses, and total duration.
     """
+    epoch = 1
     cache_hits = 0
     cache_misses = 0
     start_time = time.perf_counter()  # Start time for job duration measurement
@@ -65,12 +66,13 @@ def simulate_training_job(job_id: str) -> Tuple[str, int, int, float]:
             cache_misses += 1
             cached_missed_batch = False
             time.sleep(previous_step_wait_for_data_time + GPU_TIME)
-
+           
         batch_manager.update_job_progess(job_id, batch.batch_id, previous_step_wait_for_data_time, previous_step_is_cache_hit, GPU_TIME, cached_missed_batch)
         hit_rate = cache_hits / (i + 1) if (i + 1) > 0 else 0
         if i % 1== 0 or not previous_step_is_cache_hit:
-            logger.info(f'Setp {i+1}, Job {job_id}, {batch.batch_id}, Hits: {cache_hits}, Misses: {cache_misses}, Rate: {hit_rate:.2f}')
-
+            logger.info(f'Epoch: {epoch}, Setp {i+1}, Job {job_id}, {batch.batch_id}, Hits: {cache_hits}, Misses: {cache_misses}, Rate: {hit_rate:.2f}')
+        if i +1 == 391:
+            epoch += 1
     # Stop prefetcher and compute total duration
     total_duration = time.perf_counter() - start_time
     batch_manager.job_ended(job_id)

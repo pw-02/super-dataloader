@@ -468,9 +468,10 @@ class CentralBatchManager:
                             if is_new_job:
                                 job.future_batches.move_to_end(batch_id, last=False)
                         
-                            if len(job.future_batches) >= self.look_ahead:
-                                break
-                   
+                        if len(job.future_batches) >= self.look_ahead:
+                            break
+                    if len(job.future_batches) >= self.look_ahead:
+                            break
         pass
    
     def update_job_progess(self, 

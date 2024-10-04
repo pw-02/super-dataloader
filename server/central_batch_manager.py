@@ -395,6 +395,7 @@ class CentralBatchManager:
             #             break
             # if len(prefetch_list) >= max_batches:
             #             break
+        logger.info(f"Warming up cache with {len(prefetch_list)} batches.")
         self.prefetch_service.prefetch_batches_from_list(prefetch_list, warm_up_started)
 
 

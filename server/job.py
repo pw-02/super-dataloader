@@ -68,7 +68,7 @@ class DLTJob:
                 pass
             for batch_id, batch in list(self.future_batches.items()):
                 if batch.batch_partition_id == active_batch_set_id:
-                    if batch.is_cached or batch.caching_in_progress:
+                    if batch.is_cached or not batch.caching_in_progress:
                         next_training_batch = self.future_batches.pop(batch_id)
                         break
                 else:

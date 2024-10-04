@@ -343,7 +343,8 @@ class CentralBatchManager:
                 keep_alive_time_threshold=args.cache_evition_ttl_threshold,
                 simulate_keep_alvive= True if self.evict_from_cache_simulation_time is not None else False
                 # simulate_time=args.evict_from_cache_simulation_time
-            )        
+            )     
+
         self.lock = threading.Lock()  # Lock for thread safety
         
         # if self.prefetch_service is not None and self.prefetch_service.prefetch_stop_event.is_set():  
@@ -351,7 +352,8 @@ class CentralBatchManager:
             
         # if self.use_keep_alive and self.cache_eviction_service.cache_eviction_stop_event.is_set():
         #         self.cache_eviction_service.start_cache_evictor()
-    
+
+
     def _generate_new_batch(self):
         next_batch:Batch = next(self.batch_sampler)
 

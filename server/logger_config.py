@@ -10,7 +10,7 @@ def configure_logger():
 
     # Configure the root logger with DEBUG level and a simple format
     # logging.basicConfig(level=logging.DEBUG, format='%(message)s')
-    logging.basicConfig(level=logging.DEBUG, format='[%(asctime)s][%(name)s][%(levelname)s] - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+    logging.basicConfig(level=logging.INFO, format='[%(asctime)s][%(name)s][%(levelname)s] - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
     # Create and configure a logger named "SUPER"
     logger = logging.getLogger("SUPER")

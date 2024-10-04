@@ -27,7 +27,7 @@ class Batch:
         self.last_accessed_time:float = 0 #None #float('inf')
         self.has_been_accessed_before = False
         self.lock = threading.Lock()  # Lock for accessing shared resources
-        
+        self.batch_partition_id = f"{self.epoch_idx}_{self.partition_id}"
         self.evict_from_cache_simulation_time: Optional[float] = None
         self.ttl_timer: Optional[threading.Timer] = None  # Initialize timer
 

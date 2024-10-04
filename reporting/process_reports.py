@@ -48,14 +48,14 @@ def get_training_summary(folder_path):
          "data_fetch_time(s)": 0,
          "transformation_time(s)": 0,
          "cache_hits": 0,
-         "avg_gpu_time(s)": 0,
-         "avg_data_fetch_time(s)": 0,
-        "avg_data_transformation_time_on_hit(s)": 0,
-        "avg_data_transformation_time_on_miss(s)": 0,
-        "avg_data_fetch_time_on_hit(s)": 0,
-        "avg_data_fetch_time_on_miss(s)": 0,
-        "avg_transformation_time(s)": 0,
-        "avg_wait_on_data_time(s)": 0,
+        #  "avg_gpu_time(s)": 0,
+        #  "avg_data_fetch_time(s)": 0,
+        # "avg_data_transformation_time_on_hit(s)": 0,
+        # "avg_data_transformation_time_on_miss(s)": 0,
+        # "avg_data_fetch_time_on_hit(s)": 0,
+        # "avg_data_fetch_time_on_miss(s)": 0,
+        # "avg_transformation_time(s)": 0,
+        # "avg_wait_on_data_time(s)": 0,
     })
     search_pattern = os.path.join(folder_path, '**', 'metrics.csv')
     for metrics_csv in glob.iglob(search_pattern, recursive=True):
@@ -77,25 +77,28 @@ def get_training_summary(folder_path):
         metrics["transformation_time(s)"] += sum(csv_data["Transformation Time (s)"])
         metrics["cache_hits"] += sum(csv_data["Cache_Hits (Samples)"])
     
-    metrics["avg_gpu_time(s)"] = metrics["gpu_processing_time(s)"] / metrics["total_batches"]
-    metrics["avg_data_fetch_time(s)"] = metrics["data_fetch_time(s)"] / metrics["total_batches"]
-    metrics["avg_transformation_time(s)"] = metrics["transformation_time(s)"] / metrics["total_batches"]
-    metrics["avg_wait_on_data_time(s)"] = metrics["wait_on_data_time(s)"] / metrics["total_batches"]
+    # metrics["avg_gpu_time(s)"] = metrics["gpu_processing_time(s)"] / metrics["total_batches"]
+    # metrics["avg_data_fetch_time(s)"] = metrics["data_fetch_time(s)"] / metrics["total_batches"]
+    # metrics["avg_transformation_time(s)"] = metrics["transformation_time(s)"] / metrics["total_batches"]
+    # metrics["avg_wait_on_data_time(s)"] = metrics["wait_on_data_time(s)"] / metrics["total_batches"]
 
     if metrics['num_jobs'] > 0:
         for key in ['total_time(s)', "wait_on_data_time(s)", "gpu_processing_time(s)", "data_fetch_time(s)", "transformation_time(s)"]:
             metrics[key] = metrics[key] / metrics['num_jobs']
         
-        metrics["throughput(batches/s)"] = metrics["total_batches"] / metrics["total_time(s)"]
+        # metrics["throughput(batches/s)"] = metrics["total_batches"] / metrics["total_time(s)"]
         metrics["throughput(samples/s)"] = metrics["total_samples"] / metrics["total_time(s)"]
         
         metrics["cache_hit(%)"] = metrics["cache_hits"] / metrics["total_samples"]
         metrics["compute_time(%)"] = metrics["gpu_processing_time(s)"] / metrics["total_time(s)"]
         metrics["waiting_on_data_time(%)"] = metrics["wait_on_data_time(s)"] / metrics["total_time(s)"]
-        metrics["transform_time(%)"] = metrics["transformation_time(s)"] / (metrics["transformation_time(s)"] + metrics["data_fetch_time(s)"])
-        metrics["data_fetch_time(%)"] = metrics["data_fetch_time(s)"] / (metrics["transformation_time(s)"] + metrics["data_fetch_time(s)"])
-        metrics["transform_delay(%)"] = metrics["transform_time(%)"] *  metrics["waiting_on_data_time(%)"] 
-        metrics["data_fetch_delay(%)"] = metrics["data_fetch_time(%)"]*  metrics["waiting_on_data_time(%)"] 
+
+        transform_percent = metrics["transformation_time(s)"] / (metrics["transformation_time(s)"] + metrics["data_fetch_time(s)"])
+        data_fetch_percent = metrics["data_fetch_time(s)"] / (metrics["transformation_time(s)"] + metrics["data_fetch_time(s)"])
+        # metrics["transform_time(%)"] = metrics["transformation_time(s)"] / (metrics["transformation_time(s)"] + metrics["data_fetch_time(s)"])
+        # metrics["data_fetch_time(%)"] = metrics["data_fetch_time(s)"] / (metrics["transformation_time(s)"] + metrics["data_fetch_time(s)"])
+        metrics["transform_delay(%)"] = transform_percent *  metrics["waiting_on_data_time(%)"] 
+        metrics["data_fetch_delay(%)"] = data_fetch_percent *  metrics["waiting_on_data_time(%)"] 
     
     return metrics
 
@@ -105,7 +108,8 @@ def compute_ec2_costs(instance_type: str, time_seconds: float):
         'p3.8xlarge':  12.24,
         'c5n.xlarge': 0.4,
         'cache.t3.medium':  0.068,
-        'cache.m7g.4xlarge': 1.257
+        'cache.m7g.4xlarge': 1.257,
+        'cache.m7g.xlarge': 0.315
     }
     #  # Convert seconds to hours
     # if 'cache' in instance_type:
@@ -133,7 +137,7 @@ def compute_serverless_redis_costs(time_seconds, avg_cache_size_gb, num_requests
     
 
 
-def get_cost_summary(folder_path, exp_duration, num_samples):
+def get_cost_summary(folder_path, exp_duration, num_samples, cache_instance_type = 'cache.m7g.xlarge'):
     metrics = OrderedDict({
          "total_lambda_cost": 0,
          "prefetch_lambda_cost": 0,
@@ -143,7 +147,7 @@ def get_cost_summary(folder_path, exp_duration, num_samples):
          "redis_cache_cost": 0,
          "total_cost": 0
     })
-    metrics["training_compute_cost"] = compute_ec2_costs('p3.8xlarge', exp_duration)
+    metrics["training_compute_cost"] = compute_ec2_costs(cache_instance_type, exp_duration)
 
     if 'super' in folder_path:
         search_pattern = os.path.join(folder_path, '**', 'bill.csv')
@@ -177,7 +181,7 @@ def get_cost_summary(folder_path, exp_duration, num_samples):
     return metrics
 
 if __name__ == "__main__":
-    folder_path = "C:\\Users\\pw\\Desktop\\system-comparison\\on_sim_cpu(m5n.8xlarge)\\albef_retrieval"
+    folder_path = "C:\\Users\\pw\\Desktop\\super_results_cpu\\cifar10_resnet18"
     base_name = os.path.basename(os.path.normpath(folder_path))
     exp_names = get_subfolder_names(folder_path, include_children = False)
     overall_summary = []
@@ -187,7 +191,7 @@ if __name__ == "__main__":
         exp_path = os.path.join(folder_path, exp)
         train_summary = get_training_summary(exp_path)
         exp_summary.update(train_summary)
-        cost_summary = get_cost_summary(exp_path,train_summary["total_time(s)"],train_summary["total_samples"])
+        cost_summary = get_cost_summary(exp_path,train_summary["total_time(s)"],train_summary["total_samples"], cache_instance_type = 'cache.m7g.xlarge')
         exp_summary.update(cost_summary)
         save_dict_list_to_csv([exp_summary], os.path.join(exp_path, f'{exp}_summary.csv'))
         overall_summary.append(exp_summary)

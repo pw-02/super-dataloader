@@ -6,7 +6,7 @@ import torch
 # cache_address: 44.243.2.122:6378 #null
 
 
-cache_client =redis.StrictRedis = redis.StrictRedis(host="52.40.15.90", port=6378)
+cache_client =redis.StrictRedis = redis.StrictRedis(host="35.89.192.32", port=6378)
 
 def put_in_cache(batch_id):
      try:
@@ -25,4 +25,5 @@ def fetch_from_cache(batch_id):
 
 if __name__ == "__main__":
       put_in_cache('batch_id')
-      print(fetch_from_cache('4_1_80_4a5293ab5360614c'))
+      # print(fetch_from_cache('batch_id'))
+      # print(fetch_from_cache('1_1_2913_fc30e6f6213f1a42'))

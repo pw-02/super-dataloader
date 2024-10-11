@@ -136,7 +136,7 @@ class PrefetchService:
 
                     prefetch_cycle_duration = self.prefetch_cycle_times.avg + self.prefetch_delay if self.prefetch_cycle_times.count > 0 else self.simulate_time if self.simulate_time else 3
                     prefetch_conncurrency =  math.ceil(required_prefetch_bacthes_per_second * prefetch_cycle_duration)
-
+                    
                     logger.debug(f'prefetch_conncurrency: {prefetch_conncurrency}, prefetch_cycle_duration: {prefetch_cycle_duration}, required_prefetch_bacthes_per_second: {required_prefetch_bacthes_per_second}')
                     #add in a check to see if the job is suffering from a data loading delay and benefit from prefetching
                     prefetch_counter, time_counter = 0, 0
@@ -164,9 +164,9 @@ class PrefetchService:
                             break
 
                         else: 
-                            prefetch_counter += 1
+                            # prefetch_counter += 1
                             if not batch.is_cached and not batch.caching_in_progress:
-                                # prefetch_counter += 1
+                                prefetch_counter += 1
                                 logger.debug(f"prefetching batch '{batch.batch_id}'")
 
                                 batch.set_caching_in_progress(True)

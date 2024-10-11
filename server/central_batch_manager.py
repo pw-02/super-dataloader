@@ -127,8 +127,8 @@ class PrefetchService:
                         continue
 
                     max_bacthes_per_second = math.ceil(1 / job.training_step_gpu_times.avg)
-                    no_caching_batches_per_second =  math.floor(1 / job.dataload_time_on_miss.avg) if job.dataload_time_on_miss.count > 0 else 0
-                    required_prefetch_bacthes_per_second = max_bacthes_per_second - no_caching_batches_per_second
+                    batches_per_second_without_caching =  math.floor(1 / job.training_step_times_on_miss.avg) if job.dataload_time_on_miss.count > 0 else 0
+                    required_prefetch_bacthes_per_second = max_bacthes_per_second - batches_per_second_without_caching
 
                     if required_prefetch_bacthes_per_second < 1:
                         logger.info(f"Job '{job.job_id}' requires no prefetching. required_prefetch_bacthes_per_second: {required_prefetch_bacthes_per_second}")

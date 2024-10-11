@@ -127,22 +127,23 @@ class PrefetchService:
                         continue
 
                     max_bacthes_per_second = math.ceil(1 / job.training_step_gpu_times.avg)
-                    batches_per_second_without_caching =  math.floor(1 / job.training_step_times_on_miss.avg) if job.dataload_time_on_miss.count > 0 else 0
-                    required_prefetch_bacthes_per_second = max_bacthes_per_second - batches_per_second_without_caching
+                    no_caching_batches_per_second =  math.floor(1 / job.dataload_time_on_miss.avg) if job.dataload_time_on_miss.count > 0 else 0
+                    required_prefetch_bacthes_per_second = max_bacthes_per_second - no_caching_batches_per_second
 
                     if required_prefetch_bacthes_per_second < 1:
                         logger.info(f"Job '{job.job_id}' requires no prefetching. required_prefetch_bacthes_per_second: {required_prefetch_bacthes_per_second}")
                         continue
-
-                    prefetch_cycle_duration = self.prefetch_cycle_times.avg + self.prefetch_delay if self.prefetch_cycle_times.count > 0 else self.simulate_time if self.simulate_time else 3
-                    prefetch_conncurrency =  math.ceil(required_prefetch_bacthes_per_second * prefetch_cycle_duration)
+                    prefetch_cycle_duration = self.prefetch_lambda_execution_times.avg + self.prefetch_delay if self.prefetch_lambda_execution_times.count > 0 else self.simulate_time if self.simulate_time else 3
                     
+                    #prefetch_cycle_duration = self.prefetch_cycle_times.avg + self.prefetch_delay if self.prefetch_cycle_times.count > 0 else self.simulate_time if self.simulate_time else 3
+                    prefetch_conncurrency =  math.ceil(required_prefetch_bacthes_per_second * prefetch_cycle_duration)
+
                     logger.debug(f'prefetch_conncurrency: {prefetch_conncurrency}, prefetch_cycle_duration: {prefetch_cycle_duration}, required_prefetch_bacthes_per_second: {required_prefetch_bacthes_per_second}')
                     #add in a check to see if the job is suffering from a data loading delay and benefit from prefetching
                     prefetch_counter, time_counter = 0, 0
                     # Fetch average times for cache hit and miss scenarios for the current job
                     avg_time_on_hit = job.training_step_times_on_hit.avg if job.training_step_times_on_hit.count > 0 else job.training_step_gpu_times.avg
-                    avg_time_on_miss = job.training_step_times_on_miss.avg if job.training_step_times_on_miss.count > 0 else job.training_step_gpu_times.avg
+                    avg_time_on_miss = job.training_step_times_on_miss.avg if job.training_step_times_on_miss.count > 0 else job.training_step_gpu_times.avg + 1.5
 
                     if len(job.future_batches) < prefetch_conncurrency:
                         logger.info(f"Job '{job.job_id}' has {len(job.future_batches)} batches, less than the required prefetch concurrency of {prefetch_conncurrency}.")
@@ -166,7 +167,7 @@ class PrefetchService:
                         else: 
                             # prefetch_counter += 1
                             if not batch.is_cached and not batch.caching_in_progress:
-                                prefetch_counter += 1 #more aggressive prefetching
+                                prefetch_counter += 1
                                 logger.debug(f"prefetching batch '{batch.batch_id}'")
 
                                 batch.set_caching_in_progress(True)
@@ -424,26 +425,26 @@ class CentralBatchManager:
             if partition_batch_set.id in job.active_batch_set_ids:
                 job.future_batches[next_batch.batch_id] = next_batch
            
-    # def allocate_batches_to_job(self, job: DLTJob):
+    def allocate_batches_to_job(self, job: DLTJob):
 
-    #     if job.partition_id_cycle is None: #new job, lets start cycling partitons at the currently active partition
-    #         partition_ids = list(self.dataset.partitions.keys())
-    #         start_index = partition_ids.index(self.active_partition_id)
-    #         reordered_ids = partition_ids[start_index:] + partition_ids[:start_index]
-    #         job.partition_id_cycle = cycle(reordered_ids)
-    #         job.started_partition_index = copy.deepcopy(self.active_partition_id)
+        if job.partition_id_cycle is None: #new job, lets start cycling partitons at the currently active partition
+            partition_ids = list(self.dataset.partitions.keys())
+            start_index = partition_ids.index(self.active_partition_id)
+            reordered_ids = partition_ids[start_index:] + partition_ids[:start_index]
+            job.partition_id_cycle = cycle(reordered_ids)
+            job.started_partition_index = copy.deepcopy(self.active_partition_id)
         
-    #     next_partition_id = next(job.partition_id_cycle)
-    #     if next_partition_id == job.started_partition_index:
-    #         job.epochs_completed_count += 1
+        next_partition_id = next(job.partition_id_cycle)
+        if next_partition_id == job.started_partition_index:
+            job.epochs_completed_count += 1
 
-    #     #now find the last batch set for this partition, and make sure it hasn't been processed by the job before
-    #     for epoch_id in reversed(self.epoch_partition_batches.keys()):
-    #         if next_partition_id in self.epoch_partition_batches[epoch_id]:
-    #             batch_set = self.epoch_partition_batches[epoch_id][next_partition_id]
-    #             job.future_batches.update(batch_set.batches)
-    #             job.active_batch_set_id = batch_set.id
-    #             break
+        #now find the last batch set for this partition, and make sure it hasn't been processed by the job before
+        for epoch_id in reversed(self.epoch_partition_batches.keys()):
+            if next_partition_id in self.epoch_partition_batches[epoch_id]:
+                batch_set = self.epoch_partition_batches[epoch_id][next_partition_id]
+                job.future_batches.update(batch_set.batches)
+                job.active_batch_set_id = batch_set.id
+                break
 
     def allocate_batches_to_job(self, job: DLTJob):
         is_new_job: bool = False

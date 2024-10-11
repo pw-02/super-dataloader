@@ -166,7 +166,7 @@ class PrefetchService:
                         else: 
                             # prefetch_counter += 1
                             if not batch.is_cached and not batch.caching_in_progress:
-                                prefetch_counter += 1
+                                prefetch_counter += 1 #more aggressive prefetching
                                 logger.debug(f"prefetching batch '{batch.batch_id}'")
 
                                 batch.set_caching_in_progress(True)

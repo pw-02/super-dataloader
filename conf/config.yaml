@@ -5,10 +5,10 @@ defaults:
   # - override hydra/job_logging: disabled
 
 partitions_per_dataset: 1
-lookahead_steps: 250
+lookahead_steps: 200
 serverless_cache_address: 10.0.17.5:6378  #10.0.28.76:6378d 10.0.17.5:6378
 cache_evition_ttl_threshold: 1000 #secondss
-use_prefetching: False
+use_prefetching: True
 use_keep_alive: False
 prefetch_cost_cap_per_hour: null
 prefetch_simulation_time: null

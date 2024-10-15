@@ -110,6 +110,7 @@ def compute_ec2_costs(instance_type: str, time_seconds: float):
         'cache.m7g.4xlarge': 1.257,
         'cache.m7g.xlarge': 0.315,
         'cache.m7g.12xlarge': 3.016,
+        'cache.m5.2xlarge': 0.4984,
 
     }
     #  # Convert seconds to hours
@@ -182,7 +183,7 @@ def get_cost_summary(folder_path, exp_duration, num_samples, cache_instance_type
     return metrics
 
 if __name__ == "__main__":
-    folder_path = "C:\\Users\\pw\\Desktop\\dataloader_project_results_final\\imagenet_resnet50"
+    folder_path = "C:\\Users\\pw\\Desktop\\dataloader_project_results_final\\albef_retrieval"
     base_name = os.path.basename(os.path.normpath(folder_path))
     exp_names = get_subfolder_names(folder_path, include_children = False)
     overall_summary = []
@@ -194,7 +195,7 @@ if __name__ == "__main__":
         exp_summary.update(train_summary)
         cost_summary = get_cost_summary(exp_path,train_summary["total_time(s)"],
                                         train_summary["total_samples"], 
-                                        cache_instance_type = 'cache.m7g.12xlarge')
+                                        cache_instance_type = 'cache.m5.2xlarge')
         exp_summary.update(cost_summary)
         save_dict_list_to_csv([exp_summary], os.path.join(exp_path, f'{exp}_summary.csv'))
         overall_summary.append(exp_summary)

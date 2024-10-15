@@ -12,15 +12,10 @@ visual_map = {
 
 # Define the workloads and their associated costs
 figure_data: Dict[str, Dict[str, Dict[str, float]]] = {
-    'ResNet-18/CIFAR-10': {
-        'CoorDL': {"Compute": 0.797, "Cache": 0.081, "Prefetch": 0},
-        'Shade': {"Compute": 2.019, "Cache": 0.207, "Prefetch": 0},
-        r'$\bf{SUPER}$': {"Compute": 0.797, "Cache": 0.042, "Prefetch": 0},
-    },
     'ResNet-50/ImageNet': {
-        'CoorDL': {"Compute": 68.5219680640856, "Cache": 7.03693740658134, "Prefetch": 0},
-        'Shade': {"Compute": 78.41205909511, "Cache": 8.05261097079683, "Prefetch": 0},
-        r'$\bf{SUPER}$': {"Compute": 55.32346405, "Cache": 2.142698337, "Prefetch": 5.424994645},
+        'CoorDL': {"Compute": 36.1275267572086, "Cache": 8, "Prefetch": 0},
+        'Shade': {"Compute": 77.8915604829167, "Cache": 19.1928877791239, "Prefetch": 0},
+        r'$\bf{SUPER}$': {"Compute": 26.30234985, "Cache": 4.857332747, "Prefetch": 1.905632259},
     },
     'Albef/COCO': {
         'CoorDL': {"Compute":16.90456879, "Cache":1.933336844, "Prefetch": 0},
@@ -66,7 +61,7 @@ for workload, loaders_data in figure_data.items():
             hatch='', 
             label='Prefetch', width=bar_width)
     
-    plt.ylim(0, 25)
+    plt.ylim(0, 110)
     
     # Calculate total costs for the current workload
     total_costs = np.array(compute_costs) + np.array(Cache_costs) + np.array(Prefetch_costs)

@@ -15,15 +15,10 @@ visual_map = {
 
 # Data for the specified workloads
 result_data = {
-    'ResNet-18/CIFAR-10': {
-        'CoorDL': {'IO %': 70, 'Transform %': 13, 'GPU %': 17},
-        'SHADE': {'IO %': 88, 'Transform %': 5, 'GPU %': 7},
-        r'$\bf{SUPER}$': {'IO %': 84, 'Transform %': 1, 'GPU %': 15},
-    },
-    'ResNet-50/Cifar10': {
-        'CoorDL': {'IO %': 61, 'Transform %': 10, 'GPU %': 29},
-        'SHADE': {'IO %': 67, 'Transform %': 8, 'GPU %': 25},
-        r'$\bf{SUPER}$': {'IO %': 59, 'Transform %': 9, 'GPU %': 33},
+    'ResNet-50/ImageNet': {
+        'CoorDL': {'IO %': 45, 'Transform %': 15, 'GPU %': 55},
+        'SHADE': {'IO %': 74, 'Transform %': 8, 'GPU %': 26},
+        r'$\bf{SUPER}$': {'IO %': 29, 'Transform %': 10, 'GPU %': 71},
     },
     'Albef/COCO': {
         'CoorDL': {'IO %': 56, 'Transform %': 12, 'GPU %': 32},
@@ -35,7 +30,7 @@ result_data = {
         r'$\bf{SUPER}$': {'IO %': 2, 'Transform %': 7, 'GPU %': 91},
     }
 }
-bar_width = 0.5
+bar_width = 0.75
 # Iterate over the models and create a separate bar chart for each
 for model_name, workloads in result_data.items():
     labels = list(workloads.keys())
@@ -57,7 +52,7 @@ for model_name, workloads in result_data.items():
     current_ylim = plt.ylim()
     padding = 20
     plt.ylim(current_ylim[0], current_ylim[1] + padding)    
-    # plt.title(f'{model_name}', fontsize=12)
+    plt.title(f'{model_name}', fontsize=12)
     # Manually set y-ticks and y-tick labels
     plt.yticks(ticks=np.arange(0, 101, 20), labels=[f'{i}%' for i in np.arange(0, 101, 20)])
 

@@ -13,12 +13,12 @@ visual_map = {
 # Define the workloads
 figure_data: Dict[str, Dict[str, float]] = {}
 figure_data['ResNet-18/CIFAR-10'] = {'CoorDL': 5118.62461267584, 'Shade': 1989.18672796396, r'$\bf{SUPER}$': 4622.45918749042}
-figure_data['ResNet-50/ImageNet'] = {'CoorDL': 435.187500337274, 'Shade': 380.291178986009, r'$\bf{SUPER}$': 489.852536604153}
+figure_data['ResNet-50/ImageNet'] = {'CoorDL': 825, 'Shade': 382, r'$\bf{SUPER}$': 1066}
 figure_data['Albef/COCO'] = {'CoorDL': 90, 'Shade': 70.6977693463706, r'$\bf{SUPER}$': 193.21531208424}
 figure_data['Pythia-14m/OpenWebText'] = {'LiData': 294016.381, r'$\bf{SUPER}$': 571924.4428}
 
 # Loop over each workload and create individual plots
-bar_width = 0.5
+bar_width = 0.75
 for workload in figure_data.keys():
     # Create a new figure for each workload
     plt.figure(figsize=(4, 2.5))

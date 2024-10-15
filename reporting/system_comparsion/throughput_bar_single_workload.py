@@ -14,7 +14,7 @@ visual_map = {
 figure_data: Dict[str, Dict[str, float]] = {}
 figure_data['ResNet-18/CIFAR-10'] = {'CoorDL': 5118.62461267584, 'Shade': 1989.18672796396, r'$\bf{SUPER}$': 4622.45918749042}
 figure_data['ResNet-50/ImageNet'] = {'CoorDL': 825, 'Shade': 382, r'$\bf{SUPER}$': 1066}
-figure_data['Albef/COCO'] = {'CoorDL': 90, 'Shade': 70.6977693463706, r'$\bf{SUPER}$': 193.21531208424}
+figure_data['Albef/COCO'] = {'CoorDL': 284.0157, 'Shade': 284.015788228895, r'$\bf{SUPER}$': 321.434132910756}
 figure_data['Pythia-14m/OpenWebText'] = {'LiData': 294016.381, r'$\bf{SUPER}$': 571924.4428}
 
 # Loop over each workload and create individual plots
@@ -34,10 +34,13 @@ for workload in figure_data.keys():
                    hatch=[visual_map[dl]['hatch'] for dl in loaders], 
                    width=bar_width, alpha=1.0)
     
-    # Set titles and labels
-    plt.title(f'{workload}', fontsize=12)
-    plt.ylabel('Throughput (samples/s)', fontsize=12)
-    
-    # Adjust layout and display the plot
-    plt.tight_layout()
-    plt.show()
+# Set titles and labels
+plt.title(f'{workload}', fontsize=12)
+current_ylim = plt.ylim(0,1100)
+padding = 20
+plt.ylim(0,1100)    
+plt.ylabel('Throughput (samples/s)', fontsize=12)
+
+# Adjust layout and display the plot
+plt.tight_layout()
+plt.show()

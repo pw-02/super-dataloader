@@ -22,8 +22,13 @@ result_data = {
     },
     'Albef/COCO': {
         'CoorDL': {'IO %': 56, 'Transform %': 12, 'GPU %': 32},
-        'SHADE': {'IO %': 56, 'Transform %': 12, 'GPU %': 32},
-        r'$\bf{SUPER}$': {'IO %': 9, 'Transform %': 3, 'GPU %': 88},
+        'SHADE': {'IO %': 35, 'Transform %': 7, 'GPU %': 65},
+        r'$\bf{SUPER}$': {'IO %': 29, 'Transform %': 9, 'GPU %': 73},
+    },
+    'ViT/Cifar10': {
+        'CoorDL': {'IO %': 56, 'Transform %': 12, 'GPU %': 32},
+        'SHADE': {'IO %': 35, 'Transform %': 7, 'GPU %': 65},
+        r'$\bf{SUPER}$': {'IO %': 29, 'Transform %': 9, 'GPU %': 73},
     },
     'Pythia-14m/OpenWebText': {
         'LitData': {'IO %': 2, 'Transform %': 51, 'GPU %': 48},
@@ -39,7 +44,7 @@ for model_name, workloads in result_data.items():
     gpu_values = [workloads[label]['GPU %'] for label in labels]
 
     # Create a new figure for each model
-    plt.figure(figsize=(4.5, 2.5))
+    plt.figure(figsize=(4.5, 3))
     
     # Create the stacked bar chart
     plt.bar(labels, io_values, width=bar_width, label='IO %', color=visual_map['io']['color'], hatch=visual_map['io']['hatch'])

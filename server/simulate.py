@@ -10,20 +10,22 @@ from args import SUPERArgs
 logger = logging.getLogger()
 
 # Constants
-MISS_WAIT_FOR_DATA_TIME = 0.0004
-HIT_WAIT_FOR_DATA_TIME = 0.001
-PREFETCH_TIME = 3
-NUM_JOBS =4 # Number of parallel jobs to simulate
-DELAY_BETWEEN_JOBS = 0.1  # Delay in seconds between the start of each job
-BATCHES_PER_JOB = 392  # Number of batches each job will process
-GPU_TIME = 0.01
+MISS_WAIT_FOR_DATA_TIME = 0.659
+HIT_WAIT_FOR_DATA_TIME = 0.0008
+PREFETCH_TIME = 2
+NUM_JOBS = 10 # Number of parallel jobs to simulate
+DELAY_BETWEEN_JOBS = 0  # Delay in seconds between the start of each job
+BATCHES_PER_JOB = 500  # Number of batches each job will process
+GPU_TIME = 0.342
+# PREPROCESS_TIME_ON_HIT = 0.001
+# PREPROCESS_TIME_ON_MISS = 0.001
 
 super_args:SUPERArgs = SUPERArgs(
             batch_size = 128,
             partitions_per_dataset = 1,
             lookahead_steps = 1000,
             serverless_cache_address = '',
-            use_prefetching = False,
+            use_prefetching = True,
             use_keep_alive = False,
             prefetch_lambda_name = 'CreateVisionTrainingBatch',
             prefetch_cost_cap_per_hour=None,

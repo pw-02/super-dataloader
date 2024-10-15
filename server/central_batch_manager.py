@@ -132,7 +132,8 @@ class PrefetchService:
 
                     if required_prefetch_bacthes_per_second < 1:
                         logger.info(f"Job '{job.job_id}' requires no prefetching. required_prefetch_bacthes_per_second: {required_prefetch_bacthes_per_second}")
-                        continue
+                        # continue
+                        required_prefetch_bacthes_per_second=5
                     prefetch_cycle_duration = self.prefetch_lambda_execution_times.avg + self.prefetch_delay if self.prefetch_lambda_execution_times.count > 0 else self.simulate_time if self.simulate_time else 3
                     
                     #prefetch_cycle_duration = self.prefetch_cycle_times.avg + self.prefetch_delay if self.prefetch_cycle_times.count > 0 else self.simulate_time if self.simulate_time else 3

@@ -35,7 +35,6 @@ def get_subfolder_names(folder_path, include_children = False):
     return basenames
 
 
-
 def get_training_summary(folder_path):
     metrics = OrderedDict({
          "num_jobs": 0,
@@ -109,7 +108,9 @@ def compute_ec2_costs(instance_type: str, time_seconds: float):
         'c5n.xlarge': 0.4,
         'cache.t3.medium':  0.068,
         'cache.m7g.4xlarge': 1.257,
-        'cache.m7g.xlarge': 0.315
+        'cache.m7g.xlarge': 0.315,
+        'cache.m7g.12xlarge': 3.016,
+
     }
     #  # Convert seconds to hours
     # if 'cache' in instance_type:
@@ -147,7 +148,7 @@ def get_cost_summary(folder_path, exp_duration, num_samples, cache_instance_type
          "redis_cache_cost": 0,
          "total_cost": 0
     })
-    metrics["training_compute_cost"] = compute_ec2_costs(cache_instance_type, exp_duration)
+    metrics["training_compute_cost"] = compute_ec2_costs('p3.8xlarge', exp_duration)
 
     if 'super' in folder_path:
         search_pattern = os.path.join(folder_path, '**', 'bill.csv')
@@ -175,13 +176,13 @@ def get_cost_summary(folder_path, exp_duration, num_samples, cache_instance_type
              ValueError("Unknown dataset")
         metrics["total_cost"] = metrics["training_compute_cost"] + metrics["redis_cache_cost"]
     else:
-        metrics["redis_cache_cost"] = compute_ec2_costs('cache.m7g.4xlarge' ,exp_duration)
+        metrics["redis_cache_cost"] = compute_ec2_costs(cache_instance_type ,exp_duration)
         metrics["total_cost"] = metrics["training_compute_cost"] + metrics["redis_cache_cost"]
 
     return metrics
 
 if __name__ == "__main__":
-    folder_path = "C:\\Users\\pw\\Desktop\\super_results_cpu\\cifar10_resnet18"
+    folder_path = "C:\\Users\\pw\\Desktop\\dataloader_project_results_final\\imagenet_resnet50"
     base_name = os.path.basename(os.path.normpath(folder_path))
     exp_names = get_subfolder_names(folder_path, include_children = False)
     overall_summary = []
@@ -191,7 +192,9 @@ if __name__ == "__main__":
         exp_path = os.path.join(folder_path, exp)
         train_summary = get_training_summary(exp_path)
         exp_summary.update(train_summary)
-        cost_summary = get_cost_summary(exp_path,train_summary["total_time(s)"],train_summary["total_samples"], cache_instance_type = 'cache.m7g.xlarge')
+        cost_summary = get_cost_summary(exp_path,train_summary["total_time(s)"],
+                                        train_summary["total_samples"], 
+                                        cache_instance_type = 'cache.m7g.12xlarge')
         exp_summary.update(cost_summary)
         save_dict_list_to_csv([exp_summary], os.path.join(exp_path, f'{exp}_summary.csv'))
         overall_summary.append(exp_summary)

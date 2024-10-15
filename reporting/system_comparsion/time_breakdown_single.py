@@ -44,7 +44,7 @@ for model_name, workloads in result_data.items():
     gpu_values = [workloads[label]['GPU %'] for label in labels]
 
     # Create a new figure for each model
-    plt.figure(figsize=(4, 2.5))
+    plt.figure(figsize=(4.5, 2.5))
     
     # Create the stacked bar chart
     plt.bar(labels, io_values, width=bar_width, label='IO %', color=visual_map['io']['color'], hatch=visual_map['io']['hatch'])
@@ -55,14 +55,14 @@ for model_name, workloads in result_data.items():
     plt.ylabel('Time Breakdown (%)')
     plt.gca().yaxis.set_major_formatter(FuncFormatter(percent_formatter))
     current_ylim = plt.ylim()
-    padding = 15
+    padding = 20
     plt.ylim(current_ylim[0], current_ylim[1] + padding)    
-    plt.title(f'{model_name}', fontsize=12)
+    # plt.title(f'{model_name}', fontsize=12)
     # Manually set y-ticks and y-tick labels
     plt.yticks(ticks=np.arange(0, 101, 20), labels=[f'{i}%' for i in np.arange(0, 101, 20)])
 
     # Create a legend for the figure
-    plt.legend(loc='upper center', ncols=3, fontsize=8)
+    plt.legend(loc='upper center', ncols=3, fontsize=10)
 
     # Show the plot for the current model
     plt.tight_layout()

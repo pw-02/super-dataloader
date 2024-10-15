@@ -31,7 +31,6 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
                 message = f"Dataset '{request.data_dir}' registered with SUPER. Total Files: {len(dataset)}"
             success = True
         else:
-
             dataset = Dataset(request.data_dir, self.args.batch_size, False, self.args.partitions_per_dataset, request.dataset_kind)
             self.datasets[request.data_dir] = CentralBatchManager(dataset=dataset, 
                                                                   args=self.args,)

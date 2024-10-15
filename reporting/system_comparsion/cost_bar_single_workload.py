@@ -34,7 +34,7 @@ figure_data: Dict[str, Dict[str, Dict[str, float]]] = {
 }
 
 # Loop over each workload and create individual stacked bar plots
-bar_width = 0.5
+bar_width = 0.75
 for workload, loaders_data in figure_data.items():
     # Create a new figure for each workload
     # plt.figure(figsize=(6, 4))

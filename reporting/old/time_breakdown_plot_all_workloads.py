@@ -36,7 +36,7 @@ result_data = {
 }
 
 # Set up the figure and axes
-fig, axs = plt.subplots(2, 2, figsize=(6.5, 3.8))
+fig, axs = plt.subplots(1, 4, figsize=(16, 2.5))
 axs = axs.flatten()  # Flatten the array for easy indexing
 bar_width = 0.5  # Width of the bars
 # Iterate over the models and create a bar chart for each

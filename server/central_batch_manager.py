@@ -137,9 +137,9 @@ class PrefetchService:
                     prefetch_cycle_duration = self.prefetch_lambda_execution_times.avg + self.prefetch_delay if self.prefetch_lambda_execution_times.count > 0 else self.simulate_time if self.simulate_time else 2.5
                     
                     #prefetch_cycle_duration = self.prefetch_cycle_times.avg + self.prefetch_delay if self.prefetch_cycle_times.count > 0 else self.simulate_time if self.simulate_time else 3
-                    prefetch_conncurrency =  math.ceil(required_prefetch_bacthes_per_second * prefetch_cycle_duration)
+                    prefetch_conncurrency =  math.ceil(required_prefetch_bacthes_per_second * prefetch_cycle_duration) + 5 #add a buffer of 5
 
-                    logger.debug(f'prefetch_conncurrency: {prefetch_conncurrency}, prefetch_cycle_duration: {prefetch_cycle_duration}, required_prefetch_bacthes_per_second: {required_prefetch_bacthes_per_second}')
+                    logger.info(f'prefetch_conncurrency: {prefetch_conncurrency}, prefetch_cycle_duration: {prefetch_cycle_duration}, required_prefetch_bacthes_per_second: {required_prefetch_bacthes_per_second}')
                     #add in a check to see if the job is suffering from a data loading delay and benefit from prefetching
                     prefetch_counter, time_counter = 0, 0
                     # Fetch average times for cache hit and miss scenarios for the current job
@@ -158,16 +158,16 @@ class PrefetchService:
                                     time_counter += avg_time_on_hit
                                 else:
                                     time_counter += avg_time_on_miss
-                                logger.debug(f"batch '{batch.batch_id}' wont be prefetched in time. Skipping.")
+                                logger.info(f"batch '{batch.batch_id}' wont be prefetched in time. Skipping.")
                                 continue
                         
                         elif prefetch_counter >= prefetch_conncurrency:
                             break
 
                         else: 
-                            #prefetch_counter += 1
+                            prefetch_counter += 1
                             if not batch.is_cached and not batch.caching_in_progress:
-                                prefetch_counter += 1
+                                #prefetch_counter += 1
                                 logger.debug(f"prefetching batch '{batch.batch_id}'")
 
                                 batch.set_caching_in_progress(True)
@@ -519,7 +519,7 @@ class CentralBatchManager:
             
             next_batch:Batch = job.next_training_step_batch()
             
-            if not next_batch.is_cached:
+            if not next_batch.is_cached and not next_batch.caching_in_progress:
                 next_batch.set_caching_in_progress(True)
             
             if not next_batch.has_been_accessed_before:

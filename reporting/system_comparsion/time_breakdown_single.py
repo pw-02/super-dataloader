@@ -25,10 +25,10 @@ result_data = {
         'SHADE': {'IO %': 35, 'Transform %': 7, 'GPU %': 65},
         r'$\bf{SUPER}$': {'IO %': 29, 'Transform %': 9, 'GPU %': 73},
     },
-    'ViT/Cifar10': {
-        'CoorDL': {'IO %': 56, 'Transform %': 12, 'GPU %': 32},
-        'SHADE': {'IO %': 35, 'Transform %': 7, 'GPU %': 65},
-        r'$\bf{SUPER}$': {'IO %': 29, 'Transform %': 9, 'GPU %': 73},
+    'ViT-32/Cifar10': {
+        'CoorDL': {'IO %': 25, 'Transform %': 5, 'GPU %': 70},
+        'SHADE': {'IO %': 50, 'Transform %': 5, 'GPU %': 45},
+        r'$\bf{SUPER}$': {'IO %': 3, 'Transform %': 1, 'GPU %': 96},
     },
     'Pythia-14m/OpenWebText': {
         'LitData': {'IO %': 2, 'Transform %': 51, 'GPU %': 48},

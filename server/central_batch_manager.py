@@ -132,9 +132,9 @@ class PrefetchService:
 
                     if required_prefetch_bacthes_per_second < 1:
                         logger.info(f"Job '{job.job_id}' requires no prefetching. required_prefetch_bacthes_per_second: {required_prefetch_bacthes_per_second}")
-                        # continue
-                        required_prefetch_bacthes_per_second=5
-                    prefetch_cycle_duration = self.prefetch_lambda_execution_times.avg + self.prefetch_delay if self.prefetch_lambda_execution_times.count > 0 else self.simulate_time if self.simulate_time else 3
+                        continue
+                        # required_prefetch_bacthes_per_second=5
+                    prefetch_cycle_duration = self.prefetch_lambda_execution_times.avg + self.prefetch_delay if self.prefetch_lambda_execution_times.count > 0 else self.simulate_time if self.simulate_time else 2.5
                     
                     #prefetch_cycle_duration = self.prefetch_cycle_times.avg + self.prefetch_delay if self.prefetch_cycle_times.count > 0 else self.simulate_time if self.simulate_time else 3
                     prefetch_conncurrency =  math.ceil(required_prefetch_bacthes_per_second * prefetch_cycle_duration)
@@ -160,7 +160,6 @@ class PrefetchService:
                                     time_counter += avg_time_on_miss
                                 logger.debug(f"batch '{batch.batch_id}' wont be prefetched in time. Skipping.")
                                 continue
-                    
                         
                         elif prefetch_counter >= prefetch_conncurrency:
                             break

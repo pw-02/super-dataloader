@@ -183,7 +183,7 @@ def get_cost_summary(folder_path, exp_duration, num_samples, cache_instance_type
     return metrics
 
 if __name__ == "__main__":
-    folder_path = "C:\\Users\\pw\\Desktop\\dataloader_project_results_final\\albef_retrieval"
+    folder_path = "C:\\Users\\pw\\Desktop\\dataloader_project_results_final\\\cifar10_vit"
     base_name = os.path.basename(os.path.normpath(folder_path))
     exp_names = get_subfolder_names(folder_path, include_children = False)
     overall_summary = []

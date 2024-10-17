@@ -17,6 +17,11 @@ figure_data: Dict[str, Dict[str, Dict[str, float]]] = {
         'Shade': {"Compute": 77.8915604829167, "Cache": 19.1928877791239, "Prefetch": 0},
         r'$\bf{SUPER}$': {"Compute": 26.30234985, "Cache": 4.857332747, "Prefetch": 1.905632259},
     },
+    'ViT-32/Cifar10': {
+        'CoorDL': {"Compute":1.097, "Cache":0.044, "Prefetch": 0},
+        'Shade': {"Compute": 1.719, "Cache": 0.044, "Prefetch": 0},
+        r'$\bf{SUPER}$': {"Compute": 0.800, "Cache":  0.0044, "Prefetch": 0.002},
+    },
     'Albef/COCO': {
         'CoorDL': {"Compute":16.90456879, "Cache":1.933336844, "Prefetch": 0},
         'Shade': {"Compute": 15.90456879, "Cache": 1.633336844, "Prefetch": 0},
@@ -61,7 +66,7 @@ for workload, loaders_data in figure_data.items():
             hatch='', 
             label='Prefetch', width=bar_width)
     
-    plt.ylim(0, 110)
+    plt.ylim(0, 2)
     
     # Calculate total costs for the current workload
     total_costs = np.array(compute_costs) + np.array(Cache_costs) + np.array(Prefetch_costs)

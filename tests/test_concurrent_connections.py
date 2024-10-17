@@ -8,7 +8,7 @@ cache_client = redis.StrictRedis(host=host_ip, port=6378)
 
 def put_in_cache(batch_id):
     try:
-        # Initialize Redis client
+     # Initialize Redis client
       #   cache_client = redis.StrictRedis(host=host_ip, port=6378)
         cache_client.set(batch_id, 'hello')
       #   cache_client.close()
@@ -18,20 +18,10 @@ def put_in_cache(batch_id):
     except Exception as e:
         print(f"Error putting into cache for batch_id {batch_id}: {str(e)}. eLapsed time: {time.time() - now}")
 
-# def fetch_from_cache(batch_id):
-#     try:
-#         cache_client = redis.StrictRedis(host=host_ip, port=6378)
-#         value = cache_client.get(batch_id)
-#       #   print(f"Fetched from cache batch_id {batch_id}: {value}")
-#         return value
-#     except Exception as e:
-#         print(f"Error fetching from cache for batch_id {batch_id}: {e}")
-#         return None
 
 def test_concurrent_put_fetch(num_requests):
     # Function to put and fetch from cache concurrently
     batch_ids = [f"batch_{i}" for i in range(num_requests)]
-
     with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
         # Submit concurrent put and fetch tasks
         futures = []

@@ -27,7 +27,7 @@ cost_baseline_1 = [58, 52, 47, 41]  # Baseline 1 cost
 cost_baseline_2 = [46, 41, 41, 41]  # Baseline 2 cost
 
 # Create a new figure and set of axes for two subplots
-fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(8.7, 3))
+fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(8.7, 2.7))
 
 # Bar width and positions
 bar_width = 0.25

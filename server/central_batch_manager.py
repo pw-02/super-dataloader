@@ -492,8 +492,8 @@ class CentralBatchManager:
         if previous_step_is_cache_hit or previous_batch_cached_on_miss:
             batch.set_last_accessed_time()
             batch.set_cache_status(True)
-        else:
-            batch.set_cache_status(False)
+        # else:
+        #     batch.set_cache_status(False)
 
         self.jobs[job_id].update_perf_metrics(previous_step_wait_for_data_time, previous_step_is_cache_hit, previous_step_gpu_time)
 

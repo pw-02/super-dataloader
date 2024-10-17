@@ -13,7 +13,7 @@ import botocore.config
 s3_client = boto3.client('s3', config=botocore.config.Config(
     max_pool_connections=500
 ))
-redis_client = None
+# redis_client = None
 
 # def dict_to_torchvision_transform(transform_dict):
 #     """
@@ -112,7 +112,7 @@ def lambda_handler(event, context):
     AWS Lambda handler function that processes a batch of images from an S3 bucket and caches the results in Redis.
     """
     global s3_client
-    global redis_client
+    # global redis_client
 
     try:
         task = event.get('task')
@@ -132,8 +132,8 @@ def lambda_handler(event, context):
         minibatch = create_minibatch(bucket_name, batch_samples, transformformation, s3_client)
         minibatch_size_mb = bytes_to_mb(minibatch)
         
-        if redis_client is None:
-            redis_client = redis.StrictRedis(host=cache_host, port=int(cache_port))
+        # if redis_client is None:
+        redis_client = redis.StrictRedis(host=cache_host, port=int(cache_port))
 
         redis_client.set(batch_id, minibatch)
 

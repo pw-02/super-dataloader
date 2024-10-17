@@ -152,16 +152,16 @@ class PrefetchService:
                     # Iterate over future batches to determine access during the prefetch cycle duration
                     job_batches_snapshot = list(job.future_batches.values())
                     for batch in job_batches_snapshot:
-                        if time_counter <= prefetch_cycle_duration:
-                                # If accessed within the cycle, add its time to the counter
-                                if batch.is_cached or batch.caching_in_progress:
-                                    time_counter += avg_time_on_hit
-                                else:
-                                    time_counter += avg_time_on_miss
-                                logger.info(f"batch '{batch.batch_id}' wont be prefetched in time. Skipping.")
-                                continue
+                        # if time_counter <= prefetch_cycle_duration:
+                        #         # If accessed within the cycle, add its time to the counter
+                        #         if batch.is_cached or batch.caching_in_progress:
+                        #             time_counter += avg_time_on_hit
+                        #         else:
+                        #             time_counter += avg_time_on_miss
+                        #         logger.info(f"batch '{batch.batch_id}' wont be prefetched in time. Skipping.")
+                        #         continue
                         
-                        elif prefetch_counter >= prefetch_conncurrency:
+                        if prefetch_counter >= prefetch_conncurrency:
                             break
 
                         else: 

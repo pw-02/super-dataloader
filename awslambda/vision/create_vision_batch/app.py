@@ -110,17 +110,20 @@ def create_minibatch(bucket_name: str, samples: list, transform, s3_client) -> s
 
 def cache_minibatch_with_retries(redis_client, batch_id, minibatch, max_retries=4, retry_interval=0.1):
     retries = 0
+    execption = None
     while retries < max_retries:
         try:
             # Attempt to cache the minibatch in Redis
             redis_client.set(batch_id, minibatch)
             return  # Exit the function on success
         except Exception as e:
+            execption = e
             pass
         # Increment the retry count
         retries += 1
         # Wait before retrying
         time.sleep(retry_interval)
+    raise execption
 
 def lambda_handler(event, context):
     """

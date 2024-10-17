@@ -71,11 +71,11 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
         
         next_batch:Batch = self.datasets[data_dir].get_next_batch(job_id)
         # Create and return the response
-        try_get_from_cache = True if next_batch.is_cached or next_batch.caching_in_progress else False
+    
         response = minibatch_service_pb2.GetNextBatchForJobResponse(
             job_id=request.job_id,
             batch=minibatch_service_pb2.Batch(batch_id=next_batch.batch_id, 
-                                              indicies=next_batch.indicies, is_cached=try_get_from_cache)
+                                              indicies=next_batch.indicies, is_cached=next_batch.is_cached)
             )
         return response
     

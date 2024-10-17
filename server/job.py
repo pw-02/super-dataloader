@@ -77,7 +77,8 @@ class DLTJob:
                         break
                     elif  not batch.caching_in_progress:
                         # Store the first available batch in progress if no cached batch is found
-                        not_in_progress_batch = batch_id
+                        if not not_in_progress_batch:
+                            not_in_progress_batch = batch_id
             # Second pass: If no cached batch was found, use the first in-progress batch
             if not next_training_batch and not_in_progress_batch:
                 next_training_batch = self.future_batches.pop(not_in_progress_batch)

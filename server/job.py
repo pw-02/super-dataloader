@@ -63,7 +63,7 @@ class DLTJob:
     def next_training_step_batch(self):
         with self.lock:
             next_training_batch = None
-            in_progress_batch = None  # To hold the first batch found that's in progress
+            not_in_progress_batch = None  # To hold the first batch found that's in progress
 
             active_batch_set_id = next(iter(self.future_batches.items()))[1].batch_partition_id
             if active_batch_set_id not in self.active_batch_set_ids or active_batch_set_id != '1_1':
@@ -75,12 +75,12 @@ class DLTJob:
                     if batch.is_cached:
                         next_training_batch = self.future_batches.pop(batch_id)  # Cached batch found
                         break
-                    # elif  batch.caching_in_progress:
-                    #     # Store the first available batch in progress if no cached batch is found
-                    #     in_progress_batch = batch_id
+                    elif  not batch.caching_in_progress:
+                        # Store the first available batch in progress if no cached batch is found
+                        not_in_progress_batch = batch_id
             # Second pass: If no cached batch was found, use the first in-progress batch
-            # if not next_training_batch and in_progress_batch:
-            #     next_training_batch = self.future_batches.pop(in_progress_batch)
+            if not next_training_batch and not_in_progress_batch:
+                next_training_batch = self.future_batches.pop(not_in_progress_batch)
             
             if not next_training_batch:
                 logger.debug("No cached or in-progress batch found. Returning the first available batch")

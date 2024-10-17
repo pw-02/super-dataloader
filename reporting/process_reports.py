@@ -4,9 +4,15 @@ import os
 from collections import OrderedDict
 import csv
 
-def convert_csv_to_dict(csv_file):
+def convert_csv_to_dict(csv_file, first_epoch_only = False):
     df = pd.read_csv(csv_file)
-    return df.to_dict(orient='list')
+    # Filter the rows where 'Epoch Index' is equal to 1
+    if first_epoch_only:
+        filtered_df = df[df['Epoch Index'] == 1]
+    else:
+        filtered_df = df[df['Epoch Index'] > 1]
+
+    return filtered_df.to_dict(orient='list')
 
 def save_dict_list_to_csv(dict_list, output_file):
     if not dict_list:
@@ -34,8 +40,19 @@ def get_subfolder_names(folder_path, include_children = False):
                 basenames.append(os.path.basename(os.path.normpath(subfolder)))
     return basenames
 
+def get_first_epoch_only_from_file(folder_path):
+    csv_files = glob.glob(os.path.join(folder_path, '**', 'metrics.csv'), recursive=True)
+    first_epoch_data = []
+    for csv_file in csv_files:
+        csv_data = convert_csv_to_dict(csv_file)
+        
+    return first_epoch_data
 
-def get_training_summary(folder_path):
+
+
+
+def get_training_summary(folder_path, kind):
+    first_epoch_only = True if kind == 'first_epoch' else False
     metrics = OrderedDict({
          "num_jobs": 0,
          "total_batches": 0,
@@ -58,7 +75,7 @@ def get_training_summary(folder_path):
     })
     search_pattern = os.path.join(folder_path, '**', 'metrics.csv')
     for metrics_csv in glob.iglob(search_pattern, recursive=True):
-        csv_data = convert_csv_to_dict(metrics_csv)
+        csv_data = convert_csv_to_dict(metrics_csv, first_epoch_only)
         metrics["num_jobs"] += 1
         metrics["total_batches"] += len(csv_data["Batch Index"])
         if "Batch Size" in csv_data:
@@ -183,24 +200,25 @@ def get_cost_summary(folder_path, exp_duration, num_samples, cache_instance_type
     return metrics
 
 if __name__ == "__main__":
-    folder_path = "C:\\Users\\pw\\Desktop\\dataloader_project_results_final\\\cifar10_vit"
+    folder_path = "C:\\Users\\pw\\Desktop\\dataloading_gpu_results\\cifar10_vit"
     base_name = os.path.basename(os.path.normpath(folder_path))
     exp_names = get_subfolder_names(folder_path, include_children = False)
-    overall_summary = []
-    for exp in exp_names:
-        exp_summary  = {}
-        exp_summary['name'] = exp
-        exp_path = os.path.join(folder_path, exp)
-        train_summary = get_training_summary(exp_path)
-        exp_summary.update(train_summary)
-        cost_summary = get_cost_summary(exp_path,train_summary["total_time(s)"],
-                                        train_summary["total_samples"], 
-                                        cache_instance_type = 'cache.m5.2xlarge')
-        exp_summary.update(cost_summary)
-        save_dict_list_to_csv([exp_summary], os.path.join(exp_path, f'{exp}_summary.csv'))
-        overall_summary.append(exp_summary)
+    for kind in ['first_epoch', 'after_first_epoch']:
+        overall_summary = []
+        for exp in exp_names:
+            exp_summary  = {}
+            exp_summary['name'] = exp
+            exp_path = os.path.join(folder_path, exp)
+            train_summary = get_training_summary(exp_path, kind)
+            exp_summary.update(train_summary)
+            cost_summary = get_cost_summary(exp_path,train_summary["total_time(s)"],
+                                            train_summary["total_samples"], 
+                                            cache_instance_type = 'cache.m5.2xlarge')
+            exp_summary.update(cost_summary)
+            save_dict_list_to_csv([exp_summary], os.path.join(exp_path, f'{exp}_summary.csv'))
+            overall_summary.append(exp_summary)
 
-    save_dict_list_to_csv(overall_summary, os.path.join(folder_path, f'{base_name}_overall_summary.csv'))
+        save_dict_list_to_csv(overall_summary, os.path.join(folder_path, f'{base_name}_{kind}_overall_summary.csv'))
 
 
 

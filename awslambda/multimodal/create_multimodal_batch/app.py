@@ -12,7 +12,7 @@ from transformers.models.bert.tokenization_bert import BertTokenizer
 from typing import Any, List, Optional, Tuple, Union
 from torch.nn.utils.rnn import pad_sequence
 from torch.nn import Module
-
+import time
 # mean and standard deviation from the ALBEF repo:
 # https://github.com/salesforce/ALBEF/blob/main/dataset/__init__.py#L16
 MEAN = (0.48145466, 0.4578275, 0.40821073)
@@ -25,7 +25,7 @@ tokenizer = BertTokenizer.from_pretrained("/var/task/bert-tokenizer")
 s3_client = boto3.client('s3', config=botocore.config.Config(
     max_pool_connections=51
 ))
-# redis_client = None
+redis_client = None
 
 
 
@@ -260,12 +260,29 @@ def create_minibatch(bucket_name: str, samples: list, image_transform, text_tran
         compressed_minibatch = lz4.frame.compress(bytes_minibatch)
     return compressed_minibatch
 
+def cache_minibatch_with_retries(redis_client, batch_id, minibatch, max_retries=4, retry_interval=0.1):
+    retries = 0
+    execption = None
+    while retries < max_retries:
+        try:
+            # Attempt to cache the minibatch in Redis
+            redis_client.set(batch_id, minibatch)
+            return  # Exit the function on success
+        except Exception as e:
+            execption = e
+            pass
+        # Increment the retry count
+        retries += 1
+        # Wait before retrying
+        time.sleep(retry_interval)
+    raise execption
+
 def lambda_handler(event, context):
     """
     AWS Lambda handler function that processes a batch of images from an S3 bucket and caches the results in Redis.
     """
     global s3_client
-    # global redis_client
+    global redis_client
 
     try:
         task = event.get('task')
@@ -291,8 +308,10 @@ def lambda_handler(event, context):
         redis_client = None
         if redis_client is None:
             redis_client = redis.StrictRedis(host=cache_host, port=int(cache_port))
+        
+        cache_minibatch_with_retries(redis_client, batch_id, minibatch)
 
-        redis_client.set(batch_id, minibatch)
+        # redis_client.set(batch_id, minibatch)
 
         return {
             'success': True,

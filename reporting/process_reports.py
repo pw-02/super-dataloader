@@ -200,7 +200,7 @@ def get_cost_summary(folder_path, exp_duration, num_samples, cache_instance_type
     return metrics
 
 if __name__ == "__main__":
-    folder_path = "C:\\Users\\pw\\Desktop\\dataloading_gpu_results\\cifar10_vit"
+    folder_path = "C:\\Users\\pw\\Desktop\\\dataloading_gpu_results\\cifar10_vit"
     base_name = os.path.basename(os.path.normpath(folder_path))
     exp_names = get_subfolder_names(folder_path, include_children = False)
     for kind in ['first_epoch', 'after_first_epoch']:
@@ -215,7 +215,7 @@ if __name__ == "__main__":
                                             train_summary["total_samples"], 
                                             cache_instance_type = 'cache.m5.2xlarge')
             exp_summary.update(cost_summary)
-            save_dict_list_to_csv([exp_summary], os.path.join(exp_path, f'{exp}_summary.csv'))
+            save_dict_list_to_csv([exp_summary], os.path.join(exp_path, f'{exp}_{kind}__summary.csv'))
             overall_summary.append(exp_summary)
 
         save_dict_list_to_csv(overall_summary, os.path.join(folder_path, f'{base_name}_{kind}_overall_summary.csv'))

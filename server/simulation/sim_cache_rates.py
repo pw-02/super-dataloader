@@ -46,24 +46,24 @@ COCO = {
 
 IMAGE_NET = {
     'redis_cache': 'cache.m7g.8xlarge',
-    'shade_batch_time_on_miss': 0.3,
-    'shade_batch_time_on_hit': 0.00513509399752365,
+    'shade_batch_time_on_miss': 2.1,
+    'shade_batch_time_on_hit': 0.0513509399752365,
     'shade_first_epoch_time': 7589, #19612,
-    # 'shade_wss': 1.0,
-    'shade_repitation_factor': 2,
+    'shade_wss': 0.50,
+    'shade_repitation_factor': 1.5,
     'super_batch_time_on_miss': 0.3,
-    'super_batch_time_on_hit': 0.1,
+    'super_batch_time_on_hit': 0.048,
     'coordl_batch_time_on_miss': 0.65,
-    'coordl_batch_time_on_hit': 0.002812693,
+    'coordl_batch_time_on_hit': 0.04812693,
     # 'cordl_first_epoch_time': 7589,
     'batch_size': 128,
     'batches_per_epoch': 8565,  # Corrected key name here
-    'total_epochs': 2,
+    'total_epochs': 80,
     'total_files': 1096302,
     'total_dataset_size': 155.3,
     'gpu_time': 0.341211255,
-    'num_jobs': 4,
-    'cache_size_as_percentage_of_dataset': 0.75
+    'num_jobs': 20,
+    'cache_size_as_percentage_of_dataset': 0.50
 }
 
 
@@ -122,7 +122,7 @@ def simulate_training_job(workload=IMAGE_NET):
     shade_cost = compute_ec2_costs('p3.8xlarge', shade_total_time) + compute_ec2_costs(workload['redis_cache'], shade_total_time)
     # Output results
     # print(f"Super total time: {shade_total_time}, Throughput: {workload['total_files'] / shade_total_time}")
-    print(f"Coordl time: {coordl_total_time:.4f}, Throughput (batches): {(total_epochs * workload['batches_per_epoch']) / coordl_total_time:.4f}, Throughput (samples): {(total_epochs * workload['total_files']) / coordl_total_time:.4f}, Cache hit rate: {cache_hit_rate_coordl:.2f}, Cost: {coordl_cost:.4f}")
-    # print(f"Shade total time: {shade_total_time}, Throughput: {(total_epochs * workload['batches_per_epoch']) / shade_total_time}, Cache hit rate: {cache_hit_rate_shade}, Cost: {shade_cost}")
+    print(f"Coordl time: {coordl_total_time:.4f}, Throughput (samples): {(total_epochs * workload['total_files']) / coordl_total_time:.4f}, Cache hit rate: {cache_hit_rate_coordl:.2f}, Cost: {coordl_cost:.4f}")
+    print(f"Shade total time: {shade_total_time:.4f}, Throughput(samples): {(total_epochs * workload['total_files']) / shade_total_time:.4f}, Cache hit rate: {cache_hit_rate_shade:.4f}, Cost: {shade_cost:.4f}")
 if __name__ == "__main__":
     simulate_training_job(workload=IMAGE_NET)  # Call the function without an argument

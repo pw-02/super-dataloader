@@ -10,7 +10,11 @@ def convert_csv_to_dict(csv_file, first_epoch_only = False):
     if first_epoch_only:
         filtered_df = df[df['Epoch Index'] == 1]
     else:
-        filtered_df = df[df['Epoch Index'] > 1]
+        if df[df['Epoch Index'] > 1].empty:
+            filtered_df = df[df['Epoch Index'] == 1]
+
+        else:
+            filtered_df = df[df['Epoch Index'] > 1]
 
     return filtered_df.to_dict(orient='list')
 
@@ -200,7 +204,7 @@ def get_cost_summary(folder_path, exp_duration, num_samples, cache_instance_type
     return metrics
 
 if __name__ == "__main__":
-    folder_path = "C:\\Users\\pw\\Desktop\\\dataloading_gpu_results\\cifar10_vit"
+    folder_path = "C:\\Users\\pw\\Desktop\\dataloading_gpu_results\\albef_retrieval"
     base_name = os.path.basename(os.path.normpath(folder_path))
     exp_names = get_subfolder_names(folder_path, include_children = False)
     for kind in ['first_epoch', 'after_first_epoch']:

@@ -18,7 +18,7 @@ figure_data: Dict[str, Dict[str, float]] = {}
 # figure_data['ResNet-18/Cifar10'] = {'CoorDL': 1.2,'Shade': 1, r'$\bf{SUPER}$': 1.4}
 # figure_data['ResNet-18/Cifar10'] = {'Shade': 1, 'CoorDL': 1.5, r'$\bf{SUPER}$': 2.78}
 figure_data['ResNet-50/ImageNet'] = {'Shade': 1, 'CoorDL': 1.5, r'$\bf{SUPER}$': 2.78}
-figure_data['ViT-32/Cifar10'] = {'Shade': 1, 'CoorDL': 0.89, r'$\bf{SUPER}$': 4.2}
+figure_data['ResNet-50/ImageNet'] = {'Shade': 1, 'CoorDL': 1.5, r'$\bf{SUPER}$': 2.78}
 
 figure_data['Albef/Coco'] ={'Shade': 1, 'CoorDL': 1.3, r'$\bf{SUPER}$': 4}
 figure_data['Pythia14m/OpenWebText'] = {'LiData': 1, r'$\bf{SUPER}$': 3.5}

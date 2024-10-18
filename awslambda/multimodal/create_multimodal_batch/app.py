@@ -5,7 +5,7 @@ import redis
 from PIL import Image
 import torch
 import torchvision.transforms as transforms
-import lz4.frame
+# import lz4.frame
 import botocore.config
 import re
 from transformers.models.bert.tokenization_bert import BertTokenizer
@@ -13,6 +13,8 @@ from typing import Any, List, Optional, Tuple, Union
 from torch.nn.utils.rnn import pad_sequence
 from torch.nn import Module
 import time
+import zstandard as zstd
+
 # mean and standard deviation from the ALBEF repo:
 # https://github.com/salesforce/ALBEF/blob/main/dataset/__init__.py#L16
 MEAN = (0.48145466, 0.4578275, 0.40821073)
@@ -26,7 +28,7 @@ s3_client = boto3.client('s3', config=botocore.config.Config(
     max_pool_connections=51
 ))
 redis_client = None
-
+compressor = zstd.ZstdCompressor(level=-1)
 
 
 class Truncate(Module):
@@ -257,7 +259,9 @@ def create_minibatch(bucket_name: str, samples: list, image_transform, text_tran
         torch.save(minibatch, buffer)
         bytes_minibatch = buffer.getvalue()
         # Encode the serialized tensor with base64
-        compressed_minibatch = lz4.frame.compress(bytes_minibatch)
+        # compressed_minibatch = lz4.frame.compress(bytes_minibatch)
+        compressed_minibatch = compressor.compress(bytes_minibatch)
+
     return compressed_minibatch
 
 def cache_minibatch_with_retries(redis_client, batch_id, minibatch, max_retries=4, retry_interval=0.1):

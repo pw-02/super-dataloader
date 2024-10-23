@@ -7,8 +7,6 @@ from matplotlib.ticker import FuncFormatter
 def percent_formatter(x, pos):
     return f'{int(x)}%'
 
-
-
 visual_map = {
     r'$\bf{SUPER}$': {'color': '#005250', 'hatch': '//', 'edgecolor': 'black', 'alpha': 1.0},
     'CoorDL': {'color': '#FEA400', 'hatch': '..', 'edgecolor': 'black', 'alpha': 1.0},
@@ -63,13 +61,12 @@ workload_data['ResNet-50/ImageNet'] = {
     }}
 
 
-
-
-
+x_tick_lables = [30,60,90,120,150]
+x_label = 'Dataset Size (GB)'
 for workload in workload_data:
     workload_name = workload
 
-    fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=(17.75, 2.7))
+    fig, (ax1, ax2, ax3) = plt.subplots(nrows=3, ncols=1, figsize=(4, 8))
     bar_width = 0.25
     workload_throuhgput = workload_data[workload]["Thouhgput"]
     cache_sizes = list(workload_throuhgput["CoorDL"].keys())
@@ -114,7 +111,7 @@ for workload in workload_data:
     ax2.legend(loc='best')
 
     ax2.set_xticks(x + bar_width)  # Center ticks under the grouped bars
-    ax2.set_xticklabels([10, 25, 50, 75, 100], fontsize=11)
+    ax2.set_xticklabels(x_tick_lables, fontsize=11)
     ax2.tick_params(axis='y', labelsize=12)
     ax2.set_xlabel('Baseline Cache Size (% of Dataset)', fontsize=11)
     # ax2.legend()
@@ -183,7 +180,7 @@ for workload in workload_data:
     ax3.set_yticks(ticks=np.arange(0, 101, 20), labels=[f'{i}%' for i in np.arange(0, 101, 20)])
 
     ax3.set_xticks(x + bar_width)
-    ax3.set_xticklabels([10, 25, 50, 75, 100], fontsize=11)
+    ax3.set_xticklabels(x_tick_lables, fontsize=11)
     # Remove duplicate legend entries
     handles, labels = ax3.get_legend_handles_labels()
     unique = [(h, l) for i, (h, l) in enumerate(zip(handles, labels)) if l and labels.index(l) == i]

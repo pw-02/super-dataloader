@@ -6,6 +6,8 @@ import csv
 
 def convert_csv_to_dict(csv_file, first_epoch_only = False):
     df = pd.read_csv(csv_file)
+    if 'bill.csv' in csv_file:
+        return df.to_dict(orient='list')
     # Filter the rows where 'Epoch Index' is equal to 1
     if first_epoch_only:
         filtered_df = df[df['Epoch Index'] == 1]
@@ -209,7 +211,7 @@ if __name__ == "__main__":
     folder_path = "C:\\Users\\pw\\Desktop\\\dataloading_gpu_unlimited-cache_results\\imagenet_resnet50"
     base_name = os.path.basename(os.path.normpath(folder_path))
     exp_names = get_subfolder_names(folder_path, include_children = False)
-    for kind in ['first_epoch', 'after_first_epoch']:
+    for kind in ['after_first_epoch']: #'first_epoch', 'after_first_epoch'
         overall_summary = []
         for exp in exp_names:
             exp_summary  = {}

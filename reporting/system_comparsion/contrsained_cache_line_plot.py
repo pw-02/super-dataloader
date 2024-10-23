@@ -22,53 +22,34 @@ visual_map = {
     'LiData': {'color': '#FF7F0E', 'hatch': '', 'edgecolor': 'black', 'alpha': 1.0,  'marker':'o', 'linestyle':'-'},
 }
 workload_data: Dict[str, Dict[str, float]] = {}
-workload_data['ViT-32/Cifar10'] = {
-    "Thouhgput" : { "CoorDL": {'10': 416, '25': 538, '50': 844, '75': 1482, '100': 1496},
-                    "Shade": {'10': 481, '25': 573, '50': 926, '75': 1313, '100': 1312},
-                    r'$\bf{SUPER}$': {'10': 1665, '25': 1665, '50': 1665, '75': 1665, '100': 1665}},
-    "Cost" : { "CoorDL": {'10': 1.70, '25': 1.31, '50': 0.83, '75':0.47, '100': 0.47},
-                "Shade": {'10': 1.47, '25': 1.23, '50': 0.76, '75': 0.54, '100': 0.54},
-                r'$\bf{SUPER}$': {'10':0.408, '25': 0.408, '50':0.408, '75': 0.408, '100': 0.408}},
-    "CacheHit" : { "CoorDL": {'10': 10, '25': 25, '50': 50, '75': 75, '100': 100},
-                    "Shade": {'10': 24, '25': 49, '50': 81, '75': 100, '100': 100},
-                    r'$\bf{SUPER}$': {'10': 100, '25': 100, '50': 100, '75': 100, '100': 100}},
+workload_data['Resnet50/ImageNet'] = {
+    "Thouhgput" : { "CoorDL": {'100': 1337, '80': 538, '60': 844, '40': 1482, '20': 1496},
+                    "Shade": {'100': 1337, '80': 573, '60': 926, '40': 1313, '20': 1312},
+                    r'$\bf{SUPER}$': {'100': 1665, '80': 1665, '60': 1665, '40': 1665, '20': 1665}},
+    "Cost" : { "CoorDL": {'100': 1.70, '80': 1.31, '60': 0.83, '40':0.47, '20': 0.47},
+                "Shade": {'100': 1.47, '80': 1.23, '60': 0.76, '40': 0.54, '20': 0.54},
+                r'$\bf{SUPER}$': {'100':0.408, '80': 0.408, '60':0.408, '40': 0.408, '20': 0.408}},
+    "CacheHit" : { "CoorDL": {'100': 10, '80': 25, '60': 50, '40': 75, '20': 100},
+                    "Shade": {'100': 24, '80': 49, '60': 81, '40': 100, '20': 100},
+                    r'$\bf{SUPER}$': {'100': 100, '80': 100, '60': 100, '40': 100, '20': 100}},
     "Time Breakdown": {
-        "IO": { "CoorDL": {'10': 76, '25': 68, '50': 50, '75': 11, '100': 10},
-                "Shade": {'10': 68, '25': 62, '50': 37, '75': 6, '100': 6},
-                r'$\bf{SUPER}$': {'10': 6, '25': 6, '50': 6, '75': 6, '100': 6}},
-        "Transform": { "CoorDL": {'10': 3, '25': 4, '50': 5, '75': 2, '100': 9},
-                        "Shade": {'10': 4, '25': 5, '50': 8, '75': 16, '100': 16},
-                        r'$\bf{SUPER}$': {'10': 3.7, '25': 3.7, '50': 3.7, '75': 3.7, '100': 3.7}},
-        "GPU": { "CoorDL": {'10': 24, '25': 32, '50': 50, '75': 89, '100': 90},
-                "Shade": {'10': 28, '25': 34, '50': 55, '75': 78, '100': 78},
-                r'$\bf{SUPER}$': {'10': 94, '25': 94, '50': 94, '75': 94, '100': 94}},
+        "IO": { "CoorDL": {'100': 76, '80': 68, '60': 50, '40': 11, '20': 10},
+                "Shade": {'100': 68, '80': 62, '60': 37, '40': 6, '20': 6},
+                r'$\bf{SUPER}$': {'100': 6, '80': 6, '60': 6, '40': 6, '20': 6}},
+        "Transform": { "CoorDL": {'100': 3, '80': 4, '60': 5, '40': 2, '20': 9},
+                        "Shade": {'100': 4, '80': 5, '60': 8, '40': 16, '20': 16},
+                        r'$\bf{SUPER}$': {'100': 3.7, '80': 3.7, '60': 3.7, '40': 3.7, '20': 3.7}},
+        "GPU": { "CoorDL": {'100': 24, '80': 32, '60': 50, '40': 89, '20': 90},
+                "Shade": {'100': 28, '80': 34, '60': 55, '40': 78, '20': 78},
+                r'$\bf{SUPER}$': {'100': 94, '80': 94, '60': 94, '40': 94, '20': 94}},
     }}
-workload_data['ResNet-50/ImageNet'] = {
-    "Thouhgput" : { "CoorDL": {'10': 552, '25': 617, '50': 766, '75': 1012, '100': 1314},
-                    "Shade": {'10': 857, '25': 964, '50': 1218, '75': 1304, '100': 1304},
-                    r'$\bf{SUPER}$': {'10': 1327, '25': 1327, '50': 1327, '75': 1327, '100': 1327}},
-    "Cost" : { "CoorDL": {'10': 31.41, '25': 28.24, '50': 22.64, '75':17.15, '100': 13.2033},
-                "Shade": {'10': 20.24, '25': 17.99, '50': 14.24, '75': 11.6670, '100': 11.6670},
-                r'$\bf{SUPER}$': {'10':10.03, '25': 10.03, '50':10.03, '75': 10.03, '100': 10.03}},
-    "CacheHit" : { "CoorDL": {'10': 10, '25': 25, '50': 50, '75': 75, '100': 100},
-                    "Shade": {'10': 15, '25': 37, '50': 75, '75': 100, '100': 100},
-                    r'$\bf{SUPER}$': {'10': 98, '25': 98, '50': 98, '75': 98, '100': 98}},
-    "Time Breakdown": {
-        "IO": { "CoorDL": {'10': 76, '25': 68, '50': 50, '75': 9, '100': 1},
-                "Shade": {'10': 68, '25': 62, '50': 37, '75': 6, '100': 6},
-                r'$\bf{SUPER}$': {'10': 6, '25': 6, '50': 6, '75': 6, '100': 6}},
-        "Transform": { "CoorDL": {'10': 3, '25': 5, '50': 5, '75': 2, '100': 9},
-                        "Shade": {'10': 4, '25': 5, '50': 8, '75': 16, '100': 16},
-                        r'$\bf{SUPER}$': {'10': 6, '25': 6, '50': 6, '75': 6, '100': 6}},
-        "GPU": { "CoorDL": {'10': 21, '25': 27, '50': 45, '75': 89, '100': 90},
-                "Shade": {'10': 28, '25': 34, '50': 55, '75': 78, '100': 78},
-                r'$\bf{SUPER}$': {'10': 88, '25': 88, '50': 88, '75': 88, '100': 88}},
-    }}
+
+x_tick_lables = [100,80,60,40,20]
+x_label = 'Dataset Size (GB)'
 
 for workload in workload_data:
     workload_name = workload
-
-    fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=(17.75, 2.7))
+    fig, (ax1, ax2, ax3) = plt.subplots(nrows=3, ncols=1, figsize=(4, 8))
     bar_width = 0.25
     workload_throuhgput = workload_data[workload]["Thouhgput"]
     dataset_sizes = list(workload_throuhgput["CoorDL"].keys())
@@ -105,11 +86,11 @@ for workload in workload_data:
     ax1.legend(loc='best')
 
     ax1.set_xticks(x + bar_width)  # Center ticks under the grouped bars
-    ax1.set_xticklabels([10, 25,50,75,100], fontsize=11)
+    ax1.set_xticklabels(x_tick_lables, fontsize=11)
     ax1.tick_params(axis='y', labelsize=12)
     ax1.set_xlabel('Dataset Size', fontsize=11)
     # ax1.legend()
-    ax1.legend(ncol=3, loc='upper center', fontsize=9)
+    ax1.legend(ncol=3, loc='upper center', fontsize=8)
 
     # Plotting the bars for cost
     workload_cost = workload_data[workload]["Cost"]
@@ -148,11 +129,11 @@ for workload in workload_data:
     ax2.legend(loc='best')
 
     ax2.set_xticks(x + bar_width)  # Center ticks under the grouped bars
-    ax2.set_xticklabels([10, 25, 50, 75, 100], fontsize=11)
+    ax2.set_xticklabels(x_tick_lables, fontsize=11)
     ax2.tick_params(axis='y', labelsize=12)
     ax1.set_xlabel('Dataset Size', fontsize=11)
     # ax2.legend()
-    ax2.legend(ncol=3, loc='upper center', fontsize=9)
+    ax2.legend(ncol=3, loc='upper center', fontsize=8)
 
     #create a stacked bar chart for time breakdown
     # Plot 3: Time Breakdown (Stacked Bar)
@@ -221,7 +202,7 @@ for workload in workload_data:
     # Remove duplicate legend entries
     handles, labels = ax3.get_legend_handles_labels()
     unique = [(h, l) for i, (h, l) in enumerate(zip(handles, labels)) if l and labels.index(l) == i]
-    ax3.legend(*zip(*unique), ncol=3, loc='upper center', fontsize=9)
+    ax3.legend(*zip(*unique), ncol=3, loc='upper center', fontsize=8)
 
 
 

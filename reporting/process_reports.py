@@ -52,9 +52,24 @@ def get_first_epoch_only_from_file(folder_path):
         
     return first_epoch_data
 
+def compute_serverless_redis_costs(total_durtion_seconds, cache_size_gb, throughput_per_s, avg_size_per_request_kb):
+    # Duration is in seconds
+    # Memory size is in GB
+    # Cost is in USD
+    hours_in_a_month = 730
+    seconds_in_a_month = 2628000
+    data_storage_cost_monthly = cache_size_gb * hours_in_a_month * 0.125
+
+    requests = throughput_per_s * seconds_in_a_month * avg_size_per_request_kb
+    ecpu_monthly_cost = requests * 0.0000000034
+
+    total_monhtly_cost = data_storage_cost_monthly + ecpu_monthly_cost
+
+    exp_cost = total_monhtly_cost/seconds_in_a_month * total_durtion_seconds
+    return exp_cost
 
 
-
+  
 def get_training_summary(folder_path, kind):
     first_epoch_only = True if kind == 'first_epoch' else False
     metrics = OrderedDict({
@@ -143,24 +158,11 @@ def compute_ec2_costs(instance_type: str, time_seconds: float):
     instance_cost = hourly_rate * hours
     return instance_cost
 
-def compute_serverless_redis_costs(time_seconds, avg_cache_size_gb, num_requests, avg_data_per_request):
-    # Redis cache costs
-    # https://aws.amazon.com/elasticache/pricing/
-    # $0.000017 per hour per GB of data stored
-    hours = max(time_seconds // 3600, 1)
-
-    # Calculate the total data stored in GB
-    gb_hours = hours * (max(avg_cache_size_gb,1))
-    storage_cost = gb_hours * 0.125
-    ecpu_consumption = num_requests * avg_data_per_request
-    ecpu_costs = 0.0000000034 * ecpu_consumption
-    total_cost = storage_cost + ecpu_costs
-    return total_cost
-
-    
 
 
-def get_cost_summary(folder_path, exp_duration, num_samples, cache_instance_type = 'cache.m7g.xlarge'):
+
+
+def get_cost_summary(folder_path, exp_duration, exp_thrpughput, cache_size_gb, averge_data_transfer_per_request_kb):
     metrics = OrderedDict({
          "total_lambda_cost": 0,
          "prefetch_lambda_cost": 0,
@@ -189,22 +191,22 @@ def get_cost_summary(folder_path, exp_duration, num_samples, cache_instance_type
             metrics["sion_cache_proxy_cost"] = compute_ec2_costs('t2.medium', exp_duration)
             metrics["total_cost"] = metrics["total_lambda_cost"] + metrics["training_compute_cost"] + metrics["sion_cache_proxy_cost"]
     
-    elif 'pytorch' in folder_path:
-        if 'cifar10' in folder_path:
-            metrics["redis_cache_cost"] = compute_serverless_redis_costs(exp_duration, 1, num_samples, 2.3)
-        elif 'imagenet' in folder_path:
-            metrics["redis_cache_cost"] = compute_serverless_redis_costs(exp_duration, 43, num_samples, 116)
-        else:
-             ValueError("Unknown dataset")
-        metrics["total_cost"] = metrics["training_compute_cost"] + metrics["redis_cache_cost"]
+    # elif 'pytorch' in folder_path:
+    #     if 'cifar10' in folder_path:
+    #         metrics["redis_cache_cost"] = compute_serverless_redis_costs(exp_duration, 1, num_samples, 2.3)
+    #     elif 'imagenet' in folder_path:
+    #         metrics["redis_cache_cost"] = compute_serverless_redis_costs(exp_duration, 43, num_samples, 116)
+    #     else:
+    #          ValueError("Unknown dataset")
+    #     metrics["total_cost"] = metrics["training_compute_cost"] + metrics["redis_cache_cost"]
     else:
-        metrics["redis_cache_cost"] = compute_ec2_costs(cache_instance_type ,exp_duration)
+        metrics["redis_cache_cost"] = compute_serverless_redis_costs(exp_duration,30,exp_thrpughput,200)
         metrics["total_cost"] = metrics["training_compute_cost"] + metrics["redis_cache_cost"]
 
     return metrics
 
 if __name__ == "__main__":
-    folder_path = "C:\\Users\\pw\\Desktop\\dataloading_gpu_results\\albef_retrieval"
+    folder_path = "C:\\Users\\pw\\Desktop\\\dataloading_gpu_unlimited-cache_results\\imagenet_resnet50"
     base_name = os.path.basename(os.path.normpath(folder_path))
     exp_names = get_subfolder_names(folder_path, include_children = False)
     for kind in ['first_epoch', 'after_first_epoch']:
@@ -215,9 +217,12 @@ if __name__ == "__main__":
             exp_path = os.path.join(folder_path, exp)
             train_summary = get_training_summary(exp_path, kind)
             exp_summary.update(train_summary)
-            cost_summary = get_cost_summary(exp_path,train_summary["total_time(s)"],
-                                            train_summary["total_samples"], 
-                                            cache_instance_type = 'cache.m5.2xlarge')
+            cost_summary = get_cost_summary(
+                folder_path=exp_path,
+                exp_duration =  train_summary["total_time(s)"],
+                exp_thrpughput =  train_summary["throughput(samples/s)"],
+                cache_size_gb = 30,
+                averge_data_transfer_per_request_kb=200)
             exp_summary.update(cost_summary)
             save_dict_list_to_csv([exp_summary], os.path.join(exp_path, f'{exp}_{kind}__summary.csv'))
             overall_summary.append(exp_summary)

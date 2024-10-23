@@ -42,19 +42,16 @@ class BaseDataset:
 
 # Dataset class inherits from BaseDataset
 class Dataset(BaseDataset):
-    def __init__(self, data_dir: str, batch_size: int, drop_last: bool, num_partitions: int = 10, kind = 'vision'):
+    def __init__(self, data_dir: str, batch_size: int, drop_last: bool, num_partitions: int = 10, kind = 'vision', max_dataset_size = 30):
         # Load samples from data directory
         self.data_dir = data_dir
         self.batch_size = batch_size
+
         if kind == 'vision':
             if 'coco' in data_dir:
-                samples = self.load_coco_samples(
-                    data_dir
-                )
+                samples = self.load_coco_samples(data_dir)
             else:
-                samples = self.load_paired_s3_object_keys(
-                    data_dir, True, True
-                )
+                samples = self.load_paired_s3_object_keys(data_dir, True, True,max_dataset_size)
             # samples = self.load_paired_s3_object_keys(
             # data_dir, True, True
             # )
@@ -82,11 +79,16 @@ class Dataset(BaseDataset):
         return paired_samples
 
 
-    def load_paired_s3_object_keys(self, s3_uri:str, images_only:bool, use_index_file:bool = True):
+    def load_paired_s3_object_keys(self, s3_uri:str, images_only:bool, use_index_file:bool = True, max_dataset_size = None):
         paired_samples = {}
         s3url = S3Url(s3_uri)
         s3_client = boto3.client('s3')
-        index_file_key = s3url.key + '_paired_index.json'
+        if max_dataset_size:
+            index_file_key = f"{s3url.key}_paired_index_{max_dataset_size}GB.json"
+        else:
+            index_file_key = f"{s3url.key}_paired_index.json"
+
+        # index_file_key = s3url.key + '_paired_index.json'
         if use_index_file:
             try:
                 index_object = s3_client.get_object(Bucket=s3url.bucket, Key=index_file_key)
@@ -98,9 +100,15 @@ class Dataset(BaseDataset):
 
         # If use_index_file is False or encounter errors with index file, build paired_samples from S3 objects
         paginator = s3_client.get_paginator('list_objects_v2')
+        total_size_gb = 0
         pages = paginator.paginate(Bucket=s3url.bucket, Prefix=s3url.key)
         for page in pages:
+            if max_dataset_size and total_size_gb >= max_dataset_size:
+                    break
             for blob in page.get('Contents', []):
+                if max_dataset_size and total_size_gb >= max_dataset_size:
+                    break
+
                 blob_path = blob.get('Key')
                 if blob_path.endswith("/"):
                     continue  # Ignore folders
@@ -121,8 +129,10 @@ class Dataset(BaseDataset):
                 paired_samples[blob_class] = blobs_with_class
         
         if use_index_file and len(paired_samples) > 0:
-            index_object = s3_client.put_object(Bucket=s3url.bucket, Key=index_file_key, 
-                                                Body=json.dumps(paired_samples, indent=4).encode('UTF-8'))    
+            index_object = s3_client.put_object(
+                Bucket=s3url.bucket, 
+                Key=index_file_key, 
+                  Body=json.dumps(paired_samples, indent=4).encode('UTF-8'))    
         return paired_samples
     
     def remove_prefix(self, s: str, prefix: str) -> str:

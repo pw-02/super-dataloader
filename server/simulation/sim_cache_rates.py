@@ -58,12 +58,12 @@ IMAGE_NET = {
     # 'cordl_first_epoch_time': 7589,
     'batch_size': 128,
     'batches_per_epoch': 8565,  # Corrected key name here
-    'total_epochs': 80,
+    'total_epochs': 1,
     'total_files': 1096302,
     'total_dataset_size': 155.3,
     'gpu_time': 0.341211255,
-    'num_jobs': 20,
-    'cache_size_as_percentage_of_dataset': 0.50
+    'num_jobs': 4,
+    'cache_size_as_percentage_of_dataset': 0.20
 }
 
 

@@ -5,17 +5,17 @@ import redis
 from PIL import Image
 import torch
 import torchvision.transforms as transforms
-# import lz4.frame
+import lz4.frame
 import botocore.config
 import time
-import zstandard as zstd
+# import zstandard as zstd
 
 # Create the S3 client with the custom config
 s3_client = boto3.client('s3', config=botocore.config.Config(
     max_pool_connections=500
 ))
 redis_client = None
-compressor = zstd.ZstdCompressor(level=-1)
+# compressor = zstd.ZstdCompressor(level=-1)
 
 # def dict_to_torchvision_transform(transform_dict):
 #     """
@@ -106,8 +106,8 @@ def create_minibatch(bucket_name: str, samples: list, transform, s3_client) -> s
         torch.save(minibatch, buffer)
         bytes_minibatch = buffer.getvalue()
         # Encode the serialized tensor with base64
-        # compressed_minibatch = lz4.frame.compress(bytes_minibatch)
-        compressed_minibatch = compressor.compress(bytes_minibatch)
+        compressed_minibatch = lz4.frame.compress(bytes_minibatch)
+        # compressed_minibatch = compressor.compress(bytes_minibatch)
     return compressed_minibatch
 
 

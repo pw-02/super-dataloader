@@ -28,7 +28,7 @@ s3_client = boto3.client('s3', config=botocore.config.Config(
     max_pool_connections=51
 ))
 redis_client = None
-compressor = zstd.ZstdCompressor(level=-1)
+compressor = zstd.ZstdCompressor(level=4)
 
 
 class Truncate(Module):

@@ -14,44 +14,46 @@ def percent_formatter(x, pos):
 #     'Shade': {'color': '#4C8BB8', 'hatch': '', 'edgecolor': 'black', 'alpha': 1.0},
 #     'LiData': {'color': '#FF7F0E', 'hatch': '', 'edgecolor': 'black', 'alpha': 1.0},
 # }
-
+#81ACCD
 visual_map = {
     r'$\bf{SUPER}$': {'color': '#005250', 'hatch': '', 'edgecolor': 'black', 'alpha': 1.0, 'marker':'o', 'linestyle':'-'},
     'CoorDL': {'color': '#FEA400', 'hatch': '', 'edgecolor': 'black', 'alpha': 1.0,  'marker':'o', 'linestyle':'-'},
-    'Shade': {'color': '#4C8BB8', 'hatch': '', 'edgecolor': 'black', 'alpha': 1.0,  'marker':'o', 'linestyle':'-'},
+    'Shade': {'color': '#73A3C7', 'hatch': '', 'edgecolor': 'black', 'alpha': 1.0,  'marker':'o', 'linestyle':'-'},
     'LiData': {'color': '#FF7F0E', 'hatch': '', 'edgecolor': 'black', 'alpha': 1.0,  'marker':'o', 'linestyle':'-'},
 }
 workload_data: Dict[str, Dict[str, float]] = {}
 workload_data['Resnet50/ImageNet'] = {
-    "Thouhgput" : { "CoorDL": {'100': 1337, '80': 538, '60': 844, '40': 1482, '20': 1496},
-                    "Shade": {'100': 1337, '80': 573, '60': 926, '40': 1313, '20': 1312},
-                    r'$\bf{SUPER}$': {'100': 1665, '80': 1665, '60': 1665, '40': 1665, '20': 1665}},
-    "Cost" : { "CoorDL": {'100': 1.70, '80': 1.31, '60': 0.83, '40':0.47, '20': 0.47},
-                "Shade": {'100': 1.47, '80': 1.23, '60': 0.76, '40': 0.54, '20': 0.54},
-                r'$\bf{SUPER}$': {'100':0.408, '80': 0.408, '60':0.408, '40': 0.408, '20': 0.408}},
+    "Thoughgput" : { "CoorDL": {'100': 1398, '80': 572, '60': 359, '40': 262, '20': 206},
+                    "Shade": {'100': 1398, '80': 1398, '60': 572, '40': 572, '20': 359},
+                    r'$\bf{SUPER}$': {'100': 1435, '80': 1422, '60': 1435, '40': 1435, '20': 1435}},
+    "Cost" : { "CoorDL": {'100': 26.7, '80': 54.57, '60': 74.9, '40':87.69, '20':92.3},
+                "Shade": {'100': 26.7, '80': 26.7, '60': 54.57, '40':54.57, '20':92.3},
+                r'$\bf{SUPER}$': {'100':19.62, '80': 19.62, '60':19.62, '40': 19.62, '20': 19.62}},
     "CacheHit" : { "CoorDL": {'100': 10, '80': 25, '60': 50, '40': 75, '20': 100},
                     "Shade": {'100': 24, '80': 49, '60': 81, '40': 100, '20': 100},
                     r'$\bf{SUPER}$': {'100': 100, '80': 100, '60': 100, '40': 100, '20': 100}},
     "Time Breakdown": {
-        "IO": { "CoorDL": {'100': 76, '80': 68, '60': 50, '40': 11, '20': 10},
-                "Shade": {'100': 68, '80': 62, '60': 37, '40': 6, '20': 6},
-                r'$\bf{SUPER}$': {'100': 6, '80': 6, '60': 6, '40': 6, '20': 6}},
-        "Transform": { "CoorDL": {'100': 3, '80': 4, '60': 5, '40': 2, '20': 9},
-                        "Shade": {'100': 4, '80': 5, '60': 8, '40': 16, '20': 16},
-                        r'$\bf{SUPER}$': {'100': 3.7, '80': 3.7, '60': 3.7, '40': 3.7, '20': 3.7}},
-        "GPU": { "CoorDL": {'100': 24, '80': 32, '60': 50, '40': 89, '20': 90},
-                "Shade": {'100': 28, '80': 34, '60': 55, '40': 78, '20': 78},
-                r'$\bf{SUPER}$': {'100': 94, '80': 94, '60': 94, '40': 94, '20': 94}},
-    }}
+        "IO": { "CoorDL": {'100': 1, '80': 57, '60': 71, '40': 78, '20': 82},
+                "Shade": {'100': 1, '80': 57, '60': 71, '40': 78, '20': 82},
+                r'$\bf{SUPER}$': {'100': 2, '80': 2, '60': 2, '40': 2, '20': 2}},
+        "Transform": { "CoorDL": {'100': 6, '80': 5, '60': 4, '40': 4, '20': 4},
+                        "Shade": {'100': 6, '80': 5, '60': 4, '40': 4, '20': 4},
+                        r'$\bf{SUPER}$': {'100': 2, '80': 2, '60': 2, '40': 2, '20': 2}},
+        "GPU": { "CoorDL": {'100': 93, '80': 38, '60': 24, '40': 17, '20': 13},
+                "Shade": {'100': 93, '80': 38, '60': 24, '40': 17, '20': 13},
+                r'$\bf{SUPER}$': {'100': 96, '80': 94, '60': 94, '40': 94, '20': 94}},
+    }
+    
+    }
 
 x_tick_lables = [100,80,60,40,20]
-x_label = 'Dataset Size (GB)'
+x_label = 'Baseline Cache Size (% of Dataset)'
 
 for workload in workload_data:
     workload_name = workload
     fig, (ax1, ax2, ax3) = plt.subplots(nrows=3, ncols=1, figsize=(4, 8))
     bar_width = 0.25
-    workload_throuhgput = workload_data[workload]["Thouhgput"]
+    workload_throuhgput = workload_data[workload]["Thoughgput"]
     dataset_sizes = list(workload_throuhgput["CoorDL"].keys())
     x = np.arange(len(dataset_sizes))
 
@@ -76,7 +78,7 @@ for workload in workload_data:
 
     # Set y-axis label and limits for throughput
     ax1.set_ylabel('Throughput (samples/s)', fontsize=11)
-    ax1.set_ylim(0, 2000)  # Adjusted limits for clarity
+    ax1.set_ylim(0, 1700)  # Adjusted limits for clarity
     # Get current y-limits
     current_ylim = ax1.get_ylim()
     # Add padding to the upper limit
@@ -88,7 +90,7 @@ for workload in workload_data:
     ax1.set_xticks(x + bar_width)  # Center ticks under the grouped bars
     ax1.set_xticklabels(x_tick_lables, fontsize=11)
     ax1.tick_params(axis='y', labelsize=12)
-    ax1.set_xlabel('Dataset Size', fontsize=11)
+    ax1.set_xlabel(x_label, fontsize=11)
     # ax1.legend()
     ax1.legend(ncol=3, loc='upper center', fontsize=8)
 
@@ -119,7 +121,7 @@ for workload in workload_data:
             marker=visual_map[r'$\bf{SUPER}$']['marker'])
 
     ax2.set_ylabel('Training Cost Per Epoch ($)', fontsize=11)
-    ax2.set_ylim(0, 40)  # Adjust limits for clarity
+    ax2.set_ylim(0, 120)  # Adjust limits for clarity
     # Get current y-limits
     current_ylim = ax2.get_ylim()
     # Add padding to the upper limit
@@ -131,7 +133,7 @@ for workload in workload_data:
     ax2.set_xticks(x + bar_width)  # Center ticks under the grouped bars
     ax2.set_xticklabels(x_tick_lables, fontsize=11)
     ax2.tick_params(axis='y', labelsize=12)
-    ax1.set_xlabel('Dataset Size', fontsize=11)
+    ax2.set_xlabel(x_label, fontsize=11)
     # ax2.legend()
     ax2.legend(ncol=3, loc='upper center', fontsize=8)
 
@@ -198,7 +200,7 @@ for workload in workload_data:
     ax3.set_yticks(ticks=np.arange(0, 101, 20), labels=[f'{i}%' for i in np.arange(0, 101, 20)])
 
     ax3.set_xticks(x + bar_width)
-    ax3.set_xticklabels([10, 25, 50, 75, 100], fontsize=11)
+    ax3.set_xticklabels(x_tick_lables, fontsize=11)
     # Remove duplicate legend entries
     handles, labels = ax3.get_legend_handles_labels()
     unique = [(h, l) for i, (h, l) in enumerate(zip(handles, labels)) if l and labels.index(l) == i]

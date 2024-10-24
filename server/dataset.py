@@ -42,7 +42,7 @@ class BaseDataset:
 
 # Dataset class inherits from BaseDataset
 class Dataset(BaseDataset):
-    def __init__(self, data_dir: str, batch_size: int, drop_last: bool, num_partitions: int = 10, kind = 'vision', max_dataset_size = 30):
+    def __init__(self, data_dir: str, batch_size: int, drop_last: bool, num_partitions: int = 10, kind = 'vision'):
         # Load samples from data directory
         self.data_dir = data_dir
         self.batch_size = batch_size
@@ -51,7 +51,7 @@ class Dataset(BaseDataset):
             if 'coco' in data_dir:
                 samples = self.load_coco_samples(data_dir)
             else:
-                samples = self.load_paired_s3_object_keys(data_dir, True, True,max_dataset_size)
+                samples = self.load_paired_s3_object_keys(data_dir, True, True,None)
             # samples = self.load_paired_s3_object_keys(
             # data_dir, True, True
             # )

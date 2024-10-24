@@ -6,6 +6,7 @@ from matplotlib.ticker import FuncFormatter
 def percent_formatter(x, pos):
     return f'{int(x)}%'
 
+
 # # Define the visual map and figure data
 # visual_map = {
 #     r'$\bf{SUPER}$': {'color': '#005250', 'hatch': '', 'edgecolor': 'black', 'alpha': 1.0},
@@ -17,63 +18,39 @@ def percent_formatter(x, pos):
 visual_map = {
     r'$\bf{SUPER}$': {'color': '#005250', 'hatch': '', 'edgecolor': 'black', 'alpha': 1.0, 'marker':'o', 'linestyle':'-'},
     'CoorDL': {'color': '#FEA400', 'hatch': '', 'edgecolor': 'black', 'alpha': 1.0,  'marker':'o', 'linestyle':'-'},
-    'Shade': {'color': '#4C8BB8', 'hatch': '', 'edgecolor': 'black', 'alpha': 1.0,  'marker':'o', 'linestyle':'-'},
+    'Shade': {'color': '#FEA400', 'hatch': '', 'edgecolor': 'black', 'alpha': 1.0,  'marker':'o', 'linestyle':'-'},
     'LiData': {'color': '#FF7F0E', 'hatch': '', 'edgecolor': 'black', 'alpha': 1.0,  'marker':'o', 'linestyle':'-'},
 }
 workload_data: Dict[str, Dict[str, float]] = {}
-# workload_data['ViT-32/Cifar10'] = {
-#     "Thouhgput" : { "CoorDL": {'30': 416, '60': 538, '90': 844, '120': 1482, '150': 1496},
-#                     "Shade": {'30': 481, '60': 573, '90': 926, '120': 1313, '150': 1312},
-#                     r'$\bf{SUPER}$': {'30': 1665, '60': 1665, '90': 1665, '120': 1665, '150': 1665}},
-#     "Cost" : { "CoorDL": {'30': 1.70, '60': 1.31, '90': 0.83, '120':0.47, '150': 0.47},
-#                 "Shade": {'30': 1.47, '60': 1.23, '90': 0.76, '120': 0.54, '150': 0.54},
-#                 r'$\bf{SUPER}$': {'30':0.408, '60': 0.408, '90':0.408, '120': 0.408, '150': 0.408}},
-#     "CacheHit" : { "CoorDL": {'30': 10, '60': 25, '90': 50, '120': 75, '150': 100},
-#                     "Shade": {'30': 24, '60': 49, '90': 81, '120': 100, '150': 100},
-#                     r'$\bf{SUPER}$': {'30': 100, '60': 100, '90': 100, '120': 100, '150': 100}},
-#     "Time Breakdown": {
-#         "IO": { "CoorDL": {'30': 76, '60': 68, '90': 50, '120': 11, '150': 10},
-#                 "Shade": {'30': 68, '60': 62, '90': 37, '120': 6, '150': 6},
-#                 r'$\bf{SUPER}$': {'30': 6, '60': 6, '90': 6, '120': 6, '150': 6}},
-#         "Transform": { "CoorDL": {'30': 3, '60': 4, '90': 5, '120': 2, '150': 9},
-#                         "Shade": {'30': 4, '60': 5, '90': 8, '120': 16, '150': 16},
-#                         r'$\bf{SUPER}$': {'30': 3.7, '60': 3.7, '90': 3.7, '120': 3.7, '150': 3.7}},
-#         "GPU": { "CoorDL": {'30': 24, '60': 32, '90': 50, '120': 89, '150': 90},
-#                 "Shade": {'30': 28, '60': 34, '90': 55, '120': 78, '150': 78},
-#                 r'$\bf{SUPER}$': {'30': 94, '60': 94, '90': 94, '120': 94, '150': 94}},
-#     }}
-workload_data['ResNet-50/ImageNet'] = {
-    "Thouhgput" : { "CoorDL": {'30': 1327, '60': 1327, '90': 1327, '120': 1327, '150': 1327},
-                     "Shade": {'30': 1325, '60': 1327, '90': 1322, '120': 1328, '150': 1328},
-                    r'$\bf{SUPER}$': {'30': 1435, '60': 1435, '90': 1435, '120': 1435, '150': 1435}},
+workload_data['Resnet50/ImageNet'] = {
+    "Thoughgput" : { 
+        "CoorDL": {'100': 1398, '80': 572, '60': 359, '40': 262, '20': 206},
+        "Shade": {'100': 1398, '80': 572, '60': 359, '40': 262, '20': 206},
+        r'$\bf{SUPER}$': {'100': 1435, '80': 1435, '60': 1435, '40': 1435, '20': 1435}},
     "Cost" : { 
-        "CoorDL": {'30': 4.29, '60': 8.73, '90': 13.13, '120': 17.55, '150': 21.97},
-        "Shade": {'30': 4.29, '60': 8.73, '90': 13.13, '120': 17.55, '150': 21.97},
-        r'$\bf{SUPER}$': {'30':2.429, '60': 4.858, '90':7.287, '120': 9.716, '150': 12.145}
-        },
-
-    # "Time Breakdown": {
-    #     "IO": { "CoorDL": {'30': 76, '60': 68, '90': 50, '120': 9, '150': 1},
-    #             # "Shade": {'30': 68, '60': 62, '90': 37, '120': 6, '150': 6},
-    #             r'$\bf{SUPER}$': {'30': 6, '60': 6, '90': 6, '120': 6, '150': 6}},
-    #     "Transform": { "CoorDL": {'30': 3, '60': 5, '90': 5, '120': 2, '150': 9},
-    #                     # "Shade": {'30': 4, '60': 5, '90': 8, '120': 16, '150': 16},
-    #                     r'$\bf{SUPER}$': {'30': 6, '60': 6, '90': 6, '120': 6, '150': 6}},
-    #     "GPU": { "CoorDL": {'30': 21, '60': 27, '90': 45, '120': 89, '150': 90},
-    #             # "Shade": {'30': 28, '60': 34, '90': 55, '120': 78, '150': 78},
-    #             r'$\bf{SUPER}$': {'30': 88, '60': 88, '90': 88, '120': 88, '150': 88}},
-    # }
-    }
-
+        "CoorDL": {'100': 4.14, '80': 9.883, '60': 17.22, '40':26.165, '20': 36.362},
+        "Shade": {'100': 4.14, '80': 9.883, '60': 17.22, '40':26.165, '20': 36.362},
+        r'$\bf{SUPER}$': {'100':3.208, '80': 6.416, '60':9.624, '40': 12.8324178, '20': 16.04}},
+    "Time Breakdown": {
+        "IO": { "CoorDL": {'100': 1, '80': 57, '60': 71, '40': 78, '20': 82},
+                "Shade": {'100': 1, '80': 57, '60': 71, '40': 78, '20': 82},
+                r'$\bf{SUPER}$': {'100': 2, '80': 2, '60': 2, '40': 2, '20': 2}},
+        "Transform": { "CoorDL": {'100': 6, '80': 5, '60': 4, '40': 4, '20': 4},
+                        "Shade": {'100': 6, '80': 5, '60': 4, '40': 4, '20': 4},
+                        r'$\bf{SUPER}$': {'100': 2, '80': 2, '60': 2, '40': 2, '20': 2}},
+        "GPU": { "CoorDL": {'100': 93, '80': 38, '60': 24, '40': 17, '20': 13},
+                "Shade": {'100': 93, '80': 38, '60': 24, '40': 17, '20': 13},
+                r'$\bf{SUPER}$': {'100': 96, '80': 94, '60': 94, '40': 94, '20': 94}},
+    }}
 
 x_tick_lables = [30,60,90,120,150]
 x_label = 'Dataset Size (GB)'
+
 for workload in workload_data:
     workload_name = workload
-
-    fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(7.75, 2.7))
+    fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(7.5, 2.3))
     bar_width = 0.25
-    workload_throuhgput = workload_data[workload]["Thouhgput"]
+    workload_throuhgput = workload_data[workload]["Thoughgput"]
     dataset_sizes = list(workload_throuhgput["CoorDL"].keys())
     x = np.arange(len(dataset_sizes))
 
@@ -98,7 +75,7 @@ for workload in workload_data:
 
     # Set y-axis label and limits for throughput
     ax1.set_ylabel('Throughput (samples/s)', fontsize=11)
-    ax1.set_ylim(0, 2000)  # Adjusted limits for clarity
+    ax1.set_ylim(0, 1500)  # Adjusted limits for clarity
     # Get current y-limits
     current_ylim = ax1.get_ylim()
     # Add padding to the upper limit
@@ -112,7 +89,7 @@ for workload in workload_data:
     ax1.tick_params(axis='y', labelsize=12)
     ax1.set_xlabel(x_label, fontsize=11)
     # ax1.legend()
-    ax1.legend(ncol=3, loc='upper center', fontsize=8)
+    ax1.legend(ncol=1, loc='center right', fontsize=8)
 
     # Plotting the bars for cost
     workload_cost = workload_data[workload]["Cost"]
@@ -140,8 +117,8 @@ for workload in workload_data:
             linestyle=visual_map[r'$\bf{SUPER}$']['linestyle'], 
             marker=visual_map[r'$\bf{SUPER}$']['marker'])
 
-    ax2.set_ylabel('Training Cost Per Epoch ($)', fontsize=11)
-    ax2.set_ylim(0, 40)  # Adjust limits for clarity
+    ax2.set_ylabel('Cost Per Epoch ($)', fontsize=11)
+    ax2.set_ylim(0, 45)  # Adjust limits for clarity
     # Get current y-limits
     current_ylim = ax2.get_ylim()
     # Add padding to the upper limit
@@ -155,7 +132,7 @@ for workload in workload_data:
     ax2.tick_params(axis='y', labelsize=12)
     ax2.set_xlabel(x_label, fontsize=11)
     # ax2.legend()
-    ax2.legend(ncol=3, loc='upper center', fontsize=8)
+    ax2.legend(ncol=1, loc='upper left', fontsize=8)
 
     # #create a stacked bar chart for time breakdown
     # # Plot 3: Time Breakdown (Stacked Bar)
@@ -201,15 +178,15 @@ for workload in workload_data:
     #         edgecolor='black',
     #         alpha=0.8
     #     )
-        #  # Add Data Loader Label on Top of GPU Bar
-        # for i, gpu_value in enumerate(gpu_values):
-        #     total_height = io_values[i] + transform_values[i] + gpu_value
-        #     ax3.text(
-        #         x[i] + offset * bar_width,  # X-position aligned with the bar
-        #         total_height + 2,  # Y-position slightly above the bar
-        #          ['CoordL', 'Shade', 'Super'] ,  # Data loader label ('CoordL', 'Shade', 'Super')
-        #         ha='center', va='bottom', fontsize=3, fontweight='bold'
-        #     )
+    #     #  # Add Data Loader Label on Top of GPU Bar
+    #     # for i, gpu_value in enumerate(gpu_values):
+    #     #     total_height = io_values[i] + transform_values[i] + gpu_value
+    #     #     ax3.text(
+    #     #         x[i] + offset * bar_width,  # X-position aligned with the bar
+    #     #         total_height + 2,  # Y-position slightly above the bar
+    #     #          ['CoordL', 'Shade', 'Super'] ,  # Data loader label ('CoordL', 'Shade', 'Super')
+    #     #         ha='center', va='bottom', fontsize=3, fontweight='bold'
+    #     #     )
 
     # ax3.set_ylabel('Time Breakdown (%)', fontsize=11)
     # ax3.set_xlabel('Baseline Cache Size (% of Dataset)', fontsize=11)
@@ -220,11 +197,11 @@ for workload in workload_data:
     # ax3.set_yticks(ticks=np.arange(0, 101, 20), labels=[f'{i}%' for i in np.arange(0, 101, 20)])
 
     # ax3.set_xticks(x + bar_width)
-    # ax3.set_xticklabels([10, 25, 50, 75, 100], fontsize=11)
+    # ax3.set_xticklabels(x_tick_lables, fontsize=11)
     # # Remove duplicate legend entries
     # handles, labels = ax3.get_legend_handles_labels()
     # unique = [(h, l) for i, (h, l) in enumerate(zip(handles, labels)) if l and labels.index(l) == i]
-    # ax3.legend(*zip(*unique), ncol=3, loc='upper center', fontsize=9)
+    # ax3.legend(*zip(*unique), ncol=3, loc='upper center', fontsize=8)
 
 
 

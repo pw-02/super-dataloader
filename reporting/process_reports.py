@@ -60,6 +60,8 @@ def compute_serverless_redis_costs(total_durtion_seconds, cache_size_gb, through
     # Cost is in USD
     hours_in_a_month = 730
     seconds_in_a_month = 2628000
+    # round_duartion_tonearest_hour = total_durtion_seconds / 3600
+    # rounded_duarion = round_duartion_tonearest_hour * 3600
     data_storage_cost_monthly = cache_size_gb * hours_in_a_month * 0.125
 
     requests = throughput_per_s * seconds_in_a_month * avg_size_per_request_kb
@@ -70,6 +72,60 @@ def compute_serverless_redis_costs(total_durtion_seconds, cache_size_gb, through
     exp_cost = total_monhtly_cost/seconds_in_a_month * total_durtion_seconds
     return exp_cost
 
+
+def scale_data_for_epoch(data, folder_path):
+    scaled_for_one_epoch_metrics = {}
+    if 'imagenet' in folder_path:
+        if 'super' not in exp_summary['name']:
+
+            total_files = 1096302 * data['num_jobs']
+            total_batches = 8565 * data['num_jobs']
+            dataset_Size_gb = 120
+
+            # num_files_80_percent = 1096302 * 0.8 * data['num_jobs']
+            # num_files_60_percent = 1096302 * 0.6 * data['num_jobs']
+            # num_files_40_percent = 1096302 * 0.4 * data['num_jobs']
+            # num_files_20_percent = 1096302 * 0.2 * data['num_jobs']
+
+            cache_hits_throughpput = 1398.02888496756
+            cache_hits_wait_on_data_percent = 0.01
+            cache_hits_wait_on_transformation_percent = 0.06
+            cache_hits_gpu_processing_percent = 0.93
+
+            cache_miss_throughpput = 170.124
+            cache_miss_wait_on_data_percent = 0.84
+            cache_miss_wait_on_transformation_percent = 0.04
+            cache_miss_gpu_processing_percent = 0.11
+
+            for size in [1, 0.8, 0.6, 0.4, 0.2]:
+                cahce_hits = total_files * size
+                cache_misses = total_files - cahce_hits
+                time_for_cache_hit = cahce_hits / cache_hits_throughpput
+                time_for_cache_miss = cache_misses / cache_miss_throughpput
+                total_time = time_for_cache_hit + time_for_cache_miss
+                total_throughput = total_files / total_time
+                compute_cost = compute_ec2_costs('p3.8xlarge', total_time)
+                cache_size = dataset_Size_gb * size
+                cache_cost = compute_serverless_redis_costs(total_time, cache_size, total_throughput, 200)
+
+                time_spent_on_data = time_for_cache_hit * cache_hits_wait_on_data_percent + time_for_cache_miss * cache_miss_wait_on_data_percent
+                time_spent_on_transformation = time_for_cache_hit * cache_hits_wait_on_transformation_percent + time_for_cache_miss * cache_miss_wait_on_transformation_percent
+                time_spent_on_gpu_processing = time_for_cache_hit * cache_hits_gpu_processing_percent + time_for_cache_miss * cache_miss_gpu_processing_percent
+
+                percent_spent_on_data = time_spent_on_data / total_time
+                percent_spent_on_transformation = time_spent_on_transformation / total_time
+                percent_spent_on_gpu_processing = time_spent_on_gpu_processing / total_time
+
+                scaled_for_one_epoch_metrics[f'{size*100}%_cost'] = cache_cost + compute_cost
+                # scaled_for_one_epoch_metrics[f'{size*100}%_duration'] = total_time
+                scaled_for_one_epoch_metrics[f'{size*100}%_throughput'] = total_throughput
+                scaled_for_one_epoch_metrics[f'{size*100}%_IO%'] =  percent_spent_on_data
+                scaled_for_one_epoch_metrics[f'{size*100}%_Transformation%'] = percent_spent_on_transformation
+                scaled_for_one_epoch_metrics[f'{size*100}%_GPU%'] = percent_spent_on_gpu_processing
+                # scaled_for_one_epoch_metrics[f'{size*100}%_time_breakdown'] = {'IO': percent_spent_on_data, 'Transformation:': percent_spent_on_transformation, 'GPU': percent_spent_on_gpu_processing}
+
+
+    return scaled_for_one_epoch_metrics
 
   
 def get_training_summary(folder_path, kind):
@@ -202,13 +258,13 @@ def get_cost_summary(folder_path, exp_duration, exp_thrpughput, cache_size_gb, a
     #          ValueError("Unknown dataset")
     #     metrics["total_cost"] = metrics["training_compute_cost"] + metrics["redis_cache_cost"]
     else:
-        metrics["redis_cache_cost"] = compute_serverless_redis_costs(exp_duration,30,exp_thrpughput,200)
+        metrics["redis_cache_cost"] = compute_serverless_redis_costs(exp_duration,1,exp_thrpughput,200)
         metrics["total_cost"] = metrics["training_compute_cost"] + metrics["redis_cache_cost"]
 
     return metrics
 
 if __name__ == "__main__":
-    folder_path = "C:\\Users\\pw\\Desktop\\\dataloading_gpu_unlimited-cache_results\\imagenet_resnet50"
+    folder_path = "C:\\Users\\pw\\Desktop\\dataloading_gpu_cache_sizes_results\\cifar10_vit"
     base_name = os.path.basename(os.path.normpath(folder_path))
     exp_names = get_subfolder_names(folder_path, include_children = False)
     for kind in ['after_first_epoch']: #'first_epoch', 'after_first_epoch'
@@ -226,6 +282,7 @@ if __name__ == "__main__":
                 cache_size_gb = 30,
                 averge_data_transfer_per_request_kb=200)
             exp_summary.update(cost_summary)
+            exp_summary.update(scale_data_for_epoch(exp_summary, folder_path))
             save_dict_list_to_csv([exp_summary], os.path.join(exp_path, f'{exp}_{kind}__summary.csv'))
             overall_summary.append(exp_summary)
 

@@ -264,7 +264,7 @@ def get_cost_summary(folder_path, exp_duration, exp_thrpughput, cache_size_gb, a
     return metrics
 
 if __name__ == "__main__":
-    folder_path = "C:\\Users\\pw\\Desktop\\dataloading_gpu_cache_sizes_results\\cifar10_vit"
+    folder_path = "C:\\Users\\pw\\Desktop\\dataloading_gpu_cache_sizes_results\\cifar10_resnet18"
     base_name = os.path.basename(os.path.normpath(folder_path))
     exp_names = get_subfolder_names(folder_path, include_children = False)
     for kind in ['after_first_epoch']: #'first_epoch', 'after_first_epoch'

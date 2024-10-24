@@ -55,12 +55,19 @@ def get_transform(bucket_name: str):
         ])
 
     elif 'sdl-cifar10' in bucket_name:
-        return transforms.Compose([
-            transforms.Resize(224),                    # Resize the image to 224x224 pixels
-            transforms.RandomHorizontalFlip(),     # Randomly flip the image horizontally
-            transforms.ToTensor(),                 # Convert the image to a PyTorch tensor
-             transforms.Normalize(mean=[0.4914, 0.4822, 0.4465], std=[0.2023, 0.1994, 0.2010])  # Normalize
-            ])
+         return transforms.Compose([
+        transforms.Resize(224),
+            transforms.RandomHorizontalFlip(),        # Random horizontal flip
+            transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),  # Randomly change brightness, contrast, saturation, and hue
+            transforms.RandomRotation(15),      # Randomly rotate images by up to 15 degrees
+            transforms.ToTensor(),                    # Convert to tensor
+            transforms.Normalize(mean=[0.4914, 0.4822, 0.4465], std=[0.2023, 0.1994, 0.2010]) ]) # Normalize
+        # return transforms.Compose([
+        #     transforms.Resize(224),                    # Resize the image to 224x224 pixels
+        #     transforms.RandomHorizontalFlip(),     # Randomly flip the image horizontally
+        #     transforms.ToTensor(),                 # Convert the image to a PyTorch tensor
+        #      transforms.Normalize(mean=[0.4914, 0.4822, 0.4465], std=[0.2023, 0.1994, 0.2010])  # Normalize
+        #     ])
     elif 'coco' in bucket_name:
         return transforms.Compose([
             transforms.Resize(256),                    # Resize the image to 256x256 pixels

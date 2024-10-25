@@ -50,6 +50,7 @@ def get_transform(bucket_name: str):
             transforms.Resize(256),                    # Resize the image to 256x256 pixels
             transforms.RandomResizedCrop(224),   # Randomly crop a 224x224 patch
             transforms.RandomHorizontalFlip(), # Randomly flip the image horizontally
+            transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),  # Randomly change brightness, contrast, saturation, and hue
             transforms.ToTensor(),  # Convert the image to a PyTorch tensor
             normalize,
         ])

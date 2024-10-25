@@ -30,70 +30,23 @@ visual_map = {
 }
 workload_data: Dict[str, Dict[str, float]] = {}
 workload_data['Resnet50/ImageNet'] = {
-    "Throughput" : { 
-        "CoorDL": {'30': 1398, '60': 1398, '90': 1398, '120': 1398, '150': 1398},
-        "Shade": {'30': 1398, '60': 1398, '90': 1398, '120': 1398, '150': 1398},
-        r'$\bf{SUPER}$': {'30': 1435, '60': 1435, '90': 1435, '120': 1435, '150': 1435}},
-    "Cost" : { 
+        "Cost" : { 
         "CoorDL": {'30': 4.14, '60': 10.031, '90': 17.88, '120': 26.716, '150': 37.33},
         "Shade": {'30': 4.14, '60': 10.031, '90': 17.88, '120': 26.716, '150': 37.33},
         r'$\bf{SUPER}$': {'30':3.315, '60': 7.604, '90':11.58, '120': 15.27, '150': 19.04}},
 }
 x_tick_labels = [30,60,90,120,150]
 x_label = 'Dataset Size (GB)'
-
+bar_width = 0.25
 for workload in workload_data:
     workload_name = workload
-    fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(7.5, 2.5))
-    bar_width = 0.25
-    workload_throuhgput = workload_data[workload]["Throughput"]
+    fig, (ax2) = plt.subplots(nrows=1, ncols=1, figsize=(3.25, 2.3))
+    workload_throuhgput = workload_data[workload]["Cost"]
     dataset_sizes = list(workload_throuhgput["CoorDL"].keys())
     x = np.arange(len(dataset_sizes))
 
-    ax1.plot(x, 
-            workload_throuhgput['CoorDL'].values(),  
-            label='CoorDL', 
-            color=visual_map['CoorDL']['color'], 
-            linestyle=visual_map['CoorDL']['linestyle'], 
-            marker=visual_map['CoorDL']['marker'])
-    ax1.plot(x,
-            workload_throuhgput['Shade'].values(),  
-            label='Shade', 
-            color=visual_map['Shade']['color'], 
-            linestyle=visual_map['Shade']['linestyle'], 
-            marker=visual_map['Shade']['marker'])
-    ax1.plot(x, 
-            workload_throuhgput[r'$\bf{SUPER}$'].values(), 
-            label=r'$\bf{SUPER}$', 
-            color=visual_map[r'$\bf{SUPER}$']['color'], 
-            linestyle=visual_map[r'$\bf{SUPER}$']['linestyle'], 
-            marker=visual_map[r'$\bf{SUPER}$']['marker'])
-    ax1.grid(True, linestyle='--', alpha=0.6)
-    # Set y-axis label and limits for throughput
-    ax1.set_ylabel('Throughput (samples/s)', fontsize=11)
-    ax1.set_ylim(1000, 1800)  # Adjusted limits for clarity
-    ax1.yaxis.set_major_formatter(FuncFormatter(thousands_formatter))  # Apply custom formatter
-    # Get current y-limits
-    current_ylim = ax1.get_ylim()
-    # Add padding to the upper limit
-    padding = 100
-    ax1.set_ylim(current_ylim[0], current_ylim[1] + padding)  # Extend the upper limit
-    # Optionally, adjust the legend placement if necessary
-    ax1.legend(loc='best')
-
-    ax1.set_xticks(x + bar_width)  # Center ticks under the grouped bars
-    ax1.set_xticklabels(x_tick_labels, fontsize=11)
-    ax1.tick_params(axis='y', labelsize=12)
-    ax1.set_xlabel(x_label, fontsize=11)
-    # ax1.legend()
-    ax2.legend(ncol=1, loc='upper left', fontsize=10)
-
     # Plotting the bars for cost
     workload_cost = workload_data[workload]["Cost"]
-    # ax2.bar(x, workload_cost['CoorDL'].values(), width=bar_width, label='CoorDL', color=visual_map['CoorDL']['color'], hatch=visual_map['CoorDL']['hatch'], edgecolor='black')
-    # ax2.bar(x + bar_width, workload_cost['Shade'].values(), width=bar_width, label='Shade', color=visual_map['Shade']['color'], hatch=visual_map['Shade']['hatch'], edgecolor='black')
-    # ax2.bar(x + 2 * bar_width, workload_cost[r'$\bf{SUPER}$'].values(), width=bar_width, label=r'$\bf{SUPER}$', color=visual_map[r'$\bf{SUPER}$']['color'], hatch=visual_map[r'$\bf{SUPER}$']['hatch'], edgecolor='black')
-    # Set y-axis label and limits for cost
 
     ax2.plot(x, 
             workload_cost['CoorDL'].values(),  
@@ -114,14 +67,12 @@ for workload in workload_data:
             linestyle=visual_map[r'$\bf{SUPER}$']['linestyle'], 
             marker=visual_map[r'$\bf{SUPER}$']['marker'])
 
-    ax2.set_ylabel('Cost Per Epoch ($)', fontsize=11)
+    ax2.set_ylabel('Dataloading Cost Per Epoch ($)', fontsize=11)
     ax2.set_ylim(0, 45)  # Adjust limits for clarity
     # Get current y-limits
     current_ylim = ax2.get_ylim()
-    # Add padding to the upper limit
     padding = 0.25
     ax2.set_ylim(current_ylim[0], current_ylim[1] + padding)  # Extend the upper limit
-    # Optionally, adjust the legend placement if necessary
     ax2.legend( fontsize=10)
     ax2.yaxis.set_major_formatter(FuncFormatter(dollar_formatter))  # Apply custom formatter
 
@@ -135,7 +86,3 @@ for workload in workload_data:
 
 plt.tight_layout()
 plt.show()
-
-
-
-

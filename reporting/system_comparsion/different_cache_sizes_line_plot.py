@@ -3,9 +3,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Patch
 from matplotlib.ticker import FuncFormatter
+
 def percent_formatter(x, pos):
     return f'{int(x)}%'
 
+# Custom formatter to display Y-tick labels in 'K'
+def thousands_formatter(x, pos):
+    return f'{x / 1000:.1f}K'
+# Custom formatter to add a dollar sign to Y-ticks in the cost subplot
+def dollar_formatter(x, pos):
+    return f'${x:.0f}'
 
 # # Define the visual map and figure data
 # visual_map = {
@@ -42,9 +49,29 @@ workload_data['Resnet50/ImageNet'] = {
         "GPU": { "CoorDL": {'100': 93, '80': 38, '60': 24, '40': 17, '20': 13},
                 "Shade": {'100': 93, '80': 38, '60': 24, '40': 17, '20': 13},
                 r'$\bf{SUPER}$': {'100': 96, '80': 94, '60': 94, '40': 94, '20': 94}},
-    }
-    
-    }
+    }}
+
+workload_data['ViT-32/Cifar10'] = {
+    "Thoughgput" : { "CoorDL": {'100': 1612, '80': 1544, '60': 911, '40': 644, '20': 456},
+                    "Shade": {'100': 1612, '80': 1544, '60': 911, '40': 644, '20': 456},
+                    r'$\bf{SUPER}$': {'100': 1567, '80': 1567, '60': 1567, '40': 1567, '20': 1567}},
+    "Cost" : { "CoorDL": {'100': 0.561, '80': 0.580, '60': 0.88, '40':1.20, '20':1.64},
+                "Shade": {'100': 0.561, '80': 0.580, '60': 0.88, '40':1.20, '20':1.64},
+                r'$\bf{SUPER}$': {'100':0.348, '80': 0.348, '60':0.348, '40': 0.348, '20': 0.348}},
+    "CacheHit" : { "CoorDL": {'100': 10, '80': 25, '60': 50, '40': 75, '20': 100},
+                    "Shade": {'100': 24, '80': 49, '60': 81, '40': 100, '20': 100},
+                    r'$\bf{SUPER}$': {'100': 100, '80': 100, '60': 100, '40': 100, '20': 100}},
+    "Time Breakdown": {
+        "IO": { "CoorDL":  {'100': 1, '80': 6, '60': 41, '40': 57, '20': 69},
+                "Shade": {'100': 1, '80': 6, '60': 41, '40': 57, '20': 69},
+                r'$\bf{SUPER}$': {'100': 2, '80': 2, '60': 2, '40': 2, '20': 2}},
+        "Transform": { "CoorDL": {'100': 2, '80': 2, '60': 5, '40': 4, '20': 4},
+                        "Shade": {'100': 2, '80': 2, '60': 5, '40': 4, '20': 4},
+                        r'$\bf{SUPER}$': {'100': 3, '80': 3, '60': 3, '40': 3, '20': 3}},
+        "GPU": { "CoorDL": {'100': 97, '80': 93, '60': 54, '40': 38, '20': 27},
+                "Shade": {'100': 97, '80': 93, '60': 54, '40': 38, '20': 27},
+                r'$\bf{SUPER}$': {'100': 95, '80': 95, '60': 95, '40': 95, '20': 95}},
+    }}
 
 x_tick_lables = [100,80,60,40,20]
 x_label = 'Baseline Cache Size (% of Dataset)'
@@ -78,14 +105,13 @@ for workload in workload_data:
 
     # Set y-axis label and limits for throughput
     ax1.set_ylabel('Throughput (samples/s)', fontsize=11)
-    ax1.set_ylim(0, 1700)  # Adjusted limits for clarity
+    ax1.set_ylim(0, 2000)  # Adjusted limits for clarity
     # Get current y-limits
     current_ylim = ax1.get_ylim()
     # Add padding to the upper limit
     padding = 100
     ax1.set_ylim(current_ylim[0], current_ylim[1] + padding)  # Extend the upper limit
     # Optionally, adjust the legend placement if necessary
-    ax1.legend(loc='best')
 
     ax1.set_xticks(x + bar_width)  # Center ticks under the grouped bars
     ax1.set_xticklabels(x_tick_lables, fontsize=11)

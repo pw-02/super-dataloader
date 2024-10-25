@@ -127,7 +127,8 @@ class Dataset(BaseDataset):
                 blobs_with_class = paired_samples.get(blob_class, [])
                 blobs_with_class.append(blob_path)
                 paired_samples[blob_class] = blobs_with_class
-        
+                total_size_gb += blob['Size'] / 1024 / 1024 / 1024
+
         if use_index_file and len(paired_samples) > 0:
             index_object = s3_client.put_object(
                 Bucket=s3url.bucket, 

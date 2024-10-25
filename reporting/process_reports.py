@@ -4,10 +4,13 @@ import os
 from collections import OrderedDict
 import csv
 
-def convert_csv_to_dict(csv_file, first_epoch_only = False):
+def convert_csv_to_dict(csv_file, first_epoch_only = False, start_timestamp = None, end_timestamp = None):
     df = pd.read_csv(csv_file)
     if 'bill.csv' in csv_file:
-        return df.to_dict(orient='list')
+        df['Timestamp'] = pd.to_datetime(df['Timestamp'])
+        # Filter the DataFrame based on the timestamp range
+        filtered_df = df[(df['Timestamp'] >= start_timestamp) & (df['Timestamp'] <= end_timestamp)]
+        return filtered_df.to_dict(orient='list')
     # Filter the rows where 'Epoch Index' is equal to 1
     if first_epoch_only:
         filtered_df = df[df['Epoch Index'] == 1]
@@ -82,22 +85,17 @@ def scale_data_for_epoch(data, folder_path):
             total_batches = 8565 * data['num_jobs']
             dataset_Size_gb = 120
 
-            # num_files_80_percent = 1096302 * 0.8 * data['num_jobs']
-            # num_files_60_percent = 1096302 * 0.6 * data['num_jobs']
-            # num_files_40_percent = 1096302 * 0.4 * data['num_jobs']
-            # num_files_20_percent = 1096302 * 0.2 * data['num_jobs']
-
-            cache_hits_throughpput = 1398.02888496756
-            cache_hits_wait_on_data_percent = 0.01
-            cache_hits_wait_on_transformation_percent = 0.06
-            cache_hits_gpu_processing_percent = 0.93
+            cache_hits_throughpput = 922.229995296646
+            cache_hits_wait_on_data_percent = 0.3841
+            cache_hits_wait_on_transformation_percent = 0.343851171002813
+            cache_hits_gpu_processing_percent = 0.615815066164214
 
             cache_miss_throughpput = 170.124
             cache_miss_wait_on_data_percent = 0.84
             cache_miss_wait_on_transformation_percent = 0.04
             cache_miss_gpu_processing_percent = 0.11
 
-            for size in [1, 0.8, 0.6, 0.4, 0.2]:
+            for size in [0.8, 0.6, 0.4, 0.2]:
                 cahce_hits = total_files * size
                 cache_misses = total_files - cahce_hits
                 time_for_cache_hit = cahce_hits / cache_hits_throughpput
@@ -130,6 +128,8 @@ def scale_data_for_epoch(data, folder_path):
   
 def get_training_summary(folder_path, kind):
     first_epoch_only = True if kind == 'first_epoch' else False
+    start_time_stamp = None
+    end_time_stamp = None
     metrics = OrderedDict({
          "num_jobs": 0,
          "total_batches": 0,
@@ -153,6 +153,11 @@ def get_training_summary(folder_path, kind):
     search_pattern = os.path.join(folder_path, '**', 'metrics.csv')
     for metrics_csv in glob.iglob(search_pattern, recursive=True):
         csv_data = convert_csv_to_dict(metrics_csv, first_epoch_only)
+        if not start_time_stamp or csv_data['Timestamp (UTC)'][0] < start_time_stamp:
+            #convert to datetime
+            start_time_stamp = csv_data['Timestamp (UTC)'][0]
+        if not end_time_stamp or csv_data['Timestamp (UTC)'][-1] > end_time_stamp:
+            end_time_stamp = csv_data['Timestamp (UTC)'][-1]
         metrics["num_jobs"] += 1
         metrics["total_batches"] += len(csv_data["Batch Index"])
         if "Batch Size" in csv_data:
@@ -193,7 +198,7 @@ def get_training_summary(folder_path, kind):
         metrics["transform_delay(%)"] = transform_percent *  metrics["waiting_on_data_time(%)"] 
         metrics["data_fetch_delay(%)"] = data_fetch_percent *  metrics["waiting_on_data_time(%)"] 
     
-    return metrics
+    return metrics, start_time_stamp, end_time_stamp
 
 def compute_ec2_costs(instance_type: str, time_seconds: float):
     instance_prices = {
@@ -220,7 +225,7 @@ def compute_ec2_costs(instance_type: str, time_seconds: float):
 
 
 
-def get_cost_summary(folder_path, exp_duration, exp_thrpughput, cache_size_gb, averge_data_transfer_per_request_kb):
+def get_cost_summary(folder_path, exp_duration, exp_thrpughput, start_timestamp = None, end_timestamp = None):
     metrics = OrderedDict({
          "total_lambda_cost": 0,
          "prefetch_lambda_cost": 0,
@@ -236,7 +241,7 @@ def get_cost_summary(folder_path, exp_duration, exp_thrpughput, cache_size_gb, a
         search_pattern = os.path.join(folder_path, '**', 'bill.csv')
         for cost_csv in glob.iglob(search_pattern, recursive=True):
             #comute data loading costs
-            csv_data = convert_csv_to_dict(cost_csv)
+            csv_data = convert_csv_to_dict(cost_csv, start_timestamp = start_timestamp, end_timestamp = end_timestamp)
             systems = list(csv_data["System"])
 
             for idx, system in enumerate(systems):
@@ -258,13 +263,13 @@ def get_cost_summary(folder_path, exp_duration, exp_thrpughput, cache_size_gb, a
     #          ValueError("Unknown dataset")
     #     metrics["total_cost"] = metrics["training_compute_cost"] + metrics["redis_cache_cost"]
     else:
-        metrics["redis_cache_cost"] = compute_serverless_redis_costs(exp_duration,1,exp_thrpughput,200)
+        metrics["redis_cache_cost"] = compute_serverless_redis_costs(exp_duration,10,exp_thrpughput,200)
         metrics["total_cost"] = metrics["training_compute_cost"] + metrics["redis_cache_cost"]
 
     return metrics
 
 if __name__ == "__main__":
-    folder_path = "C:\\Users\\pw\\Desktop\\dataloading_gpu_cache_sizes_results\\cifar10_vit"
+    folder_path = "C:\\Users\\pw\\Desktop\\\dataloading_gpu_dataset_sizes_results\\imagenet_resnet50"
     base_name = os.path.basename(os.path.normpath(folder_path))
     exp_names = get_subfolder_names(folder_path, include_children = False)
     for kind in ['after_first_epoch']: #'first_epoch', 'after_first_epoch'
@@ -273,14 +278,15 @@ if __name__ == "__main__":
             exp_summary  = {}
             exp_summary['name'] = exp
             exp_path = os.path.join(folder_path, exp)
-            train_summary = get_training_summary(exp_path, kind)
+            train_summary, start_timestamp, end_timestamp = get_training_summary(exp_path, kind)
             exp_summary.update(train_summary)
             cost_summary = get_cost_summary(
                 folder_path=exp_path,
                 exp_duration =  train_summary["total_time(s)"],
                 exp_thrpughput =  train_summary["throughput(samples/s)"],
-                cache_size_gb = 30,
-                averge_data_transfer_per_request_kb=200)
+                start_timestamp = start_timestamp,
+                end_timestamp = end_timestamp
+                )
             exp_summary.update(cost_summary)
             exp_summary.update(scale_data_for_epoch(exp_summary, folder_path))
             save_dict_list_to_csv([exp_summary], os.path.join(exp_path, f'{exp}_{kind}__summary.csv'))

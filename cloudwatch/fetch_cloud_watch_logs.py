@@ -135,8 +135,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Export CloudWatch logs to S3 and download them.")
     parser.add_argument("--download_dir", help="Directory to download the logs to", default="logs")
     parser.add_argument("--s3_bucket_name", help="S3 bucket name for exporting logs", default="supercloudwtachexports")
-    parser.add_argument("--start_time", help="", default='2024-10-24_18-28-02')
-    parser.add_argument("--end_time", help="",  default='2024-10-24_18-30-06')
+    parser.add_argument("--start_time", help="", default='2024-10-25_03-23-42')
+    parser.add_argument("--end_time", help="",  default='2024-10-25_03-28-42')
     args = parser.parse_args()
     #10/23/2024  11:44:40 PM
     # 2024-10-24_18-27-38

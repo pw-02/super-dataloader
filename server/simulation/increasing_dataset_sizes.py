@@ -14,9 +14,9 @@ def compute_serverless_redis_costs(total_durtion_seconds, cache_size_gb, through
 
 
 def run():
-    dataset_sizes = {30: 268741, 60: 544913, 90: 835949, 120: 1096302, 150: 1365043}
-    dataloaer_throuhgputs = {'coordl':1398, 'super':1435, 'shade':1398}
-    super_cache_costs = {30: 0.769, 60: 2.44, 90: 3.66, 120: 4.88, 150: 6.11}
+    dataset_sizes = {10: 83653, 30: 268741, 60: 544913, 90: 835949, 120: 1096302, 150: 1365043}
+    dataloaer_throuhgputs = {'coordl':922, 'super':1406, 'shade':922}
+    super_cache_costs = {10: 0.769, 30: 0.769, 60: 2.44, 90: 3.66, 120: 4.88, 150: 6.11}
     num_jobs = 4
     p38xlarge_cost = 12.24/60/60
     for size in dataset_sizes:
@@ -28,7 +28,12 @@ def run():
                 cache_cost = super_cache_costs[size]
             compute_cost =p38xlarge_cost * total_durationn
             total_cost = cache_cost + compute_cost
-            print(f"size: {size} GB, DataLoader: {loader}, Duration:{total_durationn}, Throughput: {dataloaer_throuhgputs[loader]} samples/sec, Cost: {total_cost} USD")
+
+            compute_cost_percent = compute_cost / total_cost * 100
+            cache_cost_percent = cache_cost / total_cost * 100
+
+            print(f"size: {size} GB, DataLoader: {loader} ,Compute Cost Percent: {compute_cost_percent}, Cache Cost Percent: {cache_cost_percent}")
+            # print(f"size: {size} GB, DataLoader: {loader}, Duration:{total_durationn}, Throughput: {dataloaer_throuhgputs[loader]} samples/sec, Cost: {total_cost} USD")
             
 
 

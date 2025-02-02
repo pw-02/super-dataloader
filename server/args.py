@@ -16,3 +16,12 @@ class SUPERArgs:
     shuffle:bool
     drop_last:bool
     workload_kind:str
+
+@dataclass
+class CoorDLArgs:
+    batch_size:int
+    lookahead_steps:int
+    cache_address:str
+    shuffle:bool
+    drop_last:bool
+    workload_kind:str

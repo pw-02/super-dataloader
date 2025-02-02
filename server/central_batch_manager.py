@@ -143,7 +143,7 @@ class PrefetchService:
                     #add in a check to see if the job is suffering from a data loading delay and benefit from prefetching
                     prefetch_counter, time_counter = 0, 0
                     # Fetch average times for cache hit and miss scenarios for the current job
-                    avg_time_on_hit = job.training_step_times_on_hit.avg if job.training_step_times_on_hit.count > 0 else job.training_step_gpu_times.avg
+                    ave = job.training_step_times_on_hit.avg if job.training_step_times_on_hit.count > 0 else job.training_step_gpu_times.avg
                     avg_time_on_miss = job.training_step_times_on_miss.avg if job.training_step_times_on_miss.count > 0 else job.training_step_gpu_times.avg + 1.5
 
                     if len(job.future_batches) < prefetch_conncurrency:

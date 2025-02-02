@@ -85,15 +85,15 @@ def scale_data_for_epoch(data, folder_path):
             total_batches = 8565 * data['num_jobs']
             dataset_Size_gb = 120
 
-            cache_hits_throughpput = 922.229995296646
-            cache_hits_wait_on_data_percent = 0.3841
-            cache_hits_wait_on_transformation_percent = 0.343851171002813
-            cache_hits_gpu_processing_percent = 0.615815066164214
+            cache_hits_throughpput = 1152.18849449293
+            cache_hits_wait_on_data_percent = 0.0291379650132601
+            cache_hits_wait_on_transformation_percent = 0.201517240143942
+            cache_hits_gpu_processing_percent = 0.769344794842797
 
-            cache_miss_throughpput = 170.124
-            cache_miss_wait_on_data_percent = 0.84
-            cache_miss_wait_on_transformation_percent = 0.04
-            cache_miss_gpu_processing_percent = 0.11
+            cache_miss_throughpput = 197.381926650166
+            cache_miss_wait_on_data_percent = 0.758294976165936
+            cache_miss_wait_on_transformation_percent = 0.109913885808308
+            cache_miss_gpu_processing_percent = 0.131791138025754
 
             for size in [0.8, 0.6, 0.4, 0.2]:
                 cahce_hits = total_files * size
@@ -114,14 +114,36 @@ def scale_data_for_epoch(data, folder_path):
                 percent_spent_on_transformation = time_spent_on_transformation / total_time
                 percent_spent_on_gpu_processing = time_spent_on_gpu_processing / total_time
 
-                scaled_for_one_epoch_metrics[f'{size*100}%_cost'] = cache_cost + compute_cost
+                scaled_for_one_epoch_metrics[f'{size*100}%_coordl_cost'] = cache_cost + compute_cost
                 # scaled_for_one_epoch_metrics[f'{size*100}%_duration'] = total_time
-                scaled_for_one_epoch_metrics[f'{size*100}%_throughput'] = total_throughput
-                scaled_for_one_epoch_metrics[f'{size*100}%_IO%'] =  percent_spent_on_data
-                scaled_for_one_epoch_metrics[f'{size*100}%_Transformation%'] = percent_spent_on_transformation
-                scaled_for_one_epoch_metrics[f'{size*100}%_GPU%'] = percent_spent_on_gpu_processing
+                scaled_for_one_epoch_metrics[f'{size*100}%_coordl_throughput'] = total_throughput
+                scaled_for_one_epoch_metrics[f'{size*100}%_coordl_IO%'] =  percent_spent_on_data
+                scaled_for_one_epoch_metrics[f'{size*100}%_coordl_Transformation%'] = percent_spent_on_transformation
+                scaled_for_one_epoch_metrics[f'{size*100}%_coordl_GPU%'] = percent_spent_on_gpu_processing
                 # scaled_for_one_epoch_metrics[f'{size*100}%_time_breakdown'] = {'IO': percent_spent_on_data, 'Transformation:': percent_spent_on_transformation, 'GPU': percent_spent_on_gpu_processing}
 
+                shade_cache_hits = cahce_hits * 1.5
+                shade_cache_misses = max(0, total_files - shade_cache_hits)
+                shade_time_for_cache_hit = shade_cache_hits / cache_hits_throughpput
+                shade_time_for_cache_miss = shade_cache_misses / cache_miss_throughpput
+                shade_total_time = shade_time_for_cache_hit + shade_time_for_cache_miss
+                shade_total_throughput = total_files / shade_total_time
+                shade_compute_cost = compute_ec2_costs('p3.8xlarge', shade_total_time)
+                shade_cache_cost = compute_serverless_redis_costs(shade_total_time, cache_size, shade_total_throughput, 200)
+                shade_time_spent_on_data = shade_time_for_cache_hit * cache_hits_wait_on_data_percent + shade_time_for_cache_miss * cache_miss_wait_on_data_percent
+                shade_time_spent_on_transformation = shade_time_for_cache_hit * cache_hits_wait_on_transformation_percent + shade_time_for_cache_miss * cache_miss_wait_on_transformation_percent
+                shade_time_spent_on_gpu_processing = shade_time_for_cache_hit * cache_hits_gpu_processing_percent + shade_time_for_cache_miss * cache_miss_gpu_processing_percent
+                shade_percent_spent_on_data = shade_time_spent_on_data / shade_total_time
+                shade_percent_spent_on_transformation = shade_time_spent_on_transformation / shade_total_time
+                shade_percent_spent_on_gpu_processing = shade_time_spent_on_gpu_processing / shade_total_time
+
+                scaled_for_one_epoch_metrics[f'{size*100}%_shade_cost'] = shade_cache_cost + shade_compute_cost
+                # scaled_for_one_epoch_metrics[f'{size*100}%_shade_duration'] = shade_total_time
+                scaled_for_one_epoch_metrics[f'{size*100}%_shade_throughput'] = shade_total_throughput
+                scaled_for_one_epoch_metrics[f'{size*100}%_shade_IO%'] =  shade_percent_spent_on_data
+                scaled_for_one_epoch_metrics[f'{size*100}%_shade_Transformation%'] = shade_percent_spent_on_transformation
+                scaled_for_one_epoch_metrics[f'{size*100}%_shade_GPU%'] = shade_percent_spent_on_gpu_processing
+                # scaled_for_one_epoch_metrics[f'{size*100}%_shade_time_breakdown'] = {'IO': shade_percent_spent_on_data, 'Transformation:': shade_percent_spent_on_transformation, 'GPU': shade_percent_spent_on_gpu_processing}
 
     return scaled_for_one_epoch_metrics
 
@@ -269,7 +291,7 @@ def get_cost_summary(folder_path, exp_duration, exp_thrpughput, start_timestamp 
     return metrics
 
 if __name__ == "__main__":
-    folder_path = "C:\\Users\\pw\\Desktop\\\dataloading_gpu_dataset_sizes_results\\imagenet_resnet50"
+    folder_path = "C:\\Users\\pw\\Desktop\\dataloading_cpu_cache_sizes_results\\\cifar10_vit"
     base_name = os.path.basename(os.path.normpath(folder_path))
     exp_names = get_subfolder_names(folder_path, include_children = False)
     for kind in ['after_first_epoch']: #'first_epoch', 'after_first_epoch'

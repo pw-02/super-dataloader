@@ -19,75 +19,32 @@ def dollar_formatter(x, pos):
 #     r'$\bf{DisDP}$': {'color': '#005250', 'hatch': '', 'edgecolor': 'black', 'alpha': 1.0},
 #     'CoorDL': {'color': '#FEA400', 'hatch': '', 'edgecolor': 'black', 'alpha': 1.0},
 #     'Shade': {'color': '#4C8BB8', 'hatch': '', 'edgecolor': 'black', 'alpha': 1.0},
-#     'LiData': {'color': '#FF7F0E', 'hatch': '', 'edgecolor': 'black', 'alpha': 1.0},
+#     'LitData': {'color': '#FF7F0E', 'hatch': '', 'edgecolor': 'black', 'alpha': 1.0},
 # }
 #81ACCD
 visual_map = {
     r'$\bf{DisDP}$': {'color': '#005250', 'hatch': '', 'edgecolor': 'black', 'alpha': 1.0, 'marker':'o', 'linestyle':'-'},
     'CoorDL': {'color': '#FEA400', 'hatch': '', 'edgecolor': 'black', 'alpha': 1.0,  'marker':'o', 'linestyle':'-'},
     'Shade': {'color': '#73A3C7', 'hatch': '', 'edgecolor': 'black', 'alpha': 1.0,  'marker':'o', 'linestyle':'-'},
-    'LiData': {'color': '#FF7F0E', 'hatch': '', 'edgecolor': 'black', 'alpha': 1.0,  'marker':'o', 'linestyle':'-'},
+    'LitData': {'color': '#FF7F0E', 'hatch': '', 'edgecolor': 'black', 'alpha': 1.0,  'marker':'o', 'linestyle':'-'},
 }
 workload_data: Dict[str, Dict[str, float]] = {}
-# workload_data['Resnet50/ImageNet'] = {
-#     "Thoughgput" : { "CoorDL": {'80': 585.61, '60': 392.57620783468, '40': 295.250243513791, '20': 236.594625516588},
-#                     "Shade": {'80': 960.157078744108, '60': 776.545717244473, '40': 392.57620783468, '20': 262.687956077044},
-#                     r'$\bf{DisDP}$': { '80': 1366, '60': 1366, '40': 1366, '20': 1366}},
-#     "Cost" : { "CoorDL": { '80': 53.4022088187159, '60': 68.8869216289558, '40':78.2346725997701, '20':81.445461731159},
-#                 "Shade": { '80': 33.7342712969246, '60': 36.2996542616067, '40':59.5783086079168, '20':73.6515201950887},
-#                 r'$\bf{DisDP}$': {'80': 19.62, '60':19.62, '40': 19.62, '20': 19.62}},
-#     # "CacheHit" : { "CoorDL": {'80': 25, '60': 50, '40': 75, '20': 100},
-#     #                 "Shade": {'80': 49, '60': 81, '40': 100, '20': 100},
-#     #                 r'$\bf{DisDP}$': {'80': 100, '60': 100, '40': 100, '20': 100}},
-#     "Time Breakdown": {
-#         "IO": { "CoorDL": { '80': 46, '60':61, '40': 68, '20': 73},
-#                 "Shade": {'80': 3, '60': 32, '40': 61, '20': 71},
-#                 r'$\bf{DisDP}$': { '80': 5, '60': 5, '40': 5, '20': 5}},
-#         "Transform": { "CoorDL": { '80': 15, '60': 13, '40': 12, '20': 11},
-#                         "Shade": {'80': 20, '60': 17, '40': 13, '20': 12},
-#                         r'$\bf{DisDP}$': {'80': 3, '60': 3, '40': 3, '20': 3}},
-#         "GPU": { "CoorDL": { '80': 39, '60': 26, '40': 20, '20': 16},
-#                 "Shade": { '80': 77, '60': 52, '40': 26, '20': 18},
-#                 r'$\bf{DisDP}$': {'80': 92, '60': 92, '40': 92, '20': 92}},
-#     }}
-
-# workload_data['ViT-32/Cifar10'] = {
-#     "Thoughgput" : { "CoorDL": { '80': 1544, '60': 911., '40': 644, '20': 456},
-#                     "Shade": { '80': 1178, '60': 980, '40': 679, '20': 464},
-#                     r'$\bf{DisDP}$': { '80': 1567, '60': 1567, '40': 1567, '20': 1567}},
-#     "Cost" : { "CoorDL": { '80': 0.6, '60': 0.90, '40':1.29, '20':1.77},
-#                 "Shade": { '80': 0.77, '60': 0.90, '40':1.23, '20':1.74},
-#                 r'$\bf{DisDP}$': { '80': 0.412, '60':0.412, '40': 0.412, '20': 0.412}},
-#     "CacheHit" : { "CoorDL": { '80': 25, '60': 50, '40': 75, '20': 100},
-#                     "Shade": { '80': 49, '60': 81, '40': 100, '20': 100},
-#                     r'$\bf{DisDP}$': { '80': 100, '60': 100, '40': 100, '20': 100}},
-#     "Time Breakdown": {
-#         "IO": { "CoorDL":  { '80': 6, '60': 41, '40': 57, '20': 69},
-#                 "Shade": { '80': 22, '60': 37, '40': 56, '20': 70},
-#                 r'$\bf{DisDP}$': { '80': 2, '60': 2, '40': 2, '20': 2}},
-#         "Transform": { "CoorDL": { '80': 2, '60': 5, '40': 4, '20': 4},
-#                         "Shade": { '80': 11, '60': 8, '40': 5, '20': 4},
-#                         r'$\bf{DisDP}$': {'80': 3, '60': 3, '40': 3, '20': 3}},
-#         "GPU": { "CoorDL": { '80': 93, '60': 54, '40': 38, '20': 27},
-#                 "Shade": { '80': 67, '60': 56, '40': 39, '20': 26},
-#                 r'$\bf{DisDP}$': { '80': 95, '60': 95, '40': 95, '20': 95}},
-#     }}
 
 workload_data['Pythia14m/OWT'] = {
-    "Thoughgput" : { "LitData": {'80': 585.61, '60': 392.57620783468, '40': 295.250243513791, '20': 236.594625516588},
-                    r'$\bf{DisDP}$': { '80': 1366, '60': 1366, '40': 1366, '20': 1366}},
-    "Cost" : { "LitData": { '80': 53.4022088187159, '60': 68.8869216289558, '40':78.2346725997701, '20':81.445461731159},
-                r'$\bf{DisDP}$': {'80': 19.62, '60':19.62, '40': 19.62, '20': 19.62}},
+    "Thoughgput" : { "LitData": {'80': 17.94533576, '60': 17.94533576, '40': 17.94533576, '20': 17.94533576},
+                    r'$\bf{DisDP}$': { '80': 34.907, '60': 34.907, '40': 34.907, '20': 34.907}},
+    "Cost" : { "LitData": { '80': 1.84678, '60': 1.84678, '40':1.84678, '20':1.84678},
+                r'$\bf{DisDP}$': {'80': 0.531078482, '60':0.531078482, '40': 0.531078482, '20': 0.531078482}},
     # "CacheHit" : { "CoorDL": {'80': 25, '60': 50, '40': 75, '20': 100},
     #                 "Shade": {'80': 49, '60': 81, '40': 100, '20': 100},
     #                 r'$\bf{DisDP}$': {'80': 100, '60': 100, '40': 100, '20': 100}},
     "Time Breakdown": {
-        "IO": { "LitData": { '80': 46, '60':61, '40': 68, '20': 73},
-                r'$\bf{DisDP}$': { '80': 5, '60': 5, '40': 5, '20': 5}},
-        "Transform": { "LitData": { '80': 15, '60': 13, '40': 12, '20': 11},
-                        r'$\bf{DisDP}$': {'80': 3, '60': 3, '40': 3, '20': 3}},
-        "GPU": { "LitData": { '80': 39, '60': 26, '40': 20, '20': 16},
-                r'$\bf{DisDP}$': {'80': 92, '60': 92, '40': 92, '20': 92}},
+        "IO": { "LitData": { '80': 1.6927691, '60':1.6927691, '40': 1.6927691, '20': 1.6927691},
+                r'$\bf{DisDP}$': { '80': 1.4359577, '60': 1.4359577, '40': 1.4359577, '20': 1.4359577}},
+        "Transform": { "LitData": { '80': 50.6356277, '60': 50.6356277, '40': 50.6356277, '20': 50.6356277},
+                        r'$\bf{DisDP}$': {'80': 8.2940553, '60': 8.2940553, '40': 8.2940553, '20': 8.2940553}},
+        "GPU": { "LitData": { '80':  47.6716032, '60':  47.6716032, '40':  47.6716032, '20':  47.6716032},
+                r'$\bf{DisDP}$': {'80': 90.9346479, '60': 90.9346479, '40': 90.9346479, '20': 90.9346479}},
     }}
 
 
@@ -105,17 +62,12 @@ for workload in workload_data:
     x = np.arange(len(dataset_sizes))
 
     ax1.plot(x, 
-            workload_throuhgput['CoorDL'].values(),  
-            label='CoorDL', 
-            color=visual_map['CoorDL']['color'], 
-            linestyle=visual_map['CoorDL']['linestyle'], 
-            marker=visual_map['CoorDL']['marker'])
-    ax1.plot(x,
-            workload_throuhgput['Shade'].values(),  
-            label='Shade', 
-            color=visual_map['Shade']['color'], 
-            linestyle=visual_map['Shade']['linestyle'], 
-            marker=visual_map['Shade']['marker'])
+            workload_throuhgput['LitData'].values(),  
+            label='LitData', 
+            color=visual_map['LitData']['color'], 
+            linestyle=visual_map['LitData']['linestyle'], 
+            marker=visual_map['LitData']['marker'])
+   
     ax1.plot(x, 
             workload_throuhgput[r'$\bf{DisDP}$'].values(), 
             label=r'$\bf{DisDP}$', 
@@ -125,11 +77,11 @@ for workload in workload_data:
 
     # Set y-axis label and limits for throughput
     ax1.set_ylabel('Throughput (samples/s)', fontsize=12)
-    ax1.set_ylim(0, 2000)  # Adjusted limits for clarity
+    ax1.set_ylim(0, 50)  # Adjusted limits for clarity
     # Get current y-limits
     current_ylim = ax1.get_ylim()
     # Add padding to the upper limit
-    padding = 100
+    padding = 2
     ax1.set_ylim(current_ylim[0], current_ylim[1] + padding)  # Extend the upper limit
     # Optionally, adjust the legend placement if necessary
 
@@ -148,17 +100,11 @@ for workload in workload_data:
     # Set y-axis label and limits for cost
 
     ax2.plot(x, 
-            workload_cost['CoorDL'].values(),  
-            label='CoorDL', 
-            color=visual_map['CoorDL']['color'], 
-            linestyle=visual_map['CoorDL']['linestyle'], 
-            marker=visual_map['CoorDL']['marker'])
-    ax2.plot(x,
-            workload_cost['Shade'].values(),  
-            label='Shade', 
-            color=visual_map['Shade']['color'], 
-            linestyle=visual_map['Shade']['linestyle'], 
-            marker=visual_map['Shade']['marker'])
+            workload_cost['LitData'].values(),  
+            label='LitData', 
+            color=visual_map['LitData']['color'], 
+            linestyle=visual_map['LitData']['linestyle'], 
+            marker=visual_map['LitData']['marker'])
     ax2.plot(x, 
             workload_cost[r'$\bf{DisDP}$'].values(), 
             label=r'$\bf{DisDP}$', 
@@ -167,7 +113,7 @@ for workload in workload_data:
             marker=visual_map[r'$\bf{DisDP}$']['marker'])
 
     ax2.set_ylabel('Training Cost Per Epoch ($)', fontsize=12)
-    ax2.set_ylim(0, 100)  # Adjust limits for clarity
+    ax2.set_ylim(0, 3)  # Adjust limits for clarity
     # Get current y-limits
     current_ylim = ax2.get_ylim()
     # Add padding to the upper limit

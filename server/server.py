@@ -10,13 +10,21 @@ from batch import Batch
 from typing import Dict, List
 from dataset import Dataset
 from central_batch_manager import CentralBatchManager, DLTJob, PrefetchService
-from args import SUPERArgs
+from args import SUPERArgs, CoorDLArgs
+from coordl import CoorDLBatchManager, CoorDLDataset
 
 
 class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServicer):
-    def __init__(self, args: SUPERArgs):
-        self.args:SUPERArgs = args
-        self.datasets: Dict[str,CentralBatchManager] = {}
+    def __init__(self, args):
+        if isinstance(args, CoorDLArgs):
+            self.args:CoorDLArgs = args
+            self.coordl = True
+            self.datasets: Dict[str,CoorDLBatchManager] = {}
+        elif isinstance(args, SUPERArgs):
+            self.args:SUPERArgs = args
+            self.super = True
+            self.datasets: Dict[str,CentralBatchManager] = {}
+
         self.jobs: Dict[DLTJob] = {}
 
     def Ping(self, request, context):
@@ -26,23 +34,30 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
         if request.data_dir in self.datasets:
             dataset =  self.datasets[request.data_dir].dataset
             if request.dataset_kind == 'vision':
-                message = f"Dataset '{request.data_dir}' registered with SUPER. Total Files: {len(dataset)}, Total Batches: {dataset.num_batches},Total Partitions: {len(dataset.partitions)}"
+                message = f"Dataset '{request.data_dir}' registered with {self.args.dataloader_name}. Total Files: {len(dataset)}, Total Batches: {dataset.num_batches}"
             else:
-                message = f"Dataset '{request.data_dir}' registered with SUPER. Total Files: {len(dataset)}"
+                message = f"Dataset '{request.data_dir}' registered with {self.args.dataloader_name}. Total Files: {len(dataset)}"
             success = True
         else:
-            dataset = Dataset(request.data_dir, self.args.batch_size, False, self.args.partitions_per_dataset, request.dataset_kind, max_dataset_size=5)
-            self.datasets[request.data_dir] = CentralBatchManager(dataset=dataset, 
-                                                                  args=self.args,)
-            if request.dataset_kind == 'vision':
-                message = f"Dataset '{request.data_dir}' registered with SUPER. Total Files: {len(dataset)}, Total Batches:{dataset.num_batches}, Partitions:{len(dataset.partitions)}"
+            if self.coordl:
+                dataset = CoorDLDataset(request.data_dir, self.args.batch_size, False, self.args.drop_last, self.args.workload_kind)
+                self.datasets[request.data_dir] = CoorDLBatchManager(dataset=dataset, args=self.args)
             else:
-                message = f"Dataset '{request.data_dir}' registered with SUPER. Total Files: {len(dataset)}"
+                dataset = Dataset(request.data_dir, self.args.batch_size, False, self.args.partitions_per_dataset, request.dataset_kind, max_dataset_size=5)
+                self.datasets[request.data_dir] = CentralBatchManager(dataset=dataset,   args=self.args,)
+                if request.dataset_kind == 'vision':
+                    message = f"Dataset '{request.data_dir}'. Total Files: {len(dataset)}, Total Batches:{dataset.num_batches} Partitions:{len(dataset.partitions)}"
+                else:
+                    message = f"Dataset '{request.data_dir}'. Total Files: {len(dataset)}"
+
+            if request.dataset_kind == 'vision':
+                message = f"Dataset '{request.data_dir}'. Total Files: {len(dataset)}, Total Batches:{dataset.num_batches}"
+            else:
+                message = f"Dataset '{request.data_dir}'. Total Files: {len(dataset)}"
             success = True
             logger.info(message)
-        return minibatch_service_pb2.RegisterDatasetResponse(dataset_is_registered=success, 
-                                                             total_batches=dataset.num_batches,
-                                                             message=message)
+        return minibatch_service_pb2.RegisterDatasetResponse(dataset_is_registered=success, total_batches=dataset.num_batches, message=message)
+    
     def JobUpdate(self, request, context):
         job_id = request.job_id
         data_dir = request.data_dir
@@ -52,15 +67,21 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
         previous_step_gpu_time = request.previous_step_gpu_time
         cached_previous_batch = request.cached_previous_batch
         
-        self.datasets[data_dir].update_job_progess(job_id,
-                                                   previous_step_batch_id,
-                                                   previous_step_wait_for_data_time,
-                                                   previous_step_is_cache_hit,
-                                                   previous_step_gpu_time,
-                                                   cached_previous_batch)
+        if self.coordl:
+            self.datasets[data_dir].update_job_progess(
+                previous_step_batch_id,
+                previous_step_is_cache_hit,
+                cached_previous_batch)
+        else:
+            self.datasets[data_dir].update_job_progess(
+                job_id,
+                previous_step_batch_id,
+                previous_step_wait_for_data_time,
+                previous_step_is_cache_hit,
+                previous_step_gpu_time,
+                cached_previous_batch)
         return google.protobuf.empty_pb2.Empty()
-
-
+    
     def GetNextBatchForJob(self, request, context):
         job_id = request.job_id
         data_dir = request.data_dir
@@ -75,14 +96,13 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
         response = minibatch_service_pb2.GetNextBatchForJobResponse(
             job_id=request.job_id,
             batch=minibatch_service_pb2.Batch(batch_id=next_batch.batch_id, 
-                                              indicies=next_batch.indicies, is_cached=next_batch.is_cached)
-            )
+                                              indicies=next_batch.indicies, 
+                                              is_cached=next_batch.is_cached))
         return response
     
     def JobEnded(self, request, context):
         job_id = request.job_id
         data_dir = request.data_dir
-       
         self.datasets[data_dir].job_ended(job_id=job_id)
         return google.protobuf.empty_pb2.Empty()
 
@@ -90,23 +110,36 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
 @hydra.main(version_base=None, config_path="../conf", config_name="config")
 def serve(config: DictConfig):
     try:
-          
-        logger.info("Starting SUPER Datloading Service")
-        args:SUPERArgs = SUPERArgs(
-            batch_size = config.workload.batch_size,
-            partitions_per_dataset = config.partitions_per_dataset,
-            lookahead_steps = config.lookahead_steps,
-            serverless_cache_address = config.serverless_cache_address,
-            use_prefetching = config.use_prefetching,
-            use_keep_alive = config.use_keep_alive,
-            prefetch_lambda_name = config.workload.prefetch_lambda_name,
-            prefetch_cost_cap_per_hour=config.prefetch_cost_cap_per_hour,
-            cache_evition_ttl_threshold = config.cache_evition_ttl_threshold,
-            prefetch_simulation_time = config.prefetch_simulation_time,
-            evict_from_cache_simulation_time = config.evict_from_cache_simulation_time,
-            shuffle = config.workload.shuffle,
-            drop_last = config.workload.drop_last,
-            workload_kind = config.workload.kind)
+
+        if config.dataloader == 'coordl':
+            logger.info("Starting CoorDL Datloading Service")
+            args:CoorDLArgs = CoorDLArgs(
+                dataloader_name = config.dataloader,
+                batch_size = config.workload.batch_size,
+                lookahead_steps = config.lookahead_steps,
+                cache_address = config.serverless_cache_address,
+                shuffle = config.workload.shuffle,
+                drop_last = config.workload.drop_last,
+                workload_kind = config.workload.kind)
+            
+        elif config.dataloader == 'super':  
+            logger.info("Starting SUPER Datloading Service")
+            args:SUPERArgs = SUPERArgs(
+                dataloader_name = config.dataloader,
+                batch_size = config.workload.batch_size,
+                partitions_per_dataset = config.partitions_per_dataset,
+                lookahead_steps = config.lookahead_steps,
+                serverless_cache_address = config.serverless_cache_address,
+                use_prefetching = config.use_prefetching,
+                use_keep_alive = config.use_keep_alive,
+                prefetch_lambda_name = config.workload.prefetch_lambda_name,
+                prefetch_cost_cap_per_hour=config.prefetch_cost_cap_per_hour,
+                cache_evition_ttl_threshold = config.cache_evition_ttl_threshold,
+                prefetch_simulation_time = config.prefetch_simulation_time,
+                evict_from_cache_simulation_time = config.evict_from_cache_simulation_time,
+                shuffle = config.workload.shuffle,
+                drop_last = config.workload.drop_last,
+                workload_kind = config.workload.kind)
         
         cache_service = CacheAwareMiniBatchService(args) 
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=1))

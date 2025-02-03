@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 @dataclass
 class SUPERArgs:
+    dataloader_name:str
     partitions_per_dataset:int
     batch_size:int
     lookahead_steps:int
@@ -19,6 +20,7 @@ class SUPERArgs:
 
 @dataclass
 class CoorDLArgs:
+    dataloader_name:str
     batch_size:int
     lookahead_steps:int
     cache_address:str

@@ -17,16 +17,18 @@ import boto3
 from boto3.exceptions import botocore
 from utils import create_unique_id
 from torch.utils.data import RandomSampler
-
+import torch
 
 class CoorDLBatch():
-    def __init__(self, batch_indicies, batch_id, epoch_idx):
+    def __init__(self, batch_indicies, batch_id, epoch_id):
         self.indicies: List[int] = batch_indicies
-        self.epoch_idx:int = epoch_idx
+        self.epoch_id:int = epoch_id
         self.batch_id:str = batch_id
         self.access_count:int = 0
         self.has_been_accessed_before = False
+        self.caching_in_progress:bool = False
         self.lock = threading.Lock()
+        self.is_cached:bool = False
     
     def set_cache_status(self, is_cached:bool):
         """Set the cache status and handle cache eviction timer."""
@@ -41,7 +43,7 @@ class CoorDLBatchSet:
 class CoorDLJob:
     def __init__(self, job_id: str):
         self.job_id = job_id
-        self.epochs_completed_count = -1
+        self.epochs_completed_count = 0
         self.future_batches: OrderedDict[str, CoorDLBatch] = OrderedDict()    
         self.current_batch:CoorDLBatch = None
         self.lock = threading.Lock()
@@ -58,13 +60,13 @@ class CoorDLJob:
                     if batch.is_cached:
                         next_training_batch = self.future_batches.pop(batch_id)  # Cached batch found
                         break
-            for batch_id, batch in list(self.future_batches.items()):
-                if not batch.caching_in_progress:
-                        next_training_batch = self.future_batches.pop(batch_id)  # Cached batch found
-                        break   
+            if not next_training_batch:
+                for batch_id, batch in list(self.future_batches.items()):
+                    if not batch.caching_in_progress:
+                            next_training_batch = self.future_batches.pop(batch_id)  # Cached batch found
+                            break   
             self.current_batch = next_training_batch
             return next_training_batch
-
 
 class CoorDLDataset():
     def __init__(self, data_dir: str, 
@@ -165,10 +167,14 @@ class CoorDLBatchManager:
         self.dataset = dataset
         self.jobs: Dict[str, CoorDLJob] = {}        
         self.epoch_idx = 1
-        self.epoch_batches: Dict[int, CoorDLBatchSet] = OrderedDict()  #first key is epoch id, second key is partition id, value is the batches
+        self.epoch_batches: Dict[int, Dict [int, CoorDLBatchSet]] = OrderedDict()  #first key is epoch id, second key is partition id, value is the batches
         self.batch_size = args.batch_size
         self.drop_last = args.drop_last
-        self.sampler = RandomSampler(dataset)
+        # Create a generator with a fixed seed
+        generator = torch.Generator()
+        generator.manual_seed(42)  # Fix seed for reproducibility
+
+        self.sampler = RandomSampler(dataset, generator=generator)
         self.epoch_batches[self.epoch_idx] = self.genereate_bacthes_for_epoch()
         self.cache_host, self.cache_port = args.cache_address.split(":")
         self.cache_client:redis.StrictRedis = redis.StrictRedis(host=self.cache_host, port=int(self.cache_port))
@@ -176,7 +182,7 @@ class CoorDLBatchManager:
         self.lock = threading.Lock()  # Lock for thread safety
     
     def genereate_bacthes_for_epoch(self):
-        batch_list = []
+        batch_list = {}
         batch_indices = []
         batch_count = 0
         for idx in self.sampler:
@@ -184,16 +190,16 @@ class CoorDLBatchManager:
             if len(batch_indices) == self.batch_size:
                 batch_count += 1
                 batch_id = f"{self.epoch_idx}_{batch_count}_{create_unique_id(batch_indices, 16)}"
-                next_batch = CoorDLBatch(batch_indices, batch_id, self.epoch_idx, 1)
-                batch_list.append((batch_id, next_batch))
+                next_batch = CoorDLBatch(batch_indices, batch_id, self.epoch_idx)
+                batch_list[batch_id] = next_batch
                 batch_indices = []
 
         # Handle drop_last behavior
         if batch_indices and not self.drop_last:
             batch_id = f"{self.epoch_idx}_{batch_count}_{create_unique_id(batch_indices, 16)}"
             batch_count += 1
-            next_batch = CoorDLBatch(batch_indices, batch_id, self.epoch_idx, 1)
-            batch_list.append((batch_id, next_batch))
+            next_batch = CoorDLBatch(batch_indices, batch_id, self.epoch_idx)
+            batch_list[batch_id] = next_batch
         return batch_list
     
     def check_all_jobs_completed_epoch(self):
@@ -204,17 +210,23 @@ class CoorDLBatchManager:
                 break
         return all_jobs_completed_epoch
     
-    def update_progess(self, 
+    
+    
+    def update_job_progess(self, 
                        previous_step_batch_id,
                        previous_step_is_cache_hit,
                        previous_batch_cached_on_miss):
      with self.lock:
-        batch = self.epoch_batches[self.epoch_idx].batches[previous_step_batch_id]
+        batch = self.epoch_batches[self.epoch_idx][previous_step_batch_id]
+        if not batch:
+            batch = self.epoch_batches[self.epoch_idx-1][previous_step_batch_id]
         if previous_batch_cached_on_miss or previous_step_is_cache_hit:
             batch.set_cache_status(True)
         else:
             batch.set_cache_status(False)
         batch.access_count += 1
+        if batch.access_count == len(self.jobs):
+            self.cache_client.delete(previous_step_batch_id)
     
     def get_next_batch(self, job_id: str) -> Optional[CoorDLBatch]:
         with self.lock:    
@@ -238,9 +250,9 @@ class CoorDLBatchManager:
             else:
                 next_batch:CoorDLBatch = job.next_training_step_batch()    
                 #check if all jobs accessed this batch
-                if next_batch.access_count == len(self.jobs):
-                    self.cache_client.delete(next_batch.batch_id)
-                    pass
+                # if next_batch.access_count == len(self.jobs):
+                #     self.cache_client.delete(next_batch.batch_id)
+                #     pass
                 return next_batch
             
         
@@ -257,13 +269,13 @@ if __name__ == "__main__":
     HIT_WAIT_FOR_DATA_TIME = 0.001
     NUM_JOBS = 1 # Number of parallel jobs to simulate
     DELAY_BETWEEN_JOBS = 0.1  # Delay in seconds between the start of each job
-    BATCHES_PER_JOB = 10  # Number of batches each job will process
+    BATCHES_PER_JOB = 392  # Number of batches each job will process
     GPU_TIME = 0.01
-
+ 
     coordl_args:CoorDLArgs = CoorDLArgs(
             batch_size = 128,
             lookahead_steps = 1000,
-            cache_address = None,
+            cache_address = '127.0.0.1:6379',
             shuffle = False,
             drop_last = False,
             workload_kind = 'vision')
@@ -273,13 +285,16 @@ if __name__ == "__main__":
                              drop_last=coordl_args.drop_last)
     
     batch_manager = CoorDLBatchManager(dataset=dataset, args=coordl_args)
-    
+    cache_client:redis.StrictRedis = redis.StrictRedis(host='127.0.0.1', port=6379)
     job_id = '1'
-    BATCHES_PER_JOB = 10  # Number of batches each job will process
+    BATCHES_PER_JOB = 394  # Number of batches each job will process
     end = time.perf_counter()
     for i in range(BATCHES_PER_JOB):
         batch:CoorDLBatch = batch_manager.get_next_batch(job_id=job_id)
         logger.info(f'Setp {i+1}, Job {job_id}, {batch.batch_id}')
+        cache_client.set(batch.batch_id, 'data')
+        batch_manager.update_progess(batch.batch_id, False, True, batch.epoch_id)
     batch_manager.job_ended(job_id)
+
 
     time.sleep(5)

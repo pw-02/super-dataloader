@@ -177,7 +177,8 @@ class CoorDLBatchManager:
         self.sampler = RandomSampler(dataset, generator=generator)
         self.epoch_batches[self.epoch_idx] = self.genereate_bacthes_for_epoch()
         self.cache_host, self.cache_port = args.cache_address.split(":")
-        self.cache_client:redis.StrictRedis = redis.StrictRedis(host=self.cache_host, port=int(self.cache_port))
+        # self.cache_client:redis.StrictRedis = redis.StrictRedis(host=self.cache_host, port=int(self.cache_port))
+        self.cache_client:redis.StrictRedis = redis.StrictRedis(host=self.cache_host, port=int(self.cache_port), ssl=True)
 
         self.lock = threading.Lock()  # Lock for thread safety
     

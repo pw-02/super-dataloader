@@ -34,6 +34,10 @@ class CoorDLBatch():
         """Set the cache status and handle cache eviction timer."""
         with self.lock:
             self.is_cached = is_cached
+    
+    def set_caching_in_progress(self, in_progress:bool):
+        with self.lock:
+            self.caching_in_progress = in_progress
 
 class CoorDLBatchSet:
     def __init__(self, id:str):
@@ -218,9 +222,12 @@ class CoorDLBatchManager:
                        previous_step_is_cache_hit,
                        previous_batch_cached_on_miss):
      with self.lock:
-        batch = self.epoch_batches[self.epoch_idx][previous_step_batch_id]
-        if not batch:
-            batch = self.epoch_batches[self.epoch_idx-1][previous_step_batch_id]
+
+        if previous_step_batch_id in self.epoch_batches[self.epoch_idx]:
+            batch = self.epoch_batches[self.epoch_idx][previous_step_batch_id]
+        else:
+            batch = self.epoch_batches[self.epoch_idx -1][previous_step_batch_id]
+            
         if previous_batch_cached_on_miss or previous_step_is_cache_hit:
             batch.set_cache_status(True)
         else:
@@ -254,6 +261,9 @@ class CoorDLBatchManager:
                 # if next_batch.access_count == len(self.jobs):
                 #     self.cache_client.delete(next_batch.batch_id)
                 #     pass
+
+                if not next_batch.is_cached and not next_batch.caching_in_progress:
+                    next_batch.set_caching_in_progress(True)
                 return next_batch
             
         

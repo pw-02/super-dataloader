@@ -91,14 +91,18 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
             logger.info(message)
         
         next_batch:Batch = self.datasets[data_dir].get_next_batch(job_id)
-        # Create and return the response
-    
-        response = minibatch_service_pb2.GetNextBatchForJobResponse(
-            job_id=request.job_id,
-            batch=minibatch_service_pb2.Batch(batch_id=next_batch.batch_id, 
-                                              indicies=next_batch.indicies, 
-                                              is_cached=next_batch.is_cached))
-        return response
+        if next_batch is None:
+            return minibatch_service_pb2.GetNextBatchForJobResponse(
+                job_id=job_id,
+                batch=minibatch_service_pb2.Batch(batch_id='None', indicies=[], is_cached=False))
+        else:
+                
+            return minibatch_service_pb2.GetNextBatchForJobResponse(
+                job_id=request.job_id,
+                batch=minibatch_service_pb2.Batch(batch_id=next_batch.batch_id, 
+                                                indicies=next_batch.indicies, 
+                                                is_cached=next_batch.is_cached))
+        # return response
     
     def JobEnded(self, request, context):
         job_id = request.job_id

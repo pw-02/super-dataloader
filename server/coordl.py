@@ -227,7 +227,7 @@ class CoorDLBatchManager:
             batch = self.epoch_batches[self.epoch_idx][previous_step_batch_id]
         else:
             batch = self.epoch_batches[self.epoch_idx -1][previous_step_batch_id]
-            
+
         if previous_batch_cached_on_miss or previous_step_is_cache_hit:
             batch.set_cache_status(True)
         else:
@@ -262,9 +262,12 @@ class CoorDLBatchManager:
                 #     self.cache_client.delete(next_batch.batch_id)
                 #     pass
 
-                if not next_batch.is_cached and not next_batch.caching_in_progress:
-                    next_batch.set_caching_in_progress(True)
-                return next_batch
+                if next_batch is None:
+                    return None
+                else:
+                    if not next_batch.is_cached and not next_batch.caching_in_progress:
+                        next_batch.set_caching_in_progress(True)
+                    return next_batch
             
         
     def job_ended(self, job_id):

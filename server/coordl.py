@@ -68,7 +68,11 @@ class CoorDLJob:
                 for batch_id, batch in list(self.future_batches.items()):
                     if not batch.caching_in_progress:
                             next_training_batch = self.future_batches.pop(batch_id)  # Cached batch found
-                            break   
+                            break
+            if not next_training_batch:
+                # next_training_batch = self.future_batches.popitem(last=False)[1]  # No suitable batch found, take the first one
+                next_training_batch = self.future_batches.pop(next(iter(self.future_batches)))
+
             self.current_batch = next_training_batch
             return next_training_batch
 

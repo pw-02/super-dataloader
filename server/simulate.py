@@ -4,7 +4,7 @@ from typing import Tuple
 from central_batch_manager import Dataset, CentralBatchManager
 import logging
 from args import SUPERArgs
-
+import redis
 # Configure logging
 # logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 logger = logging.getLogger()
@@ -40,6 +40,7 @@ super_args:SUPERArgs = SUPERArgs(
 cf10 = 's3://sdl-cifar10/train/'
 dataset = Dataset(data_dir=cf10, batch_size=128, drop_last=False, num_partitions=super_args.partitions_per_dataset, kind=super_args.workload_kind)
 batch_manager = CentralBatchManager(dataset=dataset, args=super_args)
+cache_client:redis.StrictRedis = redis.StrictRedis(host='127.0.0.1', port=int(6379))
 
 
 def simulate_training_job(job_id: str) -> Tuple[str, int, int, float]:
@@ -56,7 +57,9 @@ def simulate_training_job(job_id: str) -> Tuple[str, int, int, float]:
     # Process each batch for the job
     for i in range(BATCHES_PER_JOB):
         batch = batch_manager.get_next_batch(job_id)
-        if batch.is_cached:
+        cached_batch = cache_client.get(batch.batch_id)
+
+        if cached_batch:
             previous_step_wait_for_data_time = HIT_WAIT_FOR_DATA_TIME
             previous_step_is_cache_hit = True
             cache_hits += 1

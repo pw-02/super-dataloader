@@ -4,7 +4,7 @@ from threading import Lock
 from threading import Lock, Thread
 import time
 
-total_batches = 50000
+total_batches = 27000
 
 class StagingArea:
     def __init__(self):
@@ -100,7 +100,7 @@ def simulate_jobs_processing():
     minibatches_per_job = len(minibatches) // total_jobs
     remaining_minibatches = len(minibatches) % total_jobs
     job_speeds = [random.uniform(0.001, 5) for _ in range(total_jobs)]  # Random job speeds
-    job_speeds = [0.001, 0.002, 0.003, 3.004]
+    job_speeds = [0.0123, 0.0234, 0.0403, 0.05004]
        # Initialize jobs
     for job_id in range(total_jobs):
         # Assign minibatches to each job, splitting the batches evenly

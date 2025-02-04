@@ -225,7 +225,7 @@ class CoorDLBatchManager:
         else:
             batch.set_cache_status(False)
         batch.access_count += 1
-        if batch.access_count == len(self.jobs):
+        if batch.access_count >= len(self.jobs):
             self.cache_client.delete(previous_step_batch_id)
     
     def get_next_batch(self, job_id: str) -> Optional[CoorDLBatch]:

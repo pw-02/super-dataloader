@@ -201,8 +201,8 @@ class CoorDLBatchManager:
 
         # Handle drop_last behavior
         if batch_indices and not self.drop_last:
-            batch_id = f"{self.epoch_idx}_{batch_count}_{create_unique_id(batch_indices, 16)}"
             batch_count += 1
+            batch_id = f"{self.epoch_idx}_{batch_count}_{create_unique_id(batch_indices, 16)}"
             next_batch = CoorDLBatch(batch_indices, batch_id, self.epoch_idx)
             batch_list[batch_id] = next_batch
         return batch_list

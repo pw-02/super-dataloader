@@ -113,6 +113,7 @@ class PrefetchService:
                 except Exception as e:
                     logger.error(f"Error in prefetching batch: {e}", exc_info=True)
         self.prefetch_lambda_invocations_count += len(prefetch_list)
+        
         if not is_warm_up:
             self.prefetch_cycle_times.update(time.perf_counter() - prefetch_cycle_started + delay_time)
 

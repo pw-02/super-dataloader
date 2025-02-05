@@ -47,11 +47,40 @@ def get_subfolder_names(folder_path, include_children = False):
                 basenames.append(os.path.basename(os.path.normpath(subfolder)))
     return basenames
 
+def get_throughput_over_epoch_timepoints(metrics_csv, total_epochs):
+    throughput_over_time_points =[]
+    for i in range(1, total_epochs + 1):
+        epoch_metrics = {}
+        epoch_metrics['epoch'] = i
+        df = pd.read_csv(metrics_csv)
+        filtered_df = df[df['Epoch Index'] == i]
+        epoch_dict = filtered_df.to_dict(orient='list')
+        if i == 1:
+            epoch_metrics['total_samples'] = sum(epoch_dict["Batch Size"])
+            epoch_metrics['total_time(s)'] = sum(epoch_dict["Iteration Time (s)"])
+            epoch_metrics['throughput(samples/s)'] = epoch_metrics['total_samples'] / epoch_metrics['total_time(s)']
+        else:
+            epoch_metrics['total_samples'] = sum(epoch_dict["Batch Size"]) + throughput_over_time_points[-1]['total_samples']
+            epoch_metrics['total_time(s)'] = sum(epoch_dict["Iteration Time (s)"]) + throughput_over_time_points[-1]['total_time(s)']
+            epoch_metrics['throughput(samples/s)'] = epoch_metrics['total_samples'] / epoch_metrics['total_time(s)']
+        throughput_over_time_points.append(epoch_metrics)
+        
+    return throughput_over_time_points
+
+
+def get_batches_processed_over_time(metrics_csv):
+    #get elapsed time in each row
+    csv_data = convert_csv_to_dict(metrics_csv)
+    elapsed_times = csv_data['Elapsed Time (s)']
+    return elapsed_times
+
+
+
 
 def get_training_summary(folder_path):
-
     search_pattern = os.path.join(folder_path, '**', 'metrics.csv')
     jobs_metric_list = []
+    elapsed_times = []
     for metrics_csv in glob.iglob(search_pattern, recursive=True):
         job_metrics = {}
         csv_data = convert_csv_to_dict(metrics_csv)
@@ -63,6 +92,7 @@ def get_training_summary(folder_path):
         job_metrics['num_batches'] = len(csv_data["Batch Index"])
         job_metrics['total_samples'] = sum(csv_data["Batch Size"])
         job_metrics['total_time(s)'] = sum(csv_data["Iteration Time (s)"])
+        job_metrics['total_epochs'] = max(csv_data["Epoch Index"])
         job_metrics['wait_on_data_time(s)'] = sum(csv_data["Iteration Time (s)"]) - sum(csv_data["GPU Processing Time (s)"])
         job_metrics['gpu_processing_time(s)'] = sum(csv_data["GPU Processing Time (s)"])
         job_metrics['data_fetch_time(s)'] = sum(csv_data["Data Load Time (s)"])
@@ -79,9 +109,12 @@ def get_training_summary(folder_path):
         transform_percent = job_metrics["transformation_time(s)"] / (job_metrics["transformation_time(s)"] + job_metrics["data_fetch_time(s)"])
         data_fetch_percent = job_metrics["data_fetch_time(s)"] / (job_metrics["transformation_time(s)"] + job_metrics["data_fetch_time(s)"])
         job_metrics["transform_delay(%)"] = transform_percent *  job_metrics["waiting_on_data_time(%)"] 
-        job_metrics["data_fetch_delay(%)"] = data_fetch_percent *  job_metrics["waiting_on_data_time(%)"] 
+        job_metrics["data_fetch_delay(%)"] = data_fetch_percent *  job_metrics["waiting_on_data_time(%)"]
+        job_metrics["throughout_over_time"] = get_throughput_over_epoch_timepoints(metrics_csv, job_metrics['total_epochs'])
         jobs_metric_list.append(job_metrics)
-    
+        elapsed_times.extend(get_batches_processed_over_time(metrics_csv))
+        # epoch_throughputs = get_epoch_throughput(metrics_csv, job_metrics['total_epochs'])
+        pass
     #now get the overall summary for all jobs
     start_time_stamp = None
     end_time_stamp = None
@@ -98,6 +131,8 @@ def get_training_summary(folder_path):
          "transformation_time(s)": 0,
          "cache_hits": 0,
     })
+
+    aggegared_throughput_overtime = {}
 
     for csv_data in jobs_metric_list:
         overall_metrics["num_jobs"] += 1
@@ -116,7 +151,15 @@ def get_training_summary(folder_path):
         overall_metrics["cache_hits"] += csv_data["cache_hits"]
         if csv_data["max_cached_batches"] > overall_metrics["max_cached_batches"]:
             overall_metrics["max_cached_batches"] = csv_data["max_cached_batches"]
-
+        
+        for epoch_throughput in csv_data["throughout_over_time"]:
+            if epoch_throughput['epoch'] not in aggegared_throughput_overtime:
+                aggegared_throughput_overtime[epoch_throughput['epoch']] = {'epoch_id': epoch_throughput['epoch'], 'total_samples': 0, 'total_time(s)': 0}
+            aggegared_throughput_overtime[epoch_throughput['epoch']]['total_samples'] += epoch_throughput['total_samples']
+            aggegared_throughput_overtime[epoch_throughput['epoch']]['total_time(s)'] += epoch_throughput['total_time(s)']
+            aggegared_throughput_overtime[epoch_throughput['epoch']]['throughput(samples/s)'] = aggegared_throughput_overtime[epoch_throughput['epoch']]['total_samples'] / aggegared_throughput_overtime[epoch_throughput['epoch']]['total_time(s)']
+    
+    overall_metrics["throughout_over_time"] = aggegared_throughput_overtime
     if overall_metrics['num_jobs'] > 0:
         for key in ['total_time(s)', "wait_on_data_time(s)", "gpu_processing_time(s)", "data_fetch_time(s)", "transformation_time(s)"]:
             overall_metrics[key] = overall_metrics[key] / overall_metrics['num_jobs']
@@ -134,8 +177,19 @@ def get_training_summary(folder_path):
         # metrics["data_fetch_time(%)"] = metrics["data_fetch_time(s)"] / (metrics["transformation_time(s)"] + metrics["data_fetch_time(s)"])
         overall_metrics["transform_delay(%)"] = transform_percent *  overall_metrics["waiting_on_data_time(%)"] 
         overall_metrics["data_fetch_delay(%)"] = data_fetch_percent *  overall_metrics["waiting_on_data_time(%)"] 
-    
-    return overall_metrics, jobs_metric_list, start_time_stamp, end_time_stamp
+    aggegared_throughput_overtime_list = []
+    for key, vlaue in aggegared_throughput_overtime.items():
+            dict_line = {'path': folder_path, 'epoch_id': key, 'total_samples': vlaue['total_samples'], 
+                         'total_time(s)': vlaue['total_time(s)'] / overall_metrics['num_jobs'], 
+                         'throughput(samples/s)': vlaue['total_samples']/(vlaue['total_time(s)'] / overall_metrics['num_jobs'])}
+            aggegared_throughput_overtime_list.append(dict_line)
+
+    elapsed_times = sorted(elapsed_times)
+
+
+
+
+    return overall_metrics,jobs_metric_list, aggegared_throughput_overtime_list,elapsed_times, start_time_stamp, end_time_stamp
 
 if __name__ == "__main__":
  
@@ -149,6 +203,7 @@ if __name__ == "__main__":
         experiment_folders = [str(folder) for folder in folder_path.rglob("multi_job*") if folder.is_dir()]
         workload_kind = os.path.basename(os.path.normpath(folder_path))
         overall_summary = []
+        throuhgput_over_time_summary = []
         for exp_folder in experiment_folders:
             exp_name = os.path.basename(os.path.normpath(exp_folder))
             dataloader = os.path.basename(os.path.dirname(exp_folder))
@@ -160,9 +215,17 @@ if __name__ == "__main__":
             exp_summary['dataset'] = dataset
             exp_summary['path'] = exp_folder
 
-            summary, job_metrics, start_timestamp, end_timestamp = get_training_summary(exp_folder)
+            summary, job_metrics, aggegared_throughput_overtime_list, elapsed_times, start_timestamp, end_timestamp = get_training_summary(exp_folder)
             save_dict_list_to_csv(job_metrics, os.path.join(exp_folder, f'{exp_name}_{dataset}_{dataloader}_summary.csv'))
+            save_dict_list_to_csv(aggegared_throughput_overtime_list, os.path.join(exp_folder, f'{exp_name}_{dataset}_{dataloader}_throughput_over_time.csv'))
+            
+            with open(os.path.join(exp_folder, f"{exp_name}_{dataset}_{dataloader}_batches_over_time.tsv"), "w") as f:
+                f.write("Index\tElapsed Time\n")  # Add header
+                for index, num in enumerate(elapsed_times):
+                    f.write(f"{index}\t{num:.6f}\n")  # Ensures consistent decimal places
 
+
+            
             exp_summary.update(summary)
             # save_dict_list_to_csv([exp_summary], os.path.join(exp_folder, f'{exp_name}_summary.csv'))
             overall_summary.append(exp_summary)

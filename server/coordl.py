@@ -1,7 +1,7 @@
 import threading
 from collections import deque, OrderedDict
 from typing import List, Optional, Dict, Tuple
-from dataset import CoorDLDataset
+# from dataset import CoorDLDataset
 # from batch import Batch, BatchSet
 import time
 from logger_config import logger
@@ -79,21 +79,35 @@ class CoorDLJob:
 class CoorDLDataset():
     def __init__(self, data_dir: str, 
                  batch_size: int, 
-                 drop_last: bool, kind = 
-                 'vision', 
+                 drop_last: bool, 
+                 kind = 'vision', 
                  max_dataset_size = None):
         
         # Load samples from data directory
         self.data_dir = data_dir
         self.batch_size = batch_size
         self.drop_last = drop_last
-        self.samples = self.load_paired_s3_object_keys(data_dir, False, True)
+        if kind == 'vision':
+            if 'coco' in data_dir:
+                self.samples = self.load_coco_samples(data_dir)
+            else:
+                self.samples = self.load_paired_s3_object_keys(data_dir, False, True)
         self.bucket_name =  S3Url(data_dir).bucket
          # Calculate the number of batches
         if self.drop_last:
             self.num_batches = len(self) // self.batch_size
         else:
             self.num_batches = (len(self) + self.batch_size - 1) // self.batch_size
+
+    def load_coco_samples(self, s3_uri:str):
+        s3_client = boto3.client('s3')
+        s3url = S3Url(s3_uri)
+        index_object = s3_client.get_object(Bucket=s3url.bucket, Key='coco_train.json')
+        file_content = index_object['Body'].read().decode('utf-8')
+        # samples = json.loads(file_content)
+        paired_samples = json.loads(file_content)
+        return paired_samples
+    
 
     @functools.cached_property
     def _classed_items(self) -> List[Tuple[str, int]]:
@@ -291,6 +305,7 @@ if __name__ == "__main__":
     GPU_TIME = 0.01
  
     coordl_args:CoorDLArgs = CoorDLArgs(
+            dataloader_name='coordl',
             batch_size = 128,
             lookahead_steps = 1000,
             cache_address = '127.0.0.1:6379',
@@ -298,7 +313,7 @@ if __name__ == "__main__":
             drop_last = False,
             workload_kind = 'vision')
     
-    dataset = CoorDLDataset(data_dir='s3://sdl-cifar10/train/', 
+    dataset = CoorDLDataset(data_dir='s3://coco-dataset/train2014/', 
                              batch_size=coordl_args.batch_size, 
                              drop_last=coordl_args.drop_last)
     

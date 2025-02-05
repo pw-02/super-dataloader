@@ -165,9 +165,9 @@ class PrefetchService:
                             break
 
                         else: 
-                            # prefetch_counter += 1
+                            prefetch_counter += 1
                             if not batch.is_cached and not batch.caching_in_progress:
-                                prefetch_counter += 1
+                                # prefetch_counter += 1
                                 logger.debug(f"prefetching batch '{batch.batch_id}'")
 
                                 batch.set_caching_in_progress(True)
@@ -403,8 +403,6 @@ class CentralBatchManager:
         logger.info(f"Prefetch took: {time.perf_counter()-warm_up_started:.4f}s for {len(prefetch_list)} batches.")
 
 
-
-
     def _generate_new_batch(self):
         next_batch:Batch = next(self.batch_sampler)
 
@@ -566,7 +564,7 @@ if __name__ == "__main__":
             drop_last = False,
             workload_kind = 'vision')
 
-    dataset = Dataset(data_dir='s3://sdl-cifar10/train/', batch_size=super_args.batch_size, drop_last=super_args.drop_last, num_partitions=super_args.partitions_per_dataset)
+    dataset = Dataset(data_dir='s3://sdl-cifar10/test/', batch_size=super_args.batch_size, drop_last=super_args.drop_last, num_partitions=super_args.partitions_per_dataset)
     batch_manager = CentralBatchManager(dataset=dataset, args=super_args)
     
     job_id = '1'

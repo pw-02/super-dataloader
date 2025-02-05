@@ -3,6 +3,7 @@ import pandas as pd
 import os
 from collections import OrderedDict
 import csv
+from pathlib import Path
 
 def convert_csv_to_dict(csv_file, start_timestamp = None, end_timestamp = None):
     df = pd.read_csv(csv_file)
@@ -48,9 +49,43 @@ def get_subfolder_names(folder_path, include_children = False):
 
 
 def get_training_summary(folder_path):
+
+    search_pattern = os.path.join(folder_path, '**', 'metrics.csv')
+    jobs_metric_list = []
+    for metrics_csv in glob.iglob(search_pattern, recursive=True):
+        job_metrics = {}
+        csv_data = convert_csv_to_dict(metrics_csv)
+        model_name = Path(metrics_csv).parts[-5]  
+        job_metrics['model_name'] = model_name
+        job_metrics['path'] = metrics_csv
+        job_metrics['start_time'] = csv_data['Timestamp (UTC)'][0]
+        job_metrics['end_time'] = csv_data['Timestamp (UTC)'][-1]
+        job_metrics['num_batches'] = len(csv_data["Batch Index"])
+        job_metrics['total_samples'] = sum(csv_data["Batch Size"])
+        job_metrics['total_time(s)'] = sum(csv_data["Iteration Time (s)"])
+        job_metrics['wait_on_data_time(s)'] = sum(csv_data["Iteration Time (s)"]) - sum(csv_data["GPU Processing Time (s)"])
+        job_metrics['gpu_processing_time(s)'] = sum(csv_data["GPU Processing Time (s)"])
+        job_metrics['data_fetch_time(s)'] = sum(csv_data["Data Load Time (s)"])
+        job_metrics['transformation_time(s)'] = sum(csv_data["Transformation Time (s)"])
+        job_metrics['cache_hits'] = sum(csv_data["Cache_Hits (Samples)"])
+        job_metrics['max_cached_batches'] = max(csv_data["Cache_Size"])
+        job_metrics["throughput(samples/s)"] = job_metrics["total_samples"] / job_metrics["total_time(s)"]
+        
+        job_metrics["cache_hit(%)"] = job_metrics["cache_hits"] / job_metrics["total_samples"]
+        job_metrics["compute_time(%)"] = job_metrics["gpu_processing_time(s)"] / job_metrics["total_time(s)"]
+        job_metrics["waiting_on_data_time(%)"] = job_metrics["wait_on_data_time(s)"] / job_metrics["total_time(s)"]
+        job_metrics["transformation_time(s)"] / (job_metrics["transformation_time(s)"] + job_metrics["data_fetch_time(s)"])
+        job_metrics["data_fetch_time(s)"] / (job_metrics["transformation_time(s)"] + job_metrics["data_fetch_time(s)"])
+        transform_percent = job_metrics["transformation_time(s)"] / (job_metrics["transformation_time(s)"] + job_metrics["data_fetch_time(s)"])
+        data_fetch_percent = job_metrics["data_fetch_time(s)"] / (job_metrics["transformation_time(s)"] + job_metrics["data_fetch_time(s)"])
+        job_metrics["transform_delay(%)"] = transform_percent *  job_metrics["waiting_on_data_time(%)"] 
+        job_metrics["data_fetch_delay(%)"] = data_fetch_percent *  job_metrics["waiting_on_data_time(%)"] 
+        jobs_metric_list.append(job_metrics)
+    
+    #now get the overall summary for all jobs
     start_time_stamp = None
     end_time_stamp = None
-    metrics = OrderedDict({
+    overall_metrics = OrderedDict({
          "num_jobs": 0,
          "total_batches": 0,
          "total_samples": 0,
@@ -62,86 +97,74 @@ def get_training_summary(folder_path):
          "data_fetch_time(s)": 0,
          "transformation_time(s)": 0,
          "cache_hits": 0,
-        #  "avg_gpu_time(s)": 0,
-        #  "avg_data_fetch_time(s)": 0,
-        # "avg_data_transformation_time_on_hit(s)": 0,
-        # "avg_data_transformation_time_on_miss(s)": 0,
-        # "avg_data_fetch_time_on_hit(s)": 0,
-        # "avg_data_fetch_time_on_miss(s)": 0,
-        # "avg_transformation_time(s)": 0,
-        # "avg_wait_on_data_time(s)": 0,
     })
-    search_pattern = os.path.join(folder_path, '**', 'metrics.csv')
-    for metrics_csv in glob.iglob(search_pattern, recursive=True):
-        csv_data = convert_csv_to_dict(metrics_csv)
-        if not start_time_stamp or csv_data['Timestamp (UTC)'][0] < start_time_stamp:
-            #convert to datetime
-            start_time_stamp = csv_data['Timestamp (UTC)'][0]
-        if not end_time_stamp or csv_data['Timestamp (UTC)'][-1] > end_time_stamp:
-            end_time_stamp = csv_data['Timestamp (UTC)'][-1]
-        metrics["num_jobs"] += 1
-        metrics["total_batches"] += len(csv_data["Batch Index"])
-        if "Batch Size" in csv_data:
-            metrics["total_samples"] += sum(csv_data["Batch Size"])
-        else:
-            metrics["total_samples"] += (len(csv_data["Batch Index"]) * 32) #batch size was 32
 
-            metrics["total_tokens"] += sum(csv_data["Batch Size (Tokens)"])
- 
-        # metrics["total_samples"] += sum(csv_data["Batch Size"])
-        metrics["total_time(s)"] += sum(csv_data["Iteration Time (s)"])
-        metrics["wait_on_data_time(s)"] += sum(csv_data["Iteration Time (s)"]) - sum(csv_data["GPU Processing Time (s)"])
-        metrics["gpu_processing_time(s)"] += sum(csv_data["GPU Processing Time (s)"])
-        metrics["data_fetch_time(s)"] += sum(csv_data["Data Load Time (s)"])
-        metrics["transformation_time(s)"] += sum(csv_data["Transformation Time (s)"])
-        metrics["cache_hits"] += sum(csv_data["Cache_Hits (Samples)"])
-        if max(csv_data["Cache_Size"]) > metrics["max_cached_batches"]:
-            metrics["max_cached_batches"] = max(csv_data["Cache_Size"])
-    
-    # metrics["avg_gpu_time(s)"] = metrics["gpu_processing_time(s)"] / metrics["total_batches"]
-    # metrics["avg_data_fetch_time(s)"] = metrics["data_fetch_time(s)"] / metrics["total_batches"]
-    # metrics["avg_transformation_time(s)"] = metrics["transformation_time(s)"] / metrics["total_batches"]
-    # metrics["avg_wait_on_data_time(s)"] = metrics["wait_on_data_time(s)"] / metrics["total_batches"]
+    for csv_data in jobs_metric_list:
+        overall_metrics["num_jobs"] += 1
+        if not start_time_stamp or csv_data['start_time'] < start_time_stamp:
+            start_time_stamp = csv_data['start_time']
+        if not end_time_stamp or csv_data['end_time'] > end_time_stamp:
+            end_time_stamp = csv_data['end_time']
+       
+        overall_metrics["total_batches"] += csv_data["num_batches"]
+        overall_metrics["total_samples"] += csv_data["total_samples"]
+        overall_metrics["total_time(s)"] += csv_data["total_time(s)"]
+        overall_metrics["wait_on_data_time(s)"] += csv_data["wait_on_data_time(s)"]
+        overall_metrics["gpu_processing_time(s)"] += csv_data["gpu_processing_time(s)"]
+        overall_metrics["data_fetch_time(s)"] += csv_data["data_fetch_time(s)"]
+        overall_metrics["transformation_time(s)"] += csv_data["transformation_time(s)"]
+        overall_metrics["cache_hits"] += csv_data["cache_hits"]
+        if csv_data["max_cached_batches"] > overall_metrics["max_cached_batches"]:
+            overall_metrics["max_cached_batches"] = csv_data["max_cached_batches"]
 
-    if metrics['num_jobs'] > 0:
+    if overall_metrics['num_jobs'] > 0:
         for key in ['total_time(s)', "wait_on_data_time(s)", "gpu_processing_time(s)", "data_fetch_time(s)", "transformation_time(s)"]:
-            metrics[key] = metrics[key] / metrics['num_jobs']
+            overall_metrics[key] = overall_metrics[key] / overall_metrics['num_jobs']
         
         # metrics["throughput(batches/s)"] = metrics["total_batches"] / metrics["total_time(s)"]
-        metrics["throughput(samples/s)"] = metrics["total_samples"] / metrics["total_time(s)"]
+        overall_metrics["throughput(samples/s)"] = overall_metrics["total_samples"] / overall_metrics["total_time(s)"]
         
-        metrics["cache_hit(%)"] = metrics["cache_hits"] / metrics["total_samples"]
-        metrics["compute_time(%)"] = metrics["gpu_processing_time(s)"] / metrics["total_time(s)"]
-        metrics["waiting_on_data_time(%)"] = metrics["wait_on_data_time(s)"] / metrics["total_time(s)"]
+        overall_metrics["cache_hit(%)"] = overall_metrics["cache_hits"] / overall_metrics["total_samples"]
+        overall_metrics["compute_time(%)"] = overall_metrics["gpu_processing_time(s)"] / overall_metrics["total_time(s)"]
+        overall_metrics["waiting_on_data_time(%)"] = overall_metrics["wait_on_data_time(s)"] / overall_metrics["total_time(s)"]
 
-        transform_percent = metrics["transformation_time(s)"] / (metrics["transformation_time(s)"] + metrics["data_fetch_time(s)"])
-        data_fetch_percent = metrics["data_fetch_time(s)"] / (metrics["transformation_time(s)"] + metrics["data_fetch_time(s)"])
+        transform_percent = overall_metrics["transformation_time(s)"] / (overall_metrics["transformation_time(s)"] + overall_metrics["data_fetch_time(s)"])
+        data_fetch_percent = overall_metrics["data_fetch_time(s)"] / (overall_metrics["transformation_time(s)"] + overall_metrics["data_fetch_time(s)"])
         # metrics["transform_time(%)"] = metrics["transformation_time(s)"] / (metrics["transformation_time(s)"] + metrics["data_fetch_time(s)"])
         # metrics["data_fetch_time(%)"] = metrics["data_fetch_time(s)"] / (metrics["transformation_time(s)"] + metrics["data_fetch_time(s)"])
-        metrics["transform_delay(%)"] = transform_percent *  metrics["waiting_on_data_time(%)"] 
-        metrics["data_fetch_delay(%)"] = data_fetch_percent *  metrics["waiting_on_data_time(%)"] 
+        overall_metrics["transform_delay(%)"] = transform_percent *  overall_metrics["waiting_on_data_time(%)"] 
+        overall_metrics["data_fetch_delay(%)"] = data_fetch_percent *  overall_metrics["waiting_on_data_time(%)"] 
     
-    return metrics, start_time_stamp, end_time_stamp
+    return overall_metrics, jobs_metric_list, start_time_stamp, end_time_stamp
 
 if __name__ == "__main__":
-
-    paths = ["C:\\Users\\pw\\Desktop\\image_classification\\coordl\\cifar10",
-             "C:\\Users\\pw\\Desktop\\vision transformer\\coordl\\cifar10",
-              "C:\\Users\\pw\\Desktop\\vision transformer\\coordl\\imagenet"
-            ]
+ 
+    paths = [
+        # "C:\\Users\\pw\\Desktop\\image_classification\\coordl\\cifar10",
+        Path(r"C:\Users\pw\Desktop\image_transformer")
+        # "C:\\Users\\pw\\Desktop\\vision transformer\\coordl\\imagenet"
+        ]
     
     for folder_path in paths:
-        base_name = os.path.basename(os.path.normpath(folder_path))
-        exp_names = get_subfolder_names(folder_path, include_children = False)
+        experiment_folders = [str(folder) for folder in folder_path.rglob("multi_job*") if folder.is_dir()]
+        workload_kind = os.path.basename(os.path.normpath(folder_path))
         overall_summary = []
-        
-        for exp in exp_names:
-                exp_summary  = {}
-                exp_summary['name'] = exp
-                exp_path = os.path.join(folder_path, exp)
-                train_summary, start_timestamp, end_timestamp = get_training_summary(exp_path)
-                exp_summary.update(train_summary)
-                save_dict_list_to_csv([exp_summary], os.path.join(exp_path, f'{exp}__summary.csv'))
-                overall_summary.append(exp_summary)
+        for exp_folder in experiment_folders:
+            exp_name = os.path.basename(os.path.normpath(exp_folder))
+            dataloader = os.path.basename(os.path.dirname(exp_folder))
+            dataset = os.path.basename(os.path.dirname(os.path.dirname(exp_folder)))
 
-        save_dict_list_to_csv(overall_summary, os.path.join(folder_path, f'{base_name}_overall_summary.csv'))
+            exp_summary  = {}
+            exp_summary['name'] = exp_name
+            exp_summary['dataloader'] = dataloader
+            exp_summary['dataset'] = dataset
+            exp_summary['path'] = exp_folder
+
+            summary, job_metrics, start_timestamp, end_timestamp = get_training_summary(exp_folder)
+            save_dict_list_to_csv(job_metrics, os.path.join(exp_folder, f'{exp_name}_{dataset}_{dataloader}_summary.csv'))
+
+            exp_summary.update(summary)
+            # save_dict_list_to_csv([exp_summary], os.path.join(exp_folder, f'{exp_name}_summary.csv'))
+            overall_summary.append(exp_summary)
+
+        save_dict_list_to_csv(overall_summary, os.path.join(folder_path, f'overall_summary_{workload_kind}.csv'))

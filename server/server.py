@@ -18,11 +18,9 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
     def __init__(self, args):
         if isinstance(args, CoorDLArgs):
             self.args:CoorDLArgs = args
-            self.coordl = True
             self.datasets: Dict[str,CoorDLBatchManager] = {}
         elif isinstance(args, SUPERArgs):
             self.args:SUPERArgs = args
-            self.super = True
             self.datasets: Dict[str,CentralBatchManager] = {}
 
         self.jobs: Dict[DLTJob] = {}
@@ -39,11 +37,11 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
                 message = f"Dataset '{request.data_dir}' registered with {self.args.dataloader_name}. Total Files: {len(dataset)}"
             success = True
         else:
-            if self.coordl:
+            if isinstance(self.args, CoorDLArgs):
                 dataset = CoorDLDataset(request.data_dir, self.args.batch_size, self.args.drop_last, self.args.workload_kind)
                 self.datasets[request.data_dir] = CoorDLBatchManager(dataset=dataset, args=self.args)
             else:
-                dataset = Dataset(request.data_dir, self.args.batch_size, False, self.args.partitions_per_dataset, request.dataset_kind, max_dataset_size=5)
+                dataset = Dataset(request.data_dir, self.args.batch_size, False, self.args.partitions_per_dataset, request.dataset_kind, max_dataset_size=None)
                 self.datasets[request.data_dir] = CentralBatchManager(dataset=dataset,   args=self.args,)
                 if request.dataset_kind == 'vision':
                     message = f"Dataset '{request.data_dir}'. Total Files: {len(dataset)}, Total Batches:{dataset.num_batches} Partitions:{len(dataset.partitions)}"
@@ -67,7 +65,7 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
         previous_step_gpu_time = request.previous_step_gpu_time
         cached_previous_batch = request.cached_previous_batch
         
-        if self.coordl:
+        if isinstance(self.args, CoorDLArgs):
             self.datasets[data_dir].update_job_progess(
                 previous_step_batch_id,
                 previous_step_is_cache_hit,

@@ -330,7 +330,7 @@ class CacheEvictionService:
 class CentralBatchManager:
     def __init__(self, dataset: Dataset, args: SUPERArgs):
         self.dataset = dataset
-        self.look_ahead = args.lookahead_steps  #min(args.lookahead_steps, self.dataset.partitions[1].num_batches)
+        self.look_ahead = min(args.lookahead_steps, self.dataset.partitions[1].num_batches)
         self.jobs: Dict[str, DLTJob] = {}
         self.active_epoch_idx = 1
         self.active_partition_id = None
@@ -423,26 +423,26 @@ class CentralBatchManager:
             if partition_batch_set.id in job.active_batch_set_ids:
                 job.future_batches[next_batch.batch_id] = next_batch
            
-    def allocate_batches_to_job(self, job: DLTJob):
+    # def allocate_batches_to_job(self, job: DLTJob):
 
-        if job.partition_id_cycle is None: #new job, lets start cycling partitons at the currently active partition
-            partition_ids = list(self.dataset.partitions.keys())
-            start_index = partition_ids.index(self.active_partition_id)
-            reordered_ids = partition_ids[start_index:] + partition_ids[:start_index]
-            job.partition_id_cycle = cycle(reordered_ids)
-            job.started_partition_index = copy.deepcopy(self.active_partition_id)
+    #     if job.partition_id_cycle is None: #new job, lets start cycling partitons at the currently active partition
+    #         partition_ids = list(self.dataset.partitions.keys())
+    #         start_index = partition_ids.index(self.active_partition_id)
+    #         reordered_ids = partition_ids[start_index:] + partition_ids[:start_index]
+    #         job.partition_id_cycle = cycle(reordered_ids)
+    #         job.started_partition_index = copy.deepcopy(self.active_partition_id)
         
-        next_partition_id = next(job.partition_id_cycle)
-        if next_partition_id == job.started_partition_index:
-            job.epochs_completed_count += 1
+    #     next_partition_id = next(job.partition_id_cycle)
+    #     if next_partition_id == job.started_partition_index:
+    #         job.epochs_completed_count += 1
 
-        #now find the last batch set for this partition, and make sure it hasn't been processed by the job before
-        for epoch_id in reversed(self.epoch_partition_batches.keys()):
-            if next_partition_id in self.epoch_partition_batches[epoch_id]:
-                batch_set = self.epoch_partition_batches[epoch_id][next_partition_id]
-                job.future_batches.update(batch_set.batches)
-                job.active_batch_set_id = batch_set.id
-                break
+    #     #now find the last batch set for this partition, and make sure it hasn't been processed by the job before
+    #     for epoch_id in reversed(self.epoch_partition_batches.keys()):
+    #         if next_partition_id in self.epoch_partition_batches[epoch_id]:
+    #             batch_set = self.epoch_partition_batches[epoch_id][next_partition_id]
+    #             job.future_batches.update(batch_set.batches)
+    #             job.active_batch_set_id = batch_set.id
+    #             break
 
     def allocate_batches_to_job(self, job: DLTJob):
         is_new_job: bool = False

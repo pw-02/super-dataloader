@@ -77,7 +77,8 @@ class CoorDLJob:
             return next_training_batch
 
 class CoorDLDataset():
-    def __init__(self, data_dir: str, 
+    def __init__(self, 
+                 data_dir: str, 
                  batch_size: int, 
                  drop_last: bool, 
                  kind = 'vision', 

@@ -40,7 +40,7 @@ class CacheAwareMiniBatchService(minibatch_service_pb2_grpc.MiniBatchServiceServ
             success = True
         else:
             if self.coordl:
-                dataset = CoorDLDataset(request.data_dir, self.args.batch_size, False, self.args.drop_last, self.args.workload_kind)
+                dataset = CoorDLDataset(request.data_dir, self.args.batch_size, self.args.drop_last, self.args.workload_kind)
                 self.datasets[request.data_dir] = CoorDLBatchManager(dataset=dataset, args=self.args)
             else:
                 dataset = Dataset(request.data_dir, self.args.batch_size, False, self.args.partitions_per_dataset, request.dataset_kind, max_dataset_size=5)

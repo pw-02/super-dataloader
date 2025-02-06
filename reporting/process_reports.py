@@ -4,6 +4,7 @@ import os
 from collections import OrderedDict
 import csv
 from pathlib import Path
+import itertools
 
 def convert_csv_to_dict(csv_file, start_timestamp = None, end_timestamp = None):
     df = pd.read_csv(csv_file)
@@ -71,8 +72,9 @@ def get_throughput_over_epoch_timepoints(metrics_csv, total_epochs):
 def get_batches_processed_over_time(metrics_csv):
     #get elapsed time in each row
     csv_data = convert_csv_to_dict(metrics_csv)
-    elapsed_times = csv_data['Elapsed Time (s)']
-    return elapsed_times
+    cumulative_iteration_times = list(itertools.accumulate(csv_data['Iteration Time (s)']))
+
+    return cumulative_iteration_times
 
 
 
@@ -219,7 +221,7 @@ if __name__ == "__main__":
             save_dict_list_to_csv(job_metrics, os.path.join(exp_folder, f'{exp_name}_{dataset}_{dataloader}_summary.csv'))
             save_dict_list_to_csv(aggegared_throughput_overtime_list, os.path.join(exp_folder, f'{exp_name}_{dataset}_{dataloader}_throughput_over_time.csv'))
             
-            with open(os.path.join(exp_folder, f"{exp_name}_{dataset}_{dataloader}_batches_over_time.tsv"), "w") as f:
+            with open(os.path.join(exp_folder, f"{exp_name}_{dataset}_{dataloader}_batches_over_time.txt"), "w") as f:
                 f.write("Index\tElapsed Time\n")  # Add header
                 for index, num in enumerate(elapsed_times):
                     f.write(f"{index}\t{num:.6f}\n")  # Ensures consistent decimal places

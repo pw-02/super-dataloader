@@ -114,7 +114,7 @@ def get_cloud_watch_logs_for_experiment(download_dir, s3_bucket_name, from_time,
             if log_group_name not in lambda_functions:
                 continue
 
-            s3_prefix = f'cloudwatchlogs/{log_group_name.replace("/", "_")}'
+            s3_prefix = f'cloudwatchcifar10/{log_group_name.replace("/", "_")}'
             futures.append(executor.submit(export_logs_to_s3, 
                                            log_group_name, 
                                            s3_bucket_name, 
@@ -134,7 +134,7 @@ def get_cloud_watch_logs_for_experiment(download_dir, s3_bucket_name, from_time,
             log_group_name = log_group['logGroupName']
             if log_group_name not in lambda_functions:
                 continue
-            s3_prefix = f'cloudwatchlogs/{log_group_name.replace("/", "_")}'
+            s3_prefix = f'cloudwatchcifar10/{log_group_name.replace("/", "_")}'
             executor.submit(download_logs_from_s3, s3_bucket_name, s3_prefix, download_dir)
             
         # Wait for all download tasks to complete

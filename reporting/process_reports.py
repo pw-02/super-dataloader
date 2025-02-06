@@ -76,6 +76,14 @@ def get_batches_processed_over_time(metrics_csv):
 
     return cumulative_iteration_times
 
+def compute_ec2_costs(instance_type: str, time_seconds: float):
+    instance_prices = {'p3.8xlarge':  12.24, 'c5n.xlarge': 0.4,}
+    hours = time_seconds / 3600
+    hourly_rate = instance_prices[instance_type]
+    instance_cost = hourly_rate * hours
+    return instance_cost
+
+
 
 
 
@@ -168,7 +176,8 @@ def get_training_summary(folder_path):
         
         # metrics["throughput(batches/s)"] = metrics["total_batches"] / metrics["total_time(s)"]
         overall_metrics["throughput(samples/s)"] = overall_metrics["total_samples"] / overall_metrics["total_time(s)"]
-        
+        overall_metrics["throughput(batches/s)"] = overall_metrics["total_batches"] / overall_metrics["total_time(s)"]
+
         overall_metrics["cache_hit(%)"] = overall_metrics["cache_hits"] / overall_metrics["total_samples"]
         overall_metrics["compute_time(%)"] = overall_metrics["gpu_processing_time(s)"] / overall_metrics["total_time(s)"]
         overall_metrics["waiting_on_data_time(%)"] = overall_metrics["wait_on_data_time(s)"] / overall_metrics["total_time(s)"]
@@ -187,17 +196,49 @@ def get_training_summary(folder_path):
             aggegared_throughput_overtime_list.append(dict_line)
 
     elapsed_times = sorted(elapsed_times)
-
-
-
-
     return overall_metrics,jobs_metric_list, aggegared_throughput_overtime_list,elapsed_times, start_time_stamp, end_time_stamp
+
+def get_avergae_batch_size_gb(workload):
+    if 'cifar10' in workload:
+        return 0.03486
+    
+def compute_costs(dataloader_name, elapsed_time, dataset_name, max_cached_batches, batches_per_second):
+    ec2_cost = compute_ec2_costs('p3.8xlarge', elapsed_time)
+
+    if dataloader_name == 'coordl':
+        average_batch_size_gb = get_avergae_batch_size_gb(dataset_name)
+        average_batch_size_kb = average_batch_size_gb * 1024 * 1024
+        max_cached_size = average_batch_size_gb * max_cached_batches
+        storage_costs = compute_serverless_redis_costs(elapsed_time, max_cached_size, batches_per_second, average_batch_size_kb)
+    
+    total_cost = ec2_cost + storage_costs
+    return total_cost, ec2_cost, storage_costs
+
+
+def compute_serverless_redis_costs(total_durtion_seconds, cache_size_gb, throughput_per_s, avg_size_per_request_kb):
+    # Duration is in seconds
+    # Memory size is in GB
+    # Cost is in USD
+    hours_in_a_month = 730
+    seconds_in_a_month = 2628000
+    # round_duartion_tonearest_hour = total_durtion_seconds / 3600
+    # rounded_duarion = round_duartion_tonearest_hour * 3600
+    data_storage_cost_monthly = cache_size_gb * hours_in_a_month * 0.125
+
+    requests = throughput_per_s * seconds_in_a_month * avg_size_per_request_kb
+    ecpu_monthly_cost = requests * 0.0000000034
+
+    total_monhtly_cost = data_storage_cost_monthly + ecpu_monthly_cost
+
+    exp_cost = total_monhtly_cost/seconds_in_a_month * total_durtion_seconds
+    return exp_cost
+
 
 if __name__ == "__main__":
  
     paths = [
         # "C:\\Users\\pw\\Desktop\\image_classification\\coordl\\cifar10",
-        Path(r"C:\Users\pw\Desktop\image_transformer")
+        Path(r"C:\Users\pw\Desktop\super_results\image_transformer")
         # "C:\\Users\\pw\\Desktop\\vision transformer\\coordl\\imagenet"
         ]
     
@@ -218,16 +259,25 @@ if __name__ == "__main__":
             exp_summary['path'] = exp_folder
 
             summary, job_metrics, aggegared_throughput_overtime_list, elapsed_times, start_timestamp, end_timestamp = get_training_summary(exp_folder)
+            
+            total_cost, ec2_cost, storage_costs = compute_costs(
+                dataloader_name=dataloader,
+                elapsed_time=elapsed_times[-1],
+                dataset_name=dataset,
+                max_cached_batches=summary['max_cached_batches'],
+                batches_per_second=summary['throughput(batches/s)'])
+            exp_summary['total_cost'] = total_cost
+            exp_summary['ec2_cost'] = ec2_cost
+            exp_summary['storage_costs'] = storage_costs
+                  
             save_dict_list_to_csv(job_metrics, os.path.join(exp_folder, f'{exp_name}_{dataset}_{dataloader}_summary.csv'))
             save_dict_list_to_csv(aggegared_throughput_overtime_list, os.path.join(exp_folder, f'{exp_name}_{dataset}_{dataloader}_throughput_over_time.csv'))
             
             with open(os.path.join(exp_folder, f"{exp_name}_{dataset}_{dataloader}_batches_over_time.txt"), "w") as f:
                 f.write("Index\tElapsed Time\n")  # Add header
                 for index, num in enumerate(elapsed_times):
-                    f.write(f"{index}\t{num:.6f}\n")  # Ensures consistent decimal places
+                    f.write(f"{index+1}\t{num:.6f}\n")  # Ensures consistent decimal places
 
-
-            
             exp_summary.update(summary)
             # save_dict_list_to_csv([exp_summary], os.path.join(exp_folder, f'{exp_name}_summary.csv'))
             overall_summary.append(exp_summary)

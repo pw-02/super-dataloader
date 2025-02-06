@@ -1,11 +1,24 @@
 import boto3
 
-def delete_all_cloudwatch_log_groups():
-    logs_client = boto3.client('logs')
-    log_groups = logs_client.describe_log_groups(logGroupNamePrefix='/')['logGroups']
-    for log_group in log_groups:
+def delete_all_log_groups():
+    client = boto3.client('logs')
+    
+    # List all log groups
+    log_groups = client.describe_log_groups()
+    
+    # Loop through log groups and delete each one
+    for log_group in log_groups['logGroups']:
         log_group_name = log_group['logGroupName']
-        logs_client.delete_log_group(logGroupName=log_group_name)
+        print(f"Deleting log group: {log_group_name}")
+        client.delete_log_group(logGroupName=log_group_name)
+        
+        # Check if more log groups exist, and fetch them
+        while 'nextToken' in log_groups:
+            log_groups = client.describe_log_groups(nextToken=log_groups['nextToken'])
+            for log_group in log_groups['logGroups']:
+                log_group_name = log_group['logGroupName']
+                print(f"Deleting log group: {log_group_name}")
+                client.delete_log_group(logGroupName=log_group_name)
 
 
 def empty_s3_bucket(bucket_name):
@@ -53,7 +66,7 @@ def empty_s3_bucket(bucket_name):
             )
     
 def cleanup_cloudwtachlogs_for_experiment():
-    delete_all_cloudwatch_log_groups()
+    delete_all_log_groups()
     empty_s3_bucket("supercloudwtachexports")
 
 

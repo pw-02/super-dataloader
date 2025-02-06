@@ -163,8 +163,8 @@ def lambda_handler(event, context):
         minibatch_size_mb = bytes_to_mb(minibatch)
         
         if redis_client is None:
-            # redis_client = redis.StrictRedis(host=cache_host, port=int(cache_port))
-            redis_client = redis.StrictRedis(host=cache_host, port=int(cache_port), ssl=True )
+            redis_client = redis.StrictRedis(host=cache_host, port=int(cache_port))
+            # redis_client = redis.StrictRedis(host=cache_host, port=int(cache_port), ssl=True )
         cache_minibatch_with_retries(redis_client, batch_id, minibatch)
 
         # redis_client.set(batch_id, minibatch)

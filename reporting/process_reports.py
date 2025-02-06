@@ -91,6 +91,7 @@ def get_training_summary(folder_path):
     search_pattern = os.path.join(folder_path, '**', 'metrics.csv')
     jobs_metric_list = []
     elapsed_times = []
+ 
     for metrics_csv in glob.iglob(search_pattern, recursive=True):
         job_metrics = {}
         csv_data = convert_csv_to_dict(metrics_csv)
@@ -200,19 +201,37 @@ def get_training_summary(folder_path):
 
 def get_avergae_batch_size_gb(workload):
     if 'cifar10' in workload:
-        return 0.03486
+        return 0.039 #GB
     
-def compute_costs(dataloader_name, elapsed_time, dataset_name, max_cached_batches, batches_per_second):
+def compute_costs(dataloader_name, 
+                  elapsed_time, 
+                  dataset_name, 
+                  max_cached_batches, 
+                  batches_per_second,
+                  exp_folder_path,
+                  start_timestamp = None,
+                  end_timestamp = None):
     ec2_cost = compute_ec2_costs('p3.8xlarge', elapsed_time)
-
+    cache_cost = 0
+    prefetch_cost = 0
     if dataloader_name == 'coordl':
         average_batch_size_gb = get_avergae_batch_size_gb(dataset_name)
         average_batch_size_kb = average_batch_size_gb * 1024 * 1024
         max_cached_size = average_batch_size_gb * max_cached_batches
-        storage_costs = compute_serverless_redis_costs(elapsed_time, max_cached_size, batches_per_second, average_batch_size_kb)
-    
-    total_cost = ec2_cost + storage_costs
-    return total_cost, ec2_cost, storage_costs
+        cache_cost = compute_serverless_redis_costs(elapsed_time, max_cached_size, batches_per_second, average_batch_size_kb)
+    else:
+        search_pattern = os.path.join(exp_folder_path, '**', 'bill.csv')
+        for cost_csv in glob.iglob(search_pattern, recursive=True):
+            #comute data loading costs
+            csv_data = convert_csv_to_dict(cost_csv, start_timestamp = start_timestamp, end_timestamp = end_timestamp)
+            systems = list(csv_data["System"])
+            for idx, system in enumerate(systems):
+                if 'InfiniSore' in system:
+                    cache_cost += csv_data["Total Cost"][idx]
+                elif 'PREFETCH' in system:
+                    prefetch_cost += csv_data["Total Cost"][idx]
+
+    return total_cost, ec2_cost, cache_cost, prefetch_cost
 
 
 def compute_serverless_redis_costs(total_durtion_seconds, cache_size_gb, throughput_per_s, avg_size_per_request_kb):
@@ -260,16 +279,22 @@ if __name__ == "__main__":
 
             summary, job_metrics, aggegared_throughput_overtime_list, elapsed_times, start_timestamp, end_timestamp = get_training_summary(exp_folder)
             
-            total_cost, ec2_cost, storage_costs = compute_costs(
+            total_cost, ec2_cost, cache_cost, prefetch_cost = compute_costs(
                 dataloader_name=dataloader,
                 elapsed_time=elapsed_times[-1],
                 dataset_name=dataset,
                 max_cached_batches=summary['max_cached_batches'],
-                batches_per_second=summary['throughput(batches/s)'])
+                batches_per_second=summary['throughput(batches/s)'],
+                exp_folder_path=exp_folder,
+                start_timestamp=start_timestamp,
+                end_timestamp=end_timestamp
+                )
+            
             exp_summary['total_cost'] = total_cost
             exp_summary['ec2_cost'] = ec2_cost
-            exp_summary['storage_costs'] = storage_costs
-                  
+            exp_summary['cache_cost'] = cache_cost
+            exp_summary['prefetch_cost'] = prefetch_cost
+    
             save_dict_list_to_csv(job_metrics, os.path.join(exp_folder, f'{exp_name}_{dataset}_{dataloader}_summary.csv'))
             save_dict_list_to_csv(aggegared_throughput_overtime_list, os.path.join(exp_folder, f'{exp_name}_{dataset}_{dataloader}_throughput_over_time.csv'))
             

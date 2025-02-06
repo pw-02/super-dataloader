@@ -7,34 +7,37 @@ from datetime import datetime, timezone
 import concurrent.futures
 from create_bill import prarse_exported_logs
 
-def export_logs_to_s3(log_group_name, s3_bucket_name, s3_prefix, start_time_str, end_time = None):
+def export_logs_to_s3(log_group, s3_bucket_name, s3_prefix, from_time, to_time):
 
-    start_time_ms = convert_to_milliseconds(start_time_str)
-    # end_time_ms = int(time.time() * 1000)  # Current time in milliseconds
-    if end_time:
-        end_time_ms = convert_to_milliseconds(end_time)
+    if to_time is None:
+          to_time = int(time.time() * 1000)
     else:
-        end_time_ms = int(time.time() * 1000)
-    logs_client = boto3.client('logs')
+        to_time = convert_to_millis(to_time)
 
-    """Exports CloudWatch logs to S3."""
-    # Create a unique export task name
-    task_name = f"export-{log_group_name}-{int(time.time())}"
-    
-    # Define the export task
-    response = logs_client.create_export_task(
+    if from_time is None:
+        from_time = 0
+    else:
+        from_time = convert_to_millis(from_time)
+
+    # Set toTime to current timestamp in milliseconds
+    to_time = int(time.time() * 1000)
+
+
+
+    task_name = f"export-{log_group}-{int(time.time())}"
+    client = boto3.client("logs")
+
+    response = client.create_export_task(
         taskName=task_name,
-        logGroupName=log_group_name,
-        fromTime=start_time_ms,  # Export logs from the past day
-        to=end_time_ms,  # Export logs up to now
+        logGroupName=log_group,
+        fromTime=from_time,
+        to=to_time,
         destination=s3_bucket_name,
         destinationPrefix=s3_prefix
     )
-
     task_id = response['taskId']
-    # Monitor the status of the export task
     while True:
-        request = logs_client.describe_export_tasks(taskId=task_id)
+        request = client.describe_export_tasks(taskId=task_id)
         status = request['exportTasks'][0]['status']['code']
         print(f'Task ID {task_id} status: {status}')
 
@@ -42,7 +45,9 @@ def export_logs_to_s3(log_group_name, s3_bucket_name, s3_prefix, start_time_str,
             break  
         # Wait for a while before checking the status again
         time.sleep(5)
-    print(f"Export task created: {response['taskId']} for log group {log_group_name}")
+    print(f"Export task created: {response['taskId']} for log group {log_group}")
+
+
 
 def download_logs_from_s3(s3_bucket_name, s3_prefix, download_path):
     s3_client = boto3.client('s3')
@@ -73,35 +78,49 @@ def get_all_log_groups():
     log_groups = []
     next_token = None
     client = boto3.client('logs')
+    paginator = client.get_paginator("describe_log_groups")
 
-    while True:
-        # Fetch log groups with pagination
-        response = client.describe_log_groups(nextToken=next_token) if next_token else client.describe_log_groups()
-        
-        # Append log groups to the list
-        log_groups.extend(response['logGroups'])
-        
-        # Check if there's another page of results
-        next_token = response.get('nextToken')
-        if not next_token:
-            break
+    for page in paginator.paginate():
+        for group in page.get("logGroups", []):
+            log_groups.append(group["logGroupName"])
     
     return log_groups
 
-def get_cloud_watch_logs_for_experiment(download_dir, s3_bucket_name, start_time_str, end_time_str=None):
-    logs_client = boto3.client('logs')
-    os.makedirs(download_dir, exist_ok=True)
-    # log_groups = logs_client.describe_log_groups(logGroupNamePrefix='/aws/lambda/CreateVisionTrainingBatch')['logGroups']
-    log_groups = get_all_log_groups()
 
+# Function to list all Lambda functions
+def list_lambda_functions():
+    client = boto3.client('lambda')
+
+    functions = []
+    paginator = client.get_paginator('list_functions')
+
+
+    for page in paginator.paginate():
+        for function in page['Functions']:
+            functions.append(f"/aws/lambda/{function['FunctionName']}")
+
+    return functions
+
+
+def get_cloud_watch_logs_for_experiment(download_dir, s3_bucket_name, from_time, to_time=None):
+    os.makedirs(download_dir, exist_ok=True)
+    log_groups = get_all_log_groups()
+    lambda_functions = list_lambda_functions()
     # log_groups.append({'logGroupName': '/aws/lambda/lambda_function'})
     with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
         # Export logs in parallel
         futures = []
-        for log_group in log_groups:
-            log_group_name = log_group['logGroupName']
+        for log_group_name in log_groups:
+            if log_group_name not in lambda_functions:
+                continue
+
             s3_prefix = f'cloudwatchlogs/{log_group_name.replace("/", "_")}'
-            futures.append(executor.submit(export_logs_to_s3, log_group_name, s3_bucket_name, s3_prefix, start_time_str, end_time_str))
+            futures.append(executor.submit(export_logs_to_s3, 
+                                           log_group_name, 
+                                           s3_bucket_name, 
+                                           s3_prefix,
+                                           '2025-01-01 00:00:00', 
+                                            None))
         
         # Wait for all export tasks to complete
         for future in concurrent.futures.as_completed(futures):
@@ -113,30 +132,35 @@ def get_cloud_watch_logs_for_experiment(download_dir, s3_bucket_name, start_time
         # Download logs from S3 in parallel
         for log_group in log_groups:
             log_group_name = log_group['logGroupName']
+            if log_group_name not in lambda_functions:
+                continue
             s3_prefix = f'cloudwatchlogs/{log_group_name.replace("/", "_")}'
             executor.submit(download_logs_from_s3, s3_bucket_name, s3_prefix, download_dir)
             
         # Wait for all download tasks to complete
         # (You may need to use additional synchronization here depending on your needs)
 
+def convert_to_millis(timestamp_str):
+    # Format: "YYYY-MM-DD HH:MM:SS"
+    dt = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S")
+    return int(time.mktime(dt.timetuple()) * 1000)
 
-
-def convert_to_milliseconds(date_str):
-    # Parse the input string as a naive datetime object
-    dt = datetime.strptime(date_str, '%Y-%m-%d_%H-%M-%S')
+# def convert_to_millis(date_str):
+#     # Parse the input string as a naive datetime object
+#     dt = datetime.strptime(date_str, '%Y-%m-%d_%H-%M-%S')
     
-    # Make the datetime object timezone-aware (UTC)
-    dt_utc = dt.replace(tzinfo=timezone.utc)
+#     # Make the datetime object timezone-aware (UTC)
+#     dt_utc = dt.replace(tzinfo=timezone.utc)
     
-    # Convert to milliseconds since the Unix epoch
-    return int(dt_utc.timestamp() * 1000)
+#     # Convert to milliseconds since the Unix epoch
+#     return int(dt_utc.timestamp() * 1000)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Export CloudWatch logs to S3 and download them.")
     parser.add_argument("--download_dir", help="Directory to download the logs to", default="logs")
     parser.add_argument("--s3_bucket_name", help="S3 bucket name for exporting logs", default="supercloudwtachexports")
-    parser.add_argument("--start_time", help="", default='2024-10-25_03-23-42')
-    parser.add_argument("--end_time", help="",  default='2024-10-25_03-28-42')
+    parser.add_argument("--start_time", help="", default='2025-02-05_00-32-19')
+    parser.add_argument("--end_time", help="",  default='2025-02-05_01-06-19')
     args = parser.parse_args()
     #10/23/2024  11:44:40 PM
     # 2024-10-24_18-27-38

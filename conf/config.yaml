@@ -4,7 +4,7 @@ defaults:
   # - override text/hydra_logging: disabled  
   # - override hydra/job_logging: disabled
 
-dataloader: coordl
+dataloader: super
 partitions_per_dataset: 1
 lookahead_steps: 100
 serverless_cache_address: redos-rdior4.serverless.usw2.cache.amazonaws.com:6379 #10.0.21.36:6378 #127.0.0.1:6379 #super-rdior4.serverless.usw2.cache.amazonaws.com:6379  #10.0.17.5:6378  #10.0.28.76:6378d 10.0.17.5:6378

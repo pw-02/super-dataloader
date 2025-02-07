@@ -98,11 +98,11 @@ visual_map_stacked_bar = {
     'io': {'color': '#FF7F0E', 'hatch': '....', 'edgecolor': 'black', 'alpha': 0.9},
 }
 
-visual_map_stacked_bar = {
-    'gpu': {'color': 'white', 'hatch': '///', 'edgecolor': 'black', 'alpha': 1.0},
-    'transform': {'color': 'white', 'hatch': 'xx', 'edgecolor': 'black', 'alpha': 1.0},
-    'io': {'color': 'white', 'hatch': '..', 'edgecolor': 'black', 'alpha': 1.0},
-}
+# visual_map_stacked_bar = {
+#     'gpu': {'color': 'white', 'hatch': '///', 'edgecolor': 'black', 'alpha': 1.0},
+#     'transform': {'color': 'white', 'hatch': 'xx', 'edgecolor': 'black', 'alpha': 1.0},
+#     'io': {'color': 'white', 'hatch': '..', 'edgecolor': 'black', 'alpha': 1.0},
+# }
 
 
 

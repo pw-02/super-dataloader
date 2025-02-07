@@ -89,20 +89,17 @@ ax2.legend(loc='upper left', fontsize=9, ncol=1, frameon=True)
 #-------------------------------------------------------------------------------------
 
 # visual_map_stacked_bar = {
-#     'gpu': {'color': '#005250', 'hatch': '', 'edgecolor': 'black', 'alpha': 1.0, 'marker':'o', 'linestyle':'-'},
-#     'transform': {'color': '#FEA400', 'hatch': '', 'edgecolor': 'black', 'alpha': 1.0,  'marker':'o', 'linestyle':'-'},
-#     'io': {'color': '#FF7F0E', 'hatch': '', 'edgecolor': 'black', 'alpha': 1.0,  'marker':'o', 'linestyle':'-'},
+#     'gpu': {'color': '#005250', 'hatch': '', 'edgecolor': 'black', 'alpha': 0.9, 'marker':'o', 'hatch':'////'},
+#     'transform': {'color': '#FEA400', 'hatch': '', 'edgecolor': 'black', 'alpha': 0.9,  'marker':'o', 'hatch':'\\\\'},
+#     'io': {'color': '#4C8BB8', 'hatch': '', 'edgecolor': 'black', 'alpha': 0.9,  'marker':'o', 'hatch':'....'},
 # }
-visual_map_stacked_bar = {
-    'gpu': {'color': '#005250', 'hatch': '////', 'edgecolor': 'black', 'alpha': 0.9},
-    'transform': {'color': '#FEA400', 'hatch': 'xxxx', 'edgecolor': 'black', 'alpha': 0.9},
-    'io': {'color': '#FF7F0E', 'hatch': '....', 'edgecolor': 'black', 'alpha': 0.9},
-}
+
+
 
 visual_map_stacked_bar = {
-    'gpu': {'color': 'white', 'hatch': '///', 'edgecolor': 'black', 'alpha': 1.0},
+    'gpu': {'color': 'white', 'hatch': '//', 'edgecolor': 'black', 'alpha': 1.0},
     'transform': {'color': 'white', 'hatch': 'xx', 'edgecolor': 'black', 'alpha': 1.0},
-    'io': {'color': 'white', 'hatch': '..', 'edgecolor': 'black', 'alpha': 1.0},
+    'io': {'color': 'white', 'hatch': '.', 'edgecolor': 'black', 'alpha': 1.0},
 }
 
 

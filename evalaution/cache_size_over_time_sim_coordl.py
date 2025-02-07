@@ -1,7 +1,18 @@
 import heapq
+import logging
 import numpy as np
 import matplotlib.pyplot as plt
 from typing import List, Dict
+
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.StreamHandler(),  # Print to console
+        logging.FileHandler("simulation.log", mode="w")  # Save to file
+    ]
+)
 
 # Simulation parameters
 batches_per_epoch = 10
@@ -18,7 +29,7 @@ class Job:
         self.time_per_batch = time_per_batch  
         self.batches_to_process = list(range(1, total_batches + 1))
         self.batches_processed = 0
-        self.next_available_time = time_per_batch 
+        self.next_available_time = 0 
         self.wait_time = 0  
         self.epoch_completion_time = 0  
         self.reached_end_of_epoch = False
@@ -30,12 +41,12 @@ class Job:
 
     def process_next_batch(self):
         if not self.batches_to_process:
-            return False  # No more batches to process, prevent popping an empt
-        """Process a batch and update cache usage."""
+            return False  # No more batches to process, prevent popping an empty list
+
         next_batch = self.batches_to_process.pop(0)
         self.batches_processed += 1
         self.next_available_time += self.time_per_batch  
-        print(f"[Time {self.next_available_time:.2f}] Job {self.job_id} processed batch {next_batch}")
+        logging.info(f"[Time {self.next_available_time:.2f}] Job {self.job_id} processed batch {next_batch}")
 
         # Cache management
         if next_batch in cached_batches:
@@ -50,22 +61,22 @@ class Job:
             self.reached_end_of_epoch = True
             self.epoch_completion_time = self.next_available_time
             self.current_epoch += 1
+            logging.info(f"Job {self.job_id} finished epoch {self.batches_processed // batches_per_epoch} at time {self.epoch_completion_time}. Throughput: {self.batches_processed / self.epoch_completion_time:.2f} batches per second")
 
         # Track cache size over time
         time_steps.append(self.next_available_time)
         cache_size_over_time.append(len(cached_batches))
 
     def log_epoch_delay(self, last_epoch_time):
-        """Record how much delay this job experienced waiting for others."""
         delay = last_epoch_time - self.epoch_completion_time
         self.epoch_delays[self.current_epoch] = delay
         self.next_available_time = last_epoch_time + self.time_per_batch
-        print(f"Job {self.job_id} delayed by {delay:.2f} seconds in epoch {self.current_epoch}")
+        logging.info(f"Job {self.job_id} delayed by {delay:.2f} seconds in epoch {self.current_epoch}")
 
 def create_jobs(job_speeds: List[float]) -> List[Job]:
     return [Job(job_id, time_per_batch, total_batches) for job_id, time_per_batch in enumerate(job_speeds)]
 
-def run():
+def run(coordl_mode=False):
     jobs = create_jobs(job_speeds)
     job_queue: List[Job] = []
     for job in jobs:
@@ -79,38 +90,44 @@ def run():
             training_finished = False  # There are jobs still running
             job = heapq.heappop(job_queue)  # Get the job with the earliest available time
 
-            # **Check if the job has finished all its batches**
             if len(job.batches_to_process) == 0:
-                print(f"Job {job.job_id} has no more batches to process.")
-                continue  # Skip processing and do not re-add it to the queue
+                logging.info(f"Job {job.job_id} has no more batches to process.")
+                continue
 
             job.process_next_batch()
 
-            if job.reached_end_of_epoch:
-                print(f"Job {job.job_id} finished epoch {job.batches_processed // batches_per_epoch} at time {job.epoch_completion_time}")
-
-                # Check if all jobs finished the epoch
+            if job.reached_end_of_epoch and coordl_mode:
                 all_jobs_finished_epoch = all(j.reached_end_of_epoch for j in jobs)
 
                 if all_jobs_finished_epoch:
                     last_job_to_finish_epoch_time = max(j.epoch_completion_time for j in jobs)
-                    print(f"All jobs finished epoch {job.batches_processed // batches_per_epoch}")
+                    #find the job that was the last to finish the epoch
+                    logging.info(f"All jobs finished epoch {job.batches_processed // batches_per_epoch}")
 
                     for other_job in jobs:
                         other_job.reached_end_of_epoch = False
                         other_job.next_available_time = last_job_to_finish_epoch_time + other_job.time_per_batch
                         other_job.epoch_delays[other_job.current_epoch] = last_job_to_finish_epoch_time - other_job.epoch_completion_time
                         other_job.epoch_completion_time = 0
+                        logging.info(f"Job {other_job.job_id} delayed by {other_job.epoch_delays[other_job.current_epoch]:.2f} seconds in epoch {other_job.current_epoch}")
 
-                    # Re-add jobs to the queue only if they have more batches to process
                     for job in jobs:
                         if len(job.batches_to_process) > 0:
                             heapq.heappush(job_queue, job)
             else:
                 heapq.heappush(job_queue, job)
 
-    print(f"Max cache size: {max(cache_size_over_time)}")
+    for job in jobs:
+        total_delay = sum(delay for delay in job.epoch_delays.values())
+        logging.info(f"Total delay for Job {job.job_id} due to coordl policy: {total_delay:.2f} seconds")
+    
+    for job in jobs:
+        throughput = job.batches_processed / job.next_available_time
+        logging.info(f"Throughput for Job {job.job_id}: {throughput:.2f} batches per second")
+
+    logging.info(f"Max cache size: {max(cache_size_over_time)}")
 
 
 if __name__ == "__main__":
-    run()
+    coordl_mode = True
+    run(coordl_mode)

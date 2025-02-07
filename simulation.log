@@ -1,0 +1,255 @@
+2025-02-07 15:20:38,552 [INFO] [Time 0.12] Job 0 processed batch 1
+2025-02-07 15:20:38,553 [INFO] [Time 5.50] Job 1 processed batch 1
+2025-02-07 15:20:38,553 [INFO] [Time 0.25] Job 0 processed batch 2
+2025-02-07 15:20:38,554 [INFO] [Time 0.38] Job 0 processed batch 3
+2025-02-07 15:20:38,554 [INFO] [Time 0.50] Job 0 processed batch 4
+2025-02-07 15:20:38,554 [INFO] [Time 0.62] Job 0 processed batch 5
+2025-02-07 15:20:38,554 [INFO] [Time 0.75] Job 0 processed batch 6
+2025-02-07 15:20:38,554 [INFO] [Time 0.88] Job 0 processed batch 7
+2025-02-07 15:20:38,555 [INFO] [Time 1.00] Job 0 processed batch 8
+2025-02-07 15:20:38,555 [INFO] [Time 1.12] Job 0 processed batch 9
+2025-02-07 15:20:38,555 [INFO] [Time 1.25] Job 0 processed batch 10
+2025-02-07 15:20:38,556 [INFO] Job 0 finished epoch 1 at time 1.25. Throughput: 8.00 batches per second
+2025-02-07 15:20:38,556 [INFO] [Time 11.00] Job 1 processed batch 2
+2025-02-07 15:20:38,556 [INFO] [Time 16.50] Job 1 processed batch 3
+2025-02-07 15:20:38,556 [INFO] [Time 22.00] Job 1 processed batch 4
+2025-02-07 15:20:38,556 [INFO] [Time 27.50] Job 1 processed batch 5
+2025-02-07 15:20:38,556 [INFO] [Time 33.00] Job 1 processed batch 6
+2025-02-07 15:20:38,556 [INFO] [Time 38.50] Job 1 processed batch 7
+2025-02-07 15:20:38,557 [INFO] [Time 44.00] Job 1 processed batch 8
+2025-02-07 15:20:38,557 [INFO] [Time 49.50] Job 1 processed batch 9
+2025-02-07 15:20:38,557 [INFO] [Time 55.00] Job 1 processed batch 10
+2025-02-07 15:20:38,557 [INFO] Job 1 finished epoch 1 at time 55.0. Throughput: 0.18 batches per second
+2025-02-07 15:20:38,558 [INFO] All jobs finished epoch 1
+2025-02-07 15:20:38,558 [INFO] Job 0 delayed by 53.75 seconds in epoch 1
+2025-02-07 15:20:38,558 [INFO] Job 1 delayed by 0.00 seconds in epoch 1
+2025-02-07 15:20:38,558 [INFO] [Time 55.25] Job 0 processed batch 11
+2025-02-07 15:20:38,558 [INFO] [Time 55.38] Job 0 processed batch 12
+2025-02-07 15:20:38,558 [INFO] [Time 55.50] Job 0 processed batch 13
+2025-02-07 15:20:38,559 [INFO] [Time 55.62] Job 0 processed batch 14
+2025-02-07 15:20:38,559 [INFO] [Time 55.75] Job 0 processed batch 15
+2025-02-07 15:20:38,559 [INFO] [Time 55.88] Job 0 processed batch 16
+2025-02-07 15:20:38,559 [INFO] [Time 56.00] Job 0 processed batch 17
+2025-02-07 15:20:38,560 [INFO] [Time 56.12] Job 0 processed batch 18
+2025-02-07 15:20:38,560 [INFO] [Time 56.25] Job 0 processed batch 19
+2025-02-07 15:20:38,560 [INFO] [Time 56.38] Job 0 processed batch 20
+2025-02-07 15:20:38,560 [INFO] Job 0 finished epoch 2 at time 56.375. Throughput: 0.35 batches per second
+2025-02-07 15:20:38,560 [INFO] [Time 66.00] Job 1 processed batch 11
+2025-02-07 15:20:38,561 [INFO] [Time 71.50] Job 1 processed batch 12
+2025-02-07 15:20:38,561 [INFO] [Time 77.00] Job 1 processed batch 13
+2025-02-07 15:20:38,561 [INFO] [Time 82.50] Job 1 processed batch 14
+2025-02-07 15:20:38,561 [INFO] [Time 88.00] Job 1 processed batch 15
+2025-02-07 15:20:38,562 [INFO] [Time 93.50] Job 1 processed batch 16
+2025-02-07 15:20:38,562 [INFO] [Time 99.00] Job 1 processed batch 17
+2025-02-07 15:20:38,562 [INFO] [Time 104.50] Job 1 processed batch 18
+2025-02-07 15:20:38,562 [INFO] [Time 110.00] Job 1 processed batch 19
+2025-02-07 15:20:38,562 [INFO] [Time 115.50] Job 1 processed batch 20
+2025-02-07 15:20:38,563 [INFO] Job 1 finished epoch 2 at time 115.5. Throughput: 0.17 batches per second
+2025-02-07 15:20:38,563 [INFO] All jobs finished epoch 2
+2025-02-07 15:20:38,563 [INFO] Job 0 delayed by 59.12 seconds in epoch 2
+2025-02-07 15:20:38,563 [INFO] Job 1 delayed by 0.00 seconds in epoch 2
+2025-02-07 15:20:38,563 [INFO] [Time 115.75] Job 0 processed batch 21
+2025-02-07 15:20:38,563 [INFO] [Time 115.88] Job 0 processed batch 22
+2025-02-07 15:20:38,563 [INFO] [Time 116.00] Job 0 processed batch 23
+2025-02-07 15:20:38,564 [INFO] [Time 116.12] Job 0 processed batch 24
+2025-02-07 15:20:38,564 [INFO] [Time 116.25] Job 0 processed batch 25
+2025-02-07 15:20:38,564 [INFO] [Time 116.38] Job 0 processed batch 26
+2025-02-07 15:20:38,564 [INFO] [Time 116.50] Job 0 processed batch 27
+2025-02-07 15:20:38,564 [INFO] [Time 116.62] Job 0 processed batch 28
+2025-02-07 15:20:38,565 [INFO] [Time 116.75] Job 0 processed batch 29
+2025-02-07 15:20:38,565 [INFO] [Time 116.88] Job 0 processed batch 30
+2025-02-07 15:20:38,565 [INFO] Job 0 finished epoch 3 at time 116.875. Throughput: 0.26 batches per second
+2025-02-07 15:20:38,565 [INFO] [Time 126.50] Job 1 processed batch 21
+2025-02-07 15:20:38,566 [INFO] [Time 132.00] Job 1 processed batch 22
+2025-02-07 15:20:38,566 [INFO] [Time 137.50] Job 1 processed batch 23
+2025-02-07 15:20:38,566 [INFO] [Time 143.00] Job 1 processed batch 24
+2025-02-07 15:20:38,566 [INFO] [Time 148.50] Job 1 processed batch 25
+2025-02-07 15:20:38,566 [INFO] [Time 154.00] Job 1 processed batch 26
+2025-02-07 15:20:38,566 [INFO] [Time 159.50] Job 1 processed batch 27
+2025-02-07 15:20:38,566 [INFO] [Time 165.00] Job 1 processed batch 28
+2025-02-07 15:20:38,566 [INFO] [Time 170.50] Job 1 processed batch 29
+2025-02-07 15:20:38,567 [INFO] [Time 176.00] Job 1 processed batch 30
+2025-02-07 15:20:38,567 [INFO] Job 1 finished epoch 3 at time 176.0. Throughput: 0.17 batches per second
+2025-02-07 15:20:38,567 [INFO] All jobs finished epoch 3
+2025-02-07 15:20:38,567 [INFO] Job 0 delayed by 59.12 seconds in epoch 3
+2025-02-07 15:20:38,568 [INFO] Job 1 delayed by 0.00 seconds in epoch 3
+2025-02-07 15:20:38,568 [INFO] [Time 176.25] Job 0 processed batch 31
+2025-02-07 15:20:38,568 [INFO] [Time 176.38] Job 0 processed batch 32
+2025-02-07 15:20:38,568 [INFO] [Time 176.50] Job 0 processed batch 33
+2025-02-07 15:20:38,569 [INFO] [Time 176.62] Job 0 processed batch 34
+2025-02-07 15:20:38,569 [INFO] [Time 176.75] Job 0 processed batch 35
+2025-02-07 15:20:38,569 [INFO] [Time 176.88] Job 0 processed batch 36
+2025-02-07 15:20:38,569 [INFO] [Time 177.00] Job 0 processed batch 37
+2025-02-07 15:20:38,569 [INFO] [Time 177.12] Job 0 processed batch 38
+2025-02-07 15:20:38,570 [INFO] [Time 177.25] Job 0 processed batch 39
+2025-02-07 15:20:38,570 [INFO] [Time 177.38] Job 0 processed batch 40
+2025-02-07 15:20:38,570 [INFO] Job 0 finished epoch 4 at time 177.375. Throughput: 0.23 batches per second
+2025-02-07 15:20:38,570 [INFO] [Time 187.00] Job 1 processed batch 31
+2025-02-07 15:20:38,570 [INFO] [Time 192.50] Job 1 processed batch 32
+2025-02-07 15:20:38,570 [INFO] [Time 198.00] Job 1 processed batch 33
+2025-02-07 15:20:38,570 [INFO] [Time 203.50] Job 1 processed batch 34
+2025-02-07 15:20:38,571 [INFO] [Time 209.00] Job 1 processed batch 35
+2025-02-07 15:20:38,571 [INFO] [Time 214.50] Job 1 processed batch 36
+2025-02-07 15:20:38,571 [INFO] [Time 220.00] Job 1 processed batch 37
+2025-02-07 15:20:38,571 [INFO] [Time 225.50] Job 1 processed batch 38
+2025-02-07 15:20:38,571 [INFO] [Time 231.00] Job 1 processed batch 39
+2025-02-07 15:20:38,571 [INFO] [Time 236.50] Job 1 processed batch 40
+2025-02-07 15:20:38,572 [INFO] Job 1 finished epoch 4 at time 236.5. Throughput: 0.17 batches per second
+2025-02-07 15:20:38,572 [INFO] All jobs finished epoch 4
+2025-02-07 15:20:38,572 [INFO] Job 0 delayed by 59.12 seconds in epoch 4
+2025-02-07 15:20:38,572 [INFO] Job 1 delayed by 0.00 seconds in epoch 4
+2025-02-07 15:20:38,572 [INFO] [Time 236.75] Job 0 processed batch 41
+2025-02-07 15:20:38,573 [INFO] [Time 236.88] Job 0 processed batch 42
+2025-02-07 15:20:38,573 [INFO] [Time 237.00] Job 0 processed batch 43
+2025-02-07 15:20:38,573 [INFO] [Time 237.12] Job 0 processed batch 44
+2025-02-07 15:20:38,573 [INFO] [Time 237.25] Job 0 processed batch 45
+2025-02-07 15:20:38,573 [INFO] [Time 237.38] Job 0 processed batch 46
+2025-02-07 15:20:38,573 [INFO] [Time 237.50] Job 0 processed batch 47
+2025-02-07 15:20:38,573 [INFO] [Time 237.62] Job 0 processed batch 48
+2025-02-07 15:20:38,574 [INFO] [Time 237.75] Job 0 processed batch 49
+2025-02-07 15:20:38,574 [INFO] [Time 237.88] Job 0 processed batch 50
+2025-02-07 15:20:38,574 [INFO] Job 0 finished epoch 5 at time 237.875. Throughput: 0.21 batches per second
+2025-02-07 15:20:38,574 [INFO] [Time 247.50] Job 1 processed batch 41
+2025-02-07 15:20:38,574 [INFO] [Time 253.00] Job 1 processed batch 42
+2025-02-07 15:20:38,574 [INFO] [Time 258.50] Job 1 processed batch 43
+2025-02-07 15:20:38,574 [INFO] [Time 264.00] Job 1 processed batch 44
+2025-02-07 15:20:38,574 [INFO] [Time 269.50] Job 1 processed batch 45
+2025-02-07 15:20:38,575 [INFO] [Time 275.00] Job 1 processed batch 46
+2025-02-07 15:20:38,575 [INFO] [Time 280.50] Job 1 processed batch 47
+2025-02-07 15:20:38,575 [INFO] [Time 286.00] Job 1 processed batch 48
+2025-02-07 15:20:38,575 [INFO] [Time 291.50] Job 1 processed batch 49
+2025-02-07 15:20:38,575 [INFO] [Time 297.00] Job 1 processed batch 50
+2025-02-07 15:20:38,575 [INFO] Job 1 finished epoch 5 at time 297.0. Throughput: 0.17 batches per second
+2025-02-07 15:20:38,576 [INFO] All jobs finished epoch 5
+2025-02-07 15:20:38,576 [INFO] Job 0 delayed by 59.12 seconds in epoch 5
+2025-02-07 15:20:38,576 [INFO] Job 1 delayed by 0.00 seconds in epoch 5
+2025-02-07 15:20:38,576 [INFO] [Time 297.25] Job 0 processed batch 51
+2025-02-07 15:20:38,576 [INFO] [Time 297.38] Job 0 processed batch 52
+2025-02-07 15:20:38,576 [INFO] [Time 297.50] Job 0 processed batch 53
+2025-02-07 15:20:38,576 [INFO] [Time 297.62] Job 0 processed batch 54
+2025-02-07 15:20:38,577 [INFO] [Time 297.75] Job 0 processed batch 55
+2025-02-07 15:20:38,577 [INFO] [Time 297.88] Job 0 processed batch 56
+2025-02-07 15:20:38,577 [INFO] [Time 298.00] Job 0 processed batch 57
+2025-02-07 15:20:38,577 [INFO] [Time 298.12] Job 0 processed batch 58
+2025-02-07 15:20:38,578 [INFO] [Time 298.25] Job 0 processed batch 59
+2025-02-07 15:20:38,578 [INFO] [Time 298.38] Job 0 processed batch 60
+2025-02-07 15:20:38,578 [INFO] Job 0 finished epoch 6 at time 298.375. Throughput: 0.20 batches per second
+2025-02-07 15:20:38,578 [INFO] [Time 308.00] Job 1 processed batch 51
+2025-02-07 15:20:38,578 [INFO] [Time 313.50] Job 1 processed batch 52
+2025-02-07 15:20:38,579 [INFO] [Time 319.00] Job 1 processed batch 53
+2025-02-07 15:20:38,579 [INFO] [Time 324.50] Job 1 processed batch 54
+2025-02-07 15:20:38,579 [INFO] [Time 330.00] Job 1 processed batch 55
+2025-02-07 15:20:38,579 [INFO] [Time 335.50] Job 1 processed batch 56
+2025-02-07 15:20:38,579 [INFO] [Time 341.00] Job 1 processed batch 57
+2025-02-07 15:20:38,579 [INFO] [Time 346.50] Job 1 processed batch 58
+2025-02-07 15:20:38,579 [INFO] [Time 352.00] Job 1 processed batch 59
+2025-02-07 15:20:38,580 [INFO] [Time 357.50] Job 1 processed batch 60
+2025-02-07 15:20:38,580 [INFO] Job 1 finished epoch 6 at time 357.5. Throughput: 0.17 batches per second
+2025-02-07 15:20:38,580 [INFO] All jobs finished epoch 6
+2025-02-07 15:20:38,580 [INFO] Job 0 delayed by 59.12 seconds in epoch 6
+2025-02-07 15:20:38,580 [INFO] Job 1 delayed by 0.00 seconds in epoch 6
+2025-02-07 15:20:38,580 [INFO] [Time 357.75] Job 0 processed batch 61
+2025-02-07 15:20:38,580 [INFO] [Time 357.88] Job 0 processed batch 62
+2025-02-07 15:20:38,580 [INFO] [Time 358.00] Job 0 processed batch 63
+2025-02-07 15:20:38,581 [INFO] [Time 358.12] Job 0 processed batch 64
+2025-02-07 15:20:38,581 [INFO] [Time 358.25] Job 0 processed batch 65
+2025-02-07 15:20:38,581 [INFO] [Time 358.38] Job 0 processed batch 66
+2025-02-07 15:20:38,581 [INFO] [Time 358.50] Job 0 processed batch 67
+2025-02-07 15:20:38,581 [INFO] [Time 358.62] Job 0 processed batch 68
+2025-02-07 15:20:38,581 [INFO] [Time 358.75] Job 0 processed batch 69
+2025-02-07 15:20:38,581 [INFO] [Time 358.88] Job 0 processed batch 70
+2025-02-07 15:20:38,582 [INFO] Job 0 finished epoch 7 at time 358.875. Throughput: 0.20 batches per second
+2025-02-07 15:20:38,582 [INFO] [Time 368.50] Job 1 processed batch 61
+2025-02-07 15:20:38,582 [INFO] [Time 374.00] Job 1 processed batch 62
+2025-02-07 15:20:38,582 [INFO] [Time 379.50] Job 1 processed batch 63
+2025-02-07 15:20:38,582 [INFO] [Time 385.00] Job 1 processed batch 64
+2025-02-07 15:20:38,582 [INFO] [Time 390.50] Job 1 processed batch 65
+2025-02-07 15:20:38,583 [INFO] [Time 396.00] Job 1 processed batch 66
+2025-02-07 15:20:38,583 [INFO] [Time 401.50] Job 1 processed batch 67
+2025-02-07 15:20:38,583 [INFO] [Time 407.00] Job 1 processed batch 68
+2025-02-07 15:20:38,583 [INFO] [Time 412.50] Job 1 processed batch 69
+2025-02-07 15:20:38,583 [INFO] [Time 418.00] Job 1 processed batch 70
+2025-02-07 15:20:38,583 [INFO] Job 1 finished epoch 7 at time 418.0. Throughput: 0.17 batches per second
+2025-02-07 15:20:38,583 [INFO] All jobs finished epoch 7
+2025-02-07 15:20:38,584 [INFO] Job 0 delayed by 59.12 seconds in epoch 7
+2025-02-07 15:20:38,584 [INFO] Job 1 delayed by 0.00 seconds in epoch 7
+2025-02-07 15:20:38,584 [INFO] [Time 418.25] Job 0 processed batch 71
+2025-02-07 15:20:38,584 [INFO] [Time 418.38] Job 0 processed batch 72
+2025-02-07 15:20:38,584 [INFO] [Time 418.50] Job 0 processed batch 73
+2025-02-07 15:20:38,584 [INFO] [Time 418.62] Job 0 processed batch 74
+2025-02-07 15:20:38,585 [INFO] [Time 418.75] Job 0 processed batch 75
+2025-02-07 15:20:38,585 [INFO] [Time 418.88] Job 0 processed batch 76
+2025-02-07 15:20:38,585 [INFO] [Time 419.00] Job 0 processed batch 77
+2025-02-07 15:20:38,585 [INFO] [Time 419.12] Job 0 processed batch 78
+2025-02-07 15:20:38,586 [INFO] [Time 419.25] Job 0 processed batch 79
+2025-02-07 15:20:38,586 [INFO] [Time 419.38] Job 0 processed batch 80
+2025-02-07 15:20:38,586 [INFO] Job 0 finished epoch 8 at time 419.375. Throughput: 0.19 batches per second
+2025-02-07 15:20:38,586 [INFO] [Time 429.00] Job 1 processed batch 71
+2025-02-07 15:20:38,586 [INFO] [Time 434.50] Job 1 processed batch 72
+2025-02-07 15:20:38,586 [INFO] [Time 440.00] Job 1 processed batch 73
+2025-02-07 15:20:38,586 [INFO] [Time 445.50] Job 1 processed batch 74
+2025-02-07 15:20:38,587 [INFO] [Time 451.00] Job 1 processed batch 75
+2025-02-07 15:20:38,587 [INFO] [Time 456.50] Job 1 processed batch 76
+2025-02-07 15:20:38,587 [INFO] [Time 462.00] Job 1 processed batch 77
+2025-02-07 15:20:38,587 [INFO] [Time 467.50] Job 1 processed batch 78
+2025-02-07 15:20:38,587 [INFO] [Time 473.00] Job 1 processed batch 79
+2025-02-07 15:20:38,587 [INFO] [Time 478.50] Job 1 processed batch 80
+2025-02-07 15:20:38,587 [INFO] Job 1 finished epoch 8 at time 478.5. Throughput: 0.17 batches per second
+2025-02-07 15:20:38,588 [INFO] All jobs finished epoch 8
+2025-02-07 15:20:38,588 [INFO] Job 0 delayed by 59.12 seconds in epoch 8
+2025-02-07 15:20:38,588 [INFO] Job 1 delayed by 0.00 seconds in epoch 8
+2025-02-07 15:20:38,588 [INFO] [Time 478.75] Job 0 processed batch 81
+2025-02-07 15:20:38,588 [INFO] [Time 478.88] Job 0 processed batch 82
+2025-02-07 15:20:38,588 [INFO] [Time 479.00] Job 0 processed batch 83
+2025-02-07 15:20:38,588 [INFO] [Time 479.12] Job 0 processed batch 84
+2025-02-07 15:20:38,588 [INFO] [Time 479.25] Job 0 processed batch 85
+2025-02-07 15:20:38,589 [INFO] [Time 479.38] Job 0 processed batch 86
+2025-02-07 15:20:38,589 [INFO] [Time 479.50] Job 0 processed batch 87
+2025-02-07 15:20:38,589 [INFO] [Time 479.62] Job 0 processed batch 88
+2025-02-07 15:20:38,589 [INFO] [Time 479.75] Job 0 processed batch 89
+2025-02-07 15:20:38,589 [INFO] [Time 479.88] Job 0 processed batch 90
+2025-02-07 15:20:38,589 [INFO] Job 0 finished epoch 9 at time 479.875. Throughput: 0.19 batches per second
+2025-02-07 15:20:38,589 [INFO] [Time 489.50] Job 1 processed batch 81
+2025-02-07 15:20:38,589 [INFO] [Time 495.00] Job 1 processed batch 82
+2025-02-07 15:20:38,590 [INFO] [Time 500.50] Job 1 processed batch 83
+2025-02-07 15:20:38,590 [INFO] [Time 506.00] Job 1 processed batch 84
+2025-02-07 15:20:38,590 [INFO] [Time 511.50] Job 1 processed batch 85
+2025-02-07 15:20:38,590 [INFO] [Time 517.00] Job 1 processed batch 86
+2025-02-07 15:20:38,590 [INFO] [Time 522.50] Job 1 processed batch 87
+2025-02-07 15:20:38,590 [INFO] [Time 528.00] Job 1 processed batch 88
+2025-02-07 15:20:38,590 [INFO] [Time 533.50] Job 1 processed batch 89
+2025-02-07 15:20:38,590 [INFO] [Time 539.00] Job 1 processed batch 90
+2025-02-07 15:20:38,590 [INFO] Job 1 finished epoch 9 at time 539.0. Throughput: 0.17 batches per second
+2025-02-07 15:20:38,590 [INFO] All jobs finished epoch 9
+2025-02-07 15:20:38,590 [INFO] Job 0 delayed by 59.12 seconds in epoch 9
+2025-02-07 15:20:38,590 [INFO] Job 1 delayed by 0.00 seconds in epoch 9
+2025-02-07 15:20:38,591 [INFO] [Time 539.25] Job 0 processed batch 91
+2025-02-07 15:20:38,591 [INFO] [Time 539.38] Job 0 processed batch 92
+2025-02-07 15:20:38,591 [INFO] [Time 539.50] Job 0 processed batch 93
+2025-02-07 15:20:38,591 [INFO] [Time 539.62] Job 0 processed batch 94
+2025-02-07 15:20:38,591 [INFO] [Time 539.75] Job 0 processed batch 95
+2025-02-07 15:20:38,591 [INFO] [Time 539.88] Job 0 processed batch 96
+2025-02-07 15:20:38,591 [INFO] [Time 540.00] Job 0 processed batch 97
+2025-02-07 15:20:38,591 [INFO] [Time 540.12] Job 0 processed batch 98
+2025-02-07 15:20:38,592 [INFO] [Time 540.25] Job 0 processed batch 99
+2025-02-07 15:20:38,592 [INFO] [Time 540.38] Job 0 processed batch 100
+2025-02-07 15:20:38,592 [INFO] Job 0 finished epoch 10 at time 540.375. Throughput: 0.19 batches per second
+2025-02-07 15:20:38,592 [INFO] [Time 550.00] Job 1 processed batch 91
+2025-02-07 15:20:38,592 [INFO] [Time 555.50] Job 1 processed batch 92
+2025-02-07 15:20:38,592 [INFO] [Time 561.00] Job 1 processed batch 93
+2025-02-07 15:20:38,592 [INFO] [Time 566.50] Job 1 processed batch 94
+2025-02-07 15:20:38,592 [INFO] [Time 572.00] Job 1 processed batch 95
+2025-02-07 15:20:38,593 [INFO] [Time 577.50] Job 1 processed batch 96
+2025-02-07 15:20:38,593 [INFO] [Time 583.00] Job 1 processed batch 97
+2025-02-07 15:20:38,593 [INFO] [Time 588.50] Job 1 processed batch 98
+2025-02-07 15:20:38,593 [INFO] [Time 594.00] Job 1 processed batch 99
+2025-02-07 15:20:38,593 [INFO] [Time 599.50] Job 1 processed batch 100
+2025-02-07 15:20:38,593 [INFO] Job 1 finished epoch 10 at time 599.5. Throughput: 0.17 batches per second
+2025-02-07 15:20:38,593 [INFO] All jobs finished epoch 10
+2025-02-07 15:20:38,593 [INFO] Job 0 delayed by 59.12 seconds in epoch 10
+2025-02-07 15:20:38,594 [INFO] Job 1 delayed by 0.00 seconds in epoch 10
+2025-02-07 15:20:38,594 [INFO] Total delay for Job 0 due to coordl policy: 585.88 seconds
+2025-02-07 15:20:38,594 [INFO] Total delay for Job 1 due to coordl policy: 0.00 seconds
+2025-02-07 15:20:38,594 [INFO] Throughput for Job 0: 0.17 batches per second
+2025-02-07 15:20:38,594 [INFO] Throughput for Job 1: 0.17 batches per second
+2025-02-07 15:20:38,594 [INFO] Max cache size: 10

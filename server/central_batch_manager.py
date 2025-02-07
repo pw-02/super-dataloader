@@ -22,7 +22,8 @@ from job import DLTJob
 from args import SUPERArgs
 import math
 from typing import OrderedDict as TypingOrderedDict
-
+import csv
+import os
 class PrefetchService:
     def __init__(self, 
                  prefetch_lambda_name: str, 
@@ -103,6 +104,8 @@ class PrefetchService:
                     if 'success' in response.keys() and response['success']:
                         # print(f"Batch '{batch.batch_id}' has been prefetched.")
                         batch.set_cache_status(is_cached=True)
+                        batch.set_last_accessed_time()
+                        batch.prefetched_time_utc = datetime.now(timezone.utc)
                     else:
                         batch.set_cache_status(is_cached=False)
                         if 'message' in response.keys():
@@ -520,13 +523,36 @@ class CentralBatchManager:
             
             if not next_batch.is_cached and not next_batch.caching_in_progress:
                 next_batch.set_caching_in_progress(True)
-            
+
+            if not next_batch.has_been_accessed_before and batch.prefetched_time_utc is not None:
+                batch_access_time = datetime.now(timezone.utc)
+                duration_of_time_in_cache = (batch_access_time - batch.prefetched_time_utc).total_seconds()
+                logger.info(f"Batch '{batch.batch_id}' was prefetched {duration_of_time_in_cache:.2f} seconds before being accessed.")
+                line = {'job_id': job_id,
+                        'batch_id': batch.batch_id,
+                        'prefetch_time': batch.prefetched_time_utc.isoformat(),  # Standardized format
+                        'access_time': batch_access_time.isoformat(),
+                        'duration_in_cache': round(duration_of_time_in_cache, 2)  # Round for clarity
+                        }
+                self.log_just_in_time_line
+
             if not next_batch.has_been_accessed_before:
                 next_batch.set_has_been_accessed_before(True)
                 self._generate_new_batch()
 
             # logger.info(f"Job '{job_id}' given batch '{next_batch.batch_id}' from partition '{next_batch.partition_id}' in epoch '{next_batch.epoch_idx}'")
             return next_batch
+    
+    def log_just_in_time_line(self, line):
+        file_name = 'cached_bacth_duration.csv'
+        file_exists = os.path.isfile(file_name)
+        with open(file_name, mode='a', newline='') as file:
+            writer = csv.DictWriter(file, fieldnames=line.keys())
+            if not file_exists:
+                writer.writeheader()
+                writer.writerow(line)
+
+
         
     def job_ended(self, job_id):
         with self.lock:

@@ -203,6 +203,6 @@ if __name__ == '__main__':
     
     # cost = get_lambda_cost_last_day()
 
-    export_prefix = 'cloudwatchlogs'
-    destination_folder = 'logs'
+    export_prefix = 'cloudwatchresnet'
+    destination_folder = 'C:\\Users\\pw\\Desktop\\super_results\\image_classification\\super\\imagenet\\multi_job_2025-02-06_19-13-12'
     prarse_exported_logs(destination_folder,export_prefix, False)

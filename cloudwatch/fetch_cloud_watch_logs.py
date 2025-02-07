@@ -114,7 +114,7 @@ def get_cloud_watch_logs_for_experiment(download_dir, s3_bucket_name, from_time,
             if log_group_name not in lambda_functions:
                 continue
 
-            s3_prefix = f'cloudwatchcifar10/{log_group_name.replace("/", "_")}'
+            s3_prefix = f'cloudwatchresnet/{log_group_name.replace("/", "_")}'
             futures.append(executor.submit(export_logs_to_s3, 
                                            log_group_name, 
                                            s3_bucket_name, 
@@ -130,11 +130,10 @@ def get_cloud_watch_logs_for_experiment(download_dir, s3_bucket_name, from_time,
                 print(f'Exception during log export: {e}')
 
         # Download logs from S3 in parallel
-        for log_group in log_groups:
-            log_group_name = log_group['logGroupName']
+        for log_group_name in log_groups:
             if log_group_name not in lambda_functions:
                 continue
-            s3_prefix = f'cloudwatchcifar10/{log_group_name.replace("/", "_")}'
+            s3_prefix = f'cloudwatchresnet/{log_group_name.replace("/", "_")}'
             executor.submit(download_logs_from_s3, s3_bucket_name, s3_prefix, download_dir)
             
         # Wait for all download tasks to complete
@@ -164,5 +163,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     #10/23/2024  11:44:40 PM
     # 2024-10-24_18-27-38
-    get_cloud_watch_logs_for_experiment(args.download_dir, args.s3_bucket_name, args.start_time, args.end_time)
+    # get_cloud_watch_logs_for_experiment(args.download_dir, args.s3_bucket_name, args.start_time, args.end_time)
     prarse_exported_logs(args.download_dir)

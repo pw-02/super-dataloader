@@ -30,6 +30,7 @@ class Batch:
         self.batch_partition_id = f"{self.epoch_idx}_{self.partition_id}"
         self.evict_from_cache_simulation_time: Optional[float] = None
         self.ttl_timer: Optional[threading.Timer] = None  # Initialize timer
+        self.prefetched_time_utc = None
 
     def time_since_last_access(self):
         """Calculate time elapsed since last access."""

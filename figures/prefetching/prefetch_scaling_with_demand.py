@@ -9,7 +9,7 @@ batch_request_rate = np.abs(np.sin(time_steps / 150) * 50 + np.random.normal(0, 
 lambda_concurrency = np.clip(batch_request_rate / 5 + np.random.normal(0, 1, len(time_steps)), 1, 50)  # Scaling Lambda
 
 # --- 1. Time-Series Plot (Lambda Scaling) ---
-fig, ax1 = plt.subplots(figsize=(10, 5))
+fig, ax1 = plt.subplots(figsize=(6, 4))
 ax1.plot(time_steps, lambda_concurrency, label="Lambda Concurrency", color="blue", linewidth=2)
 ax1.set_ylabel("Concurrent Lambda Executions", color="blue")
 ax1.set_xlabel("Time (seconds)")
@@ -18,5 +18,4 @@ ax2.plot(time_steps, batch_request_rate, label="Batch Request Rate", color="red"
 ax2.set_ylabel("Batch Request Rate (req/sec)", color="red")
 ax1.legend(loc="upper left")
 ax2.legend(loc="upper right")
-plt.title("AWS Lambda Scaling vs. Batch Requests")
 plt.show()

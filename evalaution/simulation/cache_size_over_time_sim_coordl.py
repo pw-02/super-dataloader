@@ -216,6 +216,7 @@ def run(coordl_mode=False):
                                                             40894.464)
     else:
         summary['cache_cost'] = summary['total_batches_processed'] * 0.0003125
+        summary['cache_request'] = cache.
     summary['total_cost'] = summary['compute_cost'] + summary['cache_cost']
     save_dict_list_to_csv([summary], "sim_final_summary_metrics.csv")
 

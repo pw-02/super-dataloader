@@ -6,6 +6,12 @@ from typing import List, Dict
 import csv
 import os
 
+asws_redis_instnces = {
+    "cache.r7g.8xlarge	": {'memory': 209, 'price_per_hour': 2.7928},
+    "cache.r5.24xlarge": {'memory': 635, 'price_per_hour': 8.2944},
+    "cache.r7g.4xlarge": {'memory': 105, 'price_per_hour': 1.396}
+}
+
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
@@ -22,9 +28,132 @@ logging.basicConfig(
 # current_cache_hourly_cost = 0
 # current_hour = 1
 
+
+
+class ServerlessCache:
+    def __init__(self, max_hourly_cost, total_jobs, prefetching_enabled = True, cache_cacpity_gb=None):
+        self.cache = {}
+        # self.cache_size_gb = 0
+        # self.max_cache_cost_per_hour = max_cache_cost_per_hour
+        self.cache_size_over_time = []
+        self.cache_hits = 0
+        self.cache_misses = 0
+        self.total_jobs = total_jobs
+        self.size_of_cache_object_gb = 0.039
+        self.cost_per_request = 0.00003125        
+        self.cost_per_prefetch = 0.000149217
+        self.current_time = 0
+        self.max_hourly_cost = max_hourly_cost
+        self.current_hour = 0
+        self.cache_cacpity_gb = cache_cacpity_gb
+        self.prefetching_enabled = prefetching_enabled
+        self.total_requests = 0
+        if self.max_hourly_cost is not None:
+            if self.prefetching_enabled:
+                self.requests_allowed_per_hour = self.max_hourly_cost / (self.cost_per_request + self.cost_per_prefetch)
+            else:
+                self.requests_allowed_per_hour = self.max_hourly_cost / self.cost_per_request
+        else:
+            self.requests_allowed_per_hour = float('inf')
+
+        self.hourly_request_buffer = 0
+        self.prefetch_requests_counter = 0
+        self.reset_request_buffer()  # Track cache size at each step
+        self.prefetch_next_batch()
+          # Track cache size at each step
+    def reset_request_buffer(self):
+        if self.max_hourly_cost is not None:
+            if self.prefetching_enabled:
+                self.hourly_request_buffer = self.max_hourly_cost / (self.cost_per_request + self.cost_per_prefetch)
+            else:
+                self.hourly_request_buffer = self.max_hourly_cost / self.cost_per_request
+        else:
+            self.hourly_request_buffer = float('inf')
+    
+    def get_or_insert_batch(self, requested_batch, current_time):
+
+        #check if we have moved into a new hour
+        if (current_time // 3600) +1 > self.current_hour:
+            self.reset_request_buffer()
+            self.current_hour += 1
+        if self.hourly_request_buffer <= 0:
+            return False #dont record a cache miss because in practice no request will be made to the cache
+        else:
+            self.hourly_request_buffer -= 1
+            self.total_requests += 1
+            cache_hit = False
+            if requested_batch not in self.cache:
+                self.cache_misses += 1
+                if  self.cache_cacpity_gb  is not None and self.get_cache_size_gb() >= self.cache_cacpity_gb :
+                    # Find the least recently used batch
+                    lru_batch = min(self.cache, key=self.cache.get)
+                    del self.cache[lru_batch]
+                self.cache[requested_batch] = 1
+            else:
+                self.cache_hits += 1  
+                self.cache[requested_batch] += 1
+
+                #preftch the next batch the first time the batch is accessed
+                if self.prefetching_enabled and self.cache[requested_batch] == 1:
+                    self.prefetch_next_batch()
+
+                if self.cache[requested_batch] >= self.total_jobs:  # Remove if all jobs accessed
+                    del self.cache[requested_batch]
+                cache_hit = True
+        self.cache_size_over_time.append(len(self.cache))
+        return cache_hit
+    
+    def prefetch_next_batch(self):
+        #get the max item in the cache and then prefetch the next batch and decrmeet the requests allowed per hour
+        if self.prefetching_enabled:
+            if self.hourly_request_buffer <= 0:
+                return False
+            else:
+                self.hourly_request_buffer -= 1
+                self.total_requests += 1
+                self.prefetch_requests_counter += 1
+                if len(self.cache) > 0:
+                    lru_batch = max(list(self.cache.keys()))
+                    next_batch = lru_batch + 1
+                    if next_batch not in self.cache:
+                        self.cache[next_batch] = 0
+                else:
+                    next_batch = 1
+                    self.cache[next_batch] = 0
+                return True
+
+    
+    def get_cache_len(self):
+        return len(self.cache)
+    
+    def get_cache_size_gb(self):
+        return len(self.cache) *  self.size_of_cache_object_gb
+    
+    def get_max_num_of_cache_items(self):
+        return max(self.cache_size_over_time)
+    
+    def get_avg_num_of_cache_items(self):
+        return sum(self.cache_size_over_time) / len(self.cache_size_over_time)
+    
+    def get_max_cache_size_gb(self):
+        return  max(self.cache_size_over_time) *  self.size_of_cache_object_gb
+    
+    def get_avg_cache_size_gb(self):
+        
+        return sum(self.cache_size_over_time) / len(self.cache_size_over_time) *  self.size_of_cache_object_gb
+    
+    def compute_caching_cost(self):
+        total_requests = self.cache_hits + self.cache_misses
+        total_cost = total_requests * self.cost_per_request
+        return total_cost
+    
+    def compute_preetching_cost(self):
+        return self.prefetch_requests_counter * self.cost_per_prefetch
+
+
 class CoorDLCache:
-    def __init__(self, max_cache_size_gb, max_cache_cost_per_hour, total_jobs, coordl_mode):
-        self.max_cache_size_gb = max_cache_size_gb
+    def __init__(self, cache_cacpity_gb, total_jobs):
+        self.cache_cacpity_gb = cache_cacpity_gb
         self.cache = {}
         # self.cache_size_gb = 0
         # self.max_cache_cost_per_hour = max_cache_cost_per_hour
@@ -34,27 +163,15 @@ class CoorDLCache:
         self.cache_misses = 0
         self.total_jobs = total_jobs
         self.size_of_cache_object_gb = 0.039
-        self.coordl_mode = coordl_mode
         self.current_time = 0
           # Track cache size at each step
     
     def get_or_insert_batch(self, requested_batch, current_time):
         
         cache_hit = False
-
-        # max_allowed_cost = self.max_cache_cost_per_hour * ((current_time // 3600)+ 1)
-        # if current_time != 0:
-        #     request_throughput = (self.cache_hits + self.cache_misses) / current_time
-        # else:
-        #     request_throughput = 0
-        # current_cost = self.compute_cost(current_time, request_throughput)
-        # if  current_cost > max_allowed_cost:
-        #     self.cache_misses += 1
-        #     return cache_hit
-
         if requested_batch not in self.cache:
             self.cache_misses += 1
-            if self.max_cache_size_gb is not None and self.get_cache_size_gb() >= self.max_cache_size_gb:
+            if self.cache_cacpity_gb is not None and self.get_cache_size_gb() >= self.cache_cacpity_gb:
                 # Find the least recently used batch
                 lru_batch = min(self.cache, key=self.cache.get)
                 del self.cache[lru_batch]
@@ -89,29 +206,34 @@ class CoorDLCache:
         
         return sum(self.cache_size_over_time) / len(self.cache_size_over_time) *  self.size_of_cache_object_gb
     
-    def compute_cost(self, total_durtion_seconds, throughput_per_s):
-        if self.get_cache_len() == 0:
-            return 0
-        # Duration is in seconds
-        # Memory size is in GB
-        # Cost is in USD
-        hours_in_a_month = 730
-        seconds_in_a_month = 2628000
-        average_cache_size_gb = self.get_max_cache_size_gb()
-        # round_duartion_tonearest_hour = total_durtion_seconds / 3600
-        # rounded_duarion = round_duartion_tonearest_hour * 3600
-        data_storage_cost_monthly = average_cache_size_gb * hours_in_a_month * 0.125
+    def compute_cost(self, cache_instnace, total_durtion_seconds, throughput_per_s):
+        if cache_instnace in asws_redis_instnces:
+            hourly_cost = asws_redis_instnces[cache_instnace]['price_per_hour']
+            total_cost = hourly_cost * total_durtion_seconds / 3600
+            return total_cost
+        else: #severless
+            # if self.get_cache_len() == 0:
+            #     return 0
+            # Duration is in seconds
+            # Memory size is in GB
+            # Cost is in USD
+            hours_in_a_month = 730
+            seconds_in_a_month = 2628000
+            # average_cache_size_gb = self.get_max_cache_size_gb()
+            average_cache_size_gb = self.get_avg_cache_size_gb()
 
-        requests = throughput_per_s * seconds_in_a_month * (self.size_of_cache_object_gb * 1024 * 1024) #gb to kb
-        ecpu_monthly_cost = requests * 0.0000000034
+            # round_duartion_tonearest_hour = total_durtion_seconds / 3600
+            # rounded_duarion = round_duartion_tonearest_hour * 3600
+            data_storage_cost_monthly = average_cache_size_gb * hours_in_a_month * 0.125
 
-        total_monhtly_cost = data_storage_cost_monthly + ecpu_monthly_cost
-        total_monhtly_cost  = data_storage_cost_monthly
-        exp_cost = total_monhtly_cost/seconds_in_a_month * total_durtion_seconds
-        
+            requests = throughput_per_s * seconds_in_a_month * (self.size_of_cache_object_gb * 1024 * 1024) #gb to kb
+            ecpu_monthly_cost = requests * 0.0000000034
 
-
-        return exp_cost
+            total_monhtly_cost = data_storage_cost_monthly + ecpu_monthly_cost
+            total_monhtly_cost  = data_storage_cost_monthly
+            exp_cost = total_monhtly_cost/seconds_in_a_month * total_durtion_seconds
+            
+            return exp_cost
 
     
 
@@ -134,7 +256,8 @@ class Job:
         self.cache_misses = 0
         self.cache = cache
         self.batch_size = 128
-    
+        self.cache_miss_penalty = 0.5 # Cache miss penalty
+        self.current_hour = 1
     def compute_final_metrics(self):
         line = {}
         line['job_id'] = self.job_id
@@ -159,6 +282,12 @@ class Job:
     def process_next_batch(self):
         if not self.batches_to_process:
             return False  # No more batches to process, prevent popping an empty list
+        
+        
+        if (self.next_available_time // 3600) +1 > self.current_hour:
+            self.current_hour += 1
+            logging.info(f"cachesize after {self.current_hour} hours: {self.cache.get_cache_size_gb()}")
+
 
         next_batch = self.batches_to_process.pop(0)
         self.batches_processed += 1
@@ -168,11 +297,11 @@ class Job:
             self.next_available_time += self.time_per_batch  
         else:
             self.cache_misses += 1
-            if self.cache.coordl_mode:
-                cache_miss_penalty = 0.5 # Cache miss penalty
-            else:
-                cache_miss_penalty = 0
-            self.next_available_time += self.time_per_batch + cache_miss_penalty  #+ 0.1  # Add cache miss penalty
+            # if self.cache.coordl_mode:
+            #     cache_miss_penalty = 0.5 # Cache miss penalty
+            # else:
+            #     cache_miss_penalty = 0
+            self.next_available_time += self.time_per_batch + self.cache_miss_penalty  #+ 0.1  # Add cache miss penalty
 
         # logging.debug(f"[Time {self.next_available_time:.2f}] Job {self.job_id} processed batch {next_batch}")
 
@@ -182,7 +311,7 @@ class Job:
             self.epoch_completion_time = self.next_available_time
             self.epochs_processed += 1
             # logging.info(f"Job {self.job_id} finished epoch {self.batches_processed // batches_per_epoch} at time {self.epoch_completion_time}. Throughput: {self.batches_processed / self.epoch_completion_time:.2f} batches per second")
-            logging.info(f"cachesize after epoch {self.epochs_processed}: {self.cache.get_cache_len()}")
+            # logging.info(f"cachesize after epoch {self.epochs_processed}: {self.cache.get_cache_len()}")
 
 
 
@@ -228,10 +357,11 @@ def run(config):
     num_jobs = len(config['job_speeds'])
     max_cache_size_gb = config['max_cache_size_gb']
     max_cache_cost_per_hour = config['max_cache_cost_per_hour']
+    prefetching_enabled = config['prefetching_enabled']
     if coordl_mode:
-        cache = CoorDLCache(max_cache_size_gb, max_cache_cost_per_hour, num_jobs, coordl_mode)
+        cache = CoorDLCache(max_cache_size_gb, num_jobs)
     else:
-        cache = CoorDLCache(max_cache_size_gb, max_cache_cost_per_hour, num_jobs, coordl_mode)
+        cache = ServerlessCache(max_cache_cost_per_hour, num_jobs, prefetching_enabled)
 
     jobs = [Job(job_id,
                 time_per_batch, 
@@ -308,7 +438,7 @@ def run(config):
     final_metrics = [job.compute_final_metrics() for job in jobs]
     save_dict_list_to_csv(final_metrics, "sim_final_metrics.csv")
     summary = {}
-    summary['dataset_size(num_bacthes)'] = total_batches
+    summary['dataset_size(num_batches)'] = total_batches
     summary['total_jobs'] = len(jobs)
     summary['epochs_per_job'] = total_epochs
     summary['total_epochs'] = sum(job['epochs_processed'] for job in final_metrics)
@@ -333,39 +463,47 @@ def run(config):
 
     if coordl_mode:
         summary['cache_cost']= cache.compute_cost(
+            config['redis_instance'],
             summary['toal_time(sec)'], 
             summary['total_throughput(bacthes/sec)'])
+        summary['prefetching_cost'] = 0
     else:
-        summary['cache_cost'] = summary['total_batches_processed'] * 0.0003125 #cost per batch request
-    summary['total_cost'] = summary['compute_cost'] + summary['cache_cost']
+        summary['cache_cost'] = cache.compute_caching_cost()
+        summary['prefetching_cost'] = cache.compute_preetching_cost()
+    summary['cache+prefetch_cost'] = summary['cache_cost'] + summary['prefetching_cost']
+    # summary['total_requests'] = cache.total_requests
+    summary['total_cost'] = summary['compute_cost'] + summary['cache_cost'] + summary['prefetching_cost']
     save_dict_list_to_csv([summary], "sim_final_summary_metrics.csv")
 
 
 def run_increasing_job_sizes_sim(config):
-    bacthes_per_epoch = [20000,40000,60000,80000,100000]
-
+    # bacthes_per_epoch = [20000,40000,60000,80000,100000]
+    bacthes_per_epoch = [500000]
     job_speeds = [0.107508104, 0.339788711, 0.089724519, 0.507133094]  # ResNet-18, ResNet-50, imagenet_shufflenet_v2_x1_0, imagenet_vgg16
-   
+    job_speeds = [0.107508104, 0.507133094]  # ResNet-18, ResNet-50, imagenet_shufflenet_v2_x1_0, imagenet_vgg16
+
+    # job_speeds = [0.107508104]  # ResNet-18, ResNet-50, imagenet_shufflenet_v2_x1_0, imagenet_vgg16
+
     for bach_per_epoch in bacthes_per_epoch:
         #compute_total_data_size
-        toal_data_size_gb = bach_per_epoch * 0.039 #gb
-        config['max_cache_size_gb'] = 80 # 100% of the data size
         config['batches_per_epoch'] = bach_per_epoch
         config['total_batches'] = config['batches_per_epoch'] * config['total_epochs']
         config['job_speeds'] = job_speeds
-        config['max_cache_cost_per_hour'] = None
         run(config)
 
 
 if __name__ == "__main__":
     np.random.seed(42)
+    cache_instnace = 'cache.r5.24xlarge' #cache.r7g.8xlarge, cache.r5.24xlarge, cache.r7g.4xlarge
     config :Dict = {
-        'coordl_mode': True,
+        'coordl_mode': False,
         'batches_per_epoch': 10000,
         'total_epochs': 1,
         'job_speeds': np.random.uniform(0.1, 1.0, 10).tolist(),
-        'max_cache_size_gb': None,
-        'max_cache_cost_per_hour': None
+        'redis_instance': None,
+        'max_cache_size_gb': None, #asws_redis_instnces[cache_instnace]['memory'], #80 = $10 per hour, 400 = $50 per hour, 800 = $100 per hour
+        'max_cache_cost_per_hour': None, #asws_redis_instnces[cache_instnace]['price_per_hour'],
+        'prefetching_enabled': True
     }
     config['total_batches'] = config['batches_per_epoch'] * config['total_epochs']
 
@@ -374,7 +512,6 @@ if __name__ == "__main__":
     if  os.path.isfile("sim_final_summary_metrics.csv"):
         os.remove("sim_final_summary_metrics.csv")
 
-    max_cache_size_gb = None
     
     run_increasing_job_sizes_sim(config)
     

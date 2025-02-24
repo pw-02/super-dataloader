@@ -54,7 +54,7 @@ ax1.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{int(x/1000)}
 
 path  = 'C:\\Users\\pw\\Desktop\\super_results\\image_transformer\\data_for_paper_cost_over_time.csv'
 # Read the CSV file
-df = pd.read_csv(path, sep="\t")
+df = pd.read_csv(path, sep=",")
 # Extract columns
 num_samples = df["Batch"]
 cost_disdp = df["Cost (Super)"]

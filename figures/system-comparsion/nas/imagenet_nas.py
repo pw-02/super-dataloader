@@ -4,21 +4,34 @@ import matplotlib.ticker as mticker
 import numpy as np
 import matplotlib.gridspec as gridspec
 
+# Set global font properties
+plt.rc('font', family='serif')  # Set font family, weight, and size
+plt.rc('axes', titlesize=16)  # Set the font size for axes titles
+plt.rc('axes', labelsize=14)  # Set the font size for axes labels
+font_size = 12
+
 coordl_label = 'CoorDL'
 disdl_label = r'$\bf{DisDP}$'
 baseline_label = 'Pytorch'
 dataset_label = 'ImageNet'
 line_width = 1.5
 visual_map_plot_1 = {
-    coordl_label: {'color': 'black', 'linestyle': '--', 'marker': '', 'linewidth': line_width},
-    disdl_label: {'color': 'black', 'linestyle': ':', 'marker': '', 'linewidth': line_width},
-    baseline_label: {'color': 'black', 'linestyle': '-', 'marker': '', 'linewidth': line_width},
+    coordl_label: {'color': 'black', 'linestyle': ':', 'marker': '', 'linewidth': line_width},
+    disdl_label: {'color': 'black', 'linestyle': '-', 'marker': '', 'linewidth': line_width},
+    baseline_label: {'color': 'black', 'linestyle': '--', 'marker': '', 'linewidth': line_width},
 }
 
+# visual_map_plot_1 = {
+#     coordl_label: {'color': '#007777', 'linestyle': '-', 'marker': '', 'linewidth': line_width},
+#     disdl_label: {'color': '#B0C4DE', 'linestyle': ':', 'marker': '', 'linewidth': line_width},
+#     baseline_label: {'color': '#FFA500', 'linestyle': '--', 'marker': '', 'linewidth': line_width},
+# }
 
 
-fig = plt.figure(figsize=(17.5, 3.8))
-gs = gridspec.GridSpec(1, 4, width_ratios=[2, 2, 1.25, 1])  # First two plots are twice as wide
+
+
+fig = plt.figure(figsize=(17.5, 3.2))
+gs = gridspec.GridSpec(1, 4, width_ratios=[1.5, 1.5, 1.25, 1])  # First two plots are twice as wide
 
 ax1 = fig.add_subplot(gs[0, 0])  # First plot
 ax2 = fig.add_subplot(gs[0, 1])  # Second plot
@@ -44,9 +57,11 @@ ax1.plot(disdl_data, num_samples, label=disdl_label,
         color=visual_map_plot_1[disdl_label]['color'], linestyle=visual_map_plot_1[disdl_label]['linestyle'], linewidth=visual_map_plot_1[disdl_label]['linewidth'])
 
 # Labels and title
-ax1.set_xlabel('Time (seconds)', fontsize=12)
-ax1.set_ylabel('Aggregated Number of Samples Processed', fontsize=11)
-ax1.set_title(f"{dataset_label}: Aggregated Throughput of 4 Jobs", fontsize=12)
+ax1.set_xlabel('Time (seconds)', fontsize=font_size)
+ax1.set_ylabel('Aggregated samples processed', fontsize=font_size)
+# for label in ax1.get_xticklabels():
+#     label.set_fontsize(font_size)
+# ax1.set_title(f"{dataset_label}: Aggregated Throughput of 4 Jobs", fontsize=font_size)
 
 # Enable grid
 # ax.grid(True, linestyle='--', alpha=0.6)
@@ -77,14 +92,14 @@ ax2.plot(cost_disdp, num_samples, label=disdl_label,
         color=visual_map_plot_1[disdl_label]['color'], linestyle=visual_map_plot_1[disdl_label]['linestyle'], linewidth=visual_map_plot_1[disdl_label]['linewidth'])
 
 # Labels and title
-ax2.set_title(f"{dataset_label}: Aggregated Cost of 4 Jobs", fontsize=12)
+# ax2.set_title(f"{dataset_label}: Aggregated Cost of 4 Jobs", fontsize=font_size)
 
-ax2.set_xlabel('Cost ($)', fontsize=12)
-ax2.set_ylabel('Aggregated Number of Samples Processed', fontsize=11)
+ax2.set_xlabel('Cost ($)', fontsize=font_size)
+ax2.set_ylabel('Aggregated samples processed', fontsize=font_size)
 
 # Enable grid
 # ax.grid(True, linestyle='--', alpha=0.6)
-ax2.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{int(x/1000)}K"))
+# ax2.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{int(x/1000)}K"))
 
 ax2.xaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
 
@@ -93,12 +108,6 @@ ax2.legend(loc='upper left', fontsize=9, ncol=1, frameon=True)
 # Show the plot
 
 # #-------------------------------------------------------------------------------------
-
-visual_map_stacked_bar = {
-    'gpu': {'color': 'white', 'hatch': '//', 'edgecolor': 'black', 'alpha': 1.0},
-    'transform': {'color': 'white', 'hatch': 'xx', 'edgecolor': 'black', 'alpha': 1.0},
-    'io': {'color': 'white', 'hatch': '.', 'edgecolor': 'black', 'alpha': 1.0},
-}
 
 # visual_map_stacked_bar = {
 #    'gpu': {'color': '#005250', 'hatch': '\\\\\',', 'edgecolor': 'black', 'alpha': 1.0, 'marker':'o', 'linestyle':'-'},
@@ -117,6 +126,12 @@ visual_map_stacked_bar = {
 #     'transform': {'color': '#FEA400', 'hatch': '....', 'edgecolor': 'black', 'alpha': 1.0},
 #     'io': {'color': '#005250', 'hatch': '--', 'edgecolor': 'black', 'alpha': 1.0},
 # }
+
+visual_map_stacked_bar = {
+    'gpu': {'color': '#007777', 'hatch': '...', 'edgecolor': 'black', 'alpha': 1.0},
+    'transform': {'color': '#FFA500', 'hatch': 'xx', 'edgecolor': 'black', 'alpha': 1.0},
+    'io': {'color': '#B0C4DE', 'hatch': '', 'edgecolor': 'black', 'alpha': 1.0},
+}
 
 
 time_breakdown = {
@@ -163,7 +178,7 @@ ax3.bar(x,
 ax3.set_xticks(x)
 ax3.set_xticklabels(loaders)
 ax3.set_ylabel("Percentage (%)")
-ax3.set_title(f"{dataset_label}: % Breakdown of Time", fontsize=12)
+# ax3.set_title(f"{dataset_label}: % Breakdown of Time", fontsize=font_size)
 ax3.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{x:.0f}%"))
 ax3.set_ylim(0, 100)  # Manually set a higher limit
 padding = 15
@@ -185,9 +200,9 @@ visual_map_bar = {
 }
 
 visual_map_bar = {
-    disdl_label: {'color': 'white', 'hatch': '///', 'edgecolor': 'black', 'alpha': 1.0},
+    disdl_label: {'color': '#007777', 'hatch': '...', 'edgecolor': 'black', 'alpha': 1.0},
     'transform': {'color': 'white', 'hatch': 'xx', 'edgecolor': 'black', 'alpha': 1.0},
-    coordl_label: {'color': 'white', 'hatch': '...', 'edgecolor': 'black', 'alpha': 1.0},
+    coordl_label: {'color': '#FFA500', 'hatch': 'xx', 'edgecolor': 'black', 'alpha': 1.0},
 }
 
 cache_hit_percentage = {
@@ -215,7 +230,7 @@ for i, system in enumerate(systems):
 # Labeling
 ax4.set_xticklabels(systems)
 ax4.set_ylabel("Cache Hit %")
-ax4.set_title(f"{dataset_label}: Cache Hit Rate", fontsize=12)
+# ax4.set_title(f"{dataset_label}: Cache Hit Rate", fontsize=font_size)
 ax4.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{x:.0f}%"))
 # ax4.set_ylim(0, 100)  # Manually set a higher limit
 # padding = 15

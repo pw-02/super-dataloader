@@ -309,7 +309,9 @@ class CacheEvictionService:
                     # job_batches_snapshot = list(job.future_batches.values())
                     for batch in job.future_batches.values():
                         
-                        if batch.time_since_last_access() > self.keep_alive_time_threshold:
+                        if batch.last_accessed_time is not None and batch.time_since_last_access() > self.keep_alive_time_threshold:
+                            
+                            logger.info(f"Keeping batch '{batch.batch_id}' alive. {batch.time_since_last_access():.2f} seconds since last access.")
                             try:
                                 if self.simulate_keep_alvive:
                                         batch.set_cache_status(is_cached=True)

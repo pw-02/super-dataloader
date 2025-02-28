@@ -81,10 +81,10 @@ def get_transform(bucket_name: str):
         return None
  
 
-def bytes_to_mb(byte_data):
-    size_in_bytes = len(byte_data)  # Get size in bytes
-    size_in_mb = size_in_bytes / (1024 * 1024)  # Convert to megabytes
-    return size_in_mb
+# def bytes_to_mb(byte_data):
+#     size_in_bytes = len(byte_data)  # Get size in bytes
+#     size_in_mb = size_in_bytes / (1024 * 1024)  # Convert to megabytes
+#     return size_in_mb
 
 def get_data_sample(bucket_name: str, data_sample: tuple, transform, s3_client) -> tuple:
     """
@@ -160,7 +160,7 @@ def lambda_handler(event, context):
         cache_host, cache_port = cache_address.split(":")
         transformformation = get_transform(bucket_name)
         minibatch = create_minibatch(bucket_name, batch_samples, transformformation, s3_client)
-        minibatch_size_mb = bytes_to_mb(minibatch)
+        # minibatch_size_mb = bytes_to_mb(minibatch)
         
         if redis_client is None:
             redis_client = redis.StrictRedis(host=cache_host, port=int(cache_port))

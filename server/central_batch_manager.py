@@ -301,7 +301,7 @@ class CacheEvictionService:
                     if job.total_steps <= 1:
                         continue
                     # job_batches_snapshot = list(job.future_batches.values())
-                    for batch in job.future_batches.values():
+                    for batch in list(job.future_batches.values()):
                         
                         if batch.last_accessed_time is not None and batch.time_since_last_access() > self.keep_alive_time_threshold:
                             

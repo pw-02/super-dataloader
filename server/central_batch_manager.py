@@ -524,17 +524,17 @@ class CentralBatchManager:
             if not next_batch.is_cached and not next_batch.caching_in_progress:
                 next_batch.set_caching_in_progress(True)
 
-            if not next_batch.has_been_accessed_before and next_batch.prefetched_time_utc is not None:
-                batch_access_time = datetime.now(timezone.utc)
-                duration_of_time_in_cache = (batch_access_time - next_batch.prefetched_time_utc).total_seconds()
-                logger.info(f"Batch '{next_batch.batch_id}' was prefetched {duration_of_time_in_cache:.2f} seconds before being accessed.")
-                line = {'job_id': job_id,
-                        'batch_id': next_batch.batch_id,
-                        'prefetch_time': next_batch.prefetched_time_utc,  # Standardized format
-                        'access_time': batch_access_time.isoformat(),
-                        'duration_in_cache': duration_of_time_in_cache  # Round for clarity
-                        }
-                self.log_just_in_time_line(line)
+            # if not next_batch.has_been_accessed_before and next_batch.prefetched_time_utc is not None:
+            #     batch_access_time = datetime.now(timezone.utc)
+            #     duration_of_time_in_cache = (batch_access_time - next_batch.prefetched_time_utc).total_seconds()
+            #     logger.info(f"Batch '{next_batch.batch_id}' was prefetched {duration_of_time_in_cache:.2f} seconds before being accessed.")
+            #     line = {'job_id': job_id,
+            #             'batch_id': next_batch.batch_id,
+            #             'prefetch_time': next_batch.prefetched_time_utc,  # Standardized format
+            #             'access_time': batch_access_time.isoformat(),
+            #             'duration_in_cache': duration_of_time_in_cache  # Round for clarity
+            #             }
+            #    self.log_just_in_time_line(line)
 
             if not next_batch.has_been_accessed_before:
                 next_batch.set_has_been_accessed_before(True)

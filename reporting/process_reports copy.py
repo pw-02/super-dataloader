@@ -234,7 +234,7 @@ def compute_costs(dataloader_name,
         average_batch_size_kb = average_batch_size_gb * 1024 * 1024
         max_cached_size = average_batch_size_gb * max_cached_batches
         cache_cost = compute_serverless_redis_costs(elapsed_time, max_cached_size, batches_per_second, average_batch_size_kb)
-    elif'dataloader_name' == 'disdl':
+    else:
         search_pattern = os.path.join(exp_folder_path, '**', 'bill.csv')
         for cost_csv in glob.iglob(search_pattern, recursive=True):
             #comute data loading costs
@@ -299,7 +299,7 @@ if __name__ == "__main__":
  
     paths = [
         # "C:\\Users\\pw\\Desktop\\image_classification\\coordl\\cifar10",
-        Path(r"C:\Users\pw\Desktop\disdl(new)\nas\image_classification")
+        Path(r"C:\Users\pw\Desktop\super_results\\image_classification")
         # Path(r"C:\Users\pw\Desktop\super_results\\\image_transformer")
         # "C:\\Users\\pw\\Desktop\\vision transformer\\coordl\\imagenet"
         ]

@@ -24,7 +24,7 @@ class Batch:
         self.is_cached:bool = False
         self.caching_in_progress:bool = False
         self.next_access_time:float = None
-        self.last_accessed_time:float = 0 #None #float('inf')
+        self.last_accessed_time:float = None #None #float('inf')
         self.has_been_accessed_before = False
         self.lock = threading.Lock()  # Lock for accessing shared resources
         self.batch_partition_id = f"{self.epoch_idx}_{self.partition_id}"

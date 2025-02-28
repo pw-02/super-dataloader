@@ -130,8 +130,8 @@ class PrefetchService:
                     if job.total_steps <= 1: #ignore first two steps for GPU warm up
                         continue
 
-                    max_bacthes_per_second = math.ceil(1 / job.training_step_gpu_times.avg)
-                    no_caching_batches_per_second =  math.floor(1 / job.dataload_time_on_miss.avg) if job.dataload_time_on_miss.count > 0 else 0
+                    max_bacthes_per_second = 1 / job.training_step_gpu_times.avg
+                    no_caching_batches_per_second =  1 / job.dataload_time_on_miss.avg if job.dataload_time_on_miss.count > 0 else 0
                     required_prefetch_bacthes_per_second = max_bacthes_per_second - no_caching_batches_per_second
 
                     if required_prefetch_bacthes_per_second < 1:
@@ -143,12 +143,12 @@ class PrefetchService:
                     #prefetch_cycle_duration = self.prefetch_cycle_times.avg + self.prefetch_delay if self.prefetch_cycle_times.count > 0 else self.simulate_time if self.simulate_time else 3
                     prefetch_conncurrency =  math.ceil(required_prefetch_bacthes_per_second * prefetch_cycle_duration) + 5 #add a buffer of 5
 
-                    logger.info(f'prefetch_conncurrency: {prefetch_conncurrency}, prefetch_cycle_duration: {prefetch_cycle_duration}, required_prefetch_bacthes_per_second: {required_prefetch_bacthes_per_second}')
+                    logger.debug(f'Job: {job.job_id}, Job Rate:{max_bacthes_per_second} batchs/s, Prefetch Rate:{1/self.prefetch_lambda_execution_times.avg } batches/s,  prefetch_conncurrency: {prefetch_conncurrency}')
                     #add in a check to see if the job is suffering from a data loading delay and benefit from prefetching
                     prefetch_counter, time_counter = 0, 0
-                    # Fetch average times for cache hit and miss scenarios for the current job
-                    avg_time_on_hit = job.training_step_times_on_hit.avg if job.training_step_times_on_hit.count > 0 else job.training_step_gpu_times.avg
-                    avg_time_on_miss = job.training_step_times_on_miss.avg if job.training_step_times_on_miss.count > 0 else job.training_step_gpu_times.avg + 1.5
+                    # # Fetch average times for cache hit and miss scenarios for the current job
+                    # avg_time_on_hit = job.training_step_times_on_hit.avg if job.training_step_times_on_hit.count > 0 else job.training_step_gpu_times.avg
+                    # avg_time_on_miss = job.training_step_times_on_miss.avg if job.training_step_times_on_miss.count > 0 else job.training_step_gpu_times.avg + 1.5
 
                     if len(job.future_batches) < prefetch_conncurrency:
                         logger.info(f"Job '{job.job_id}' has {len(job.future_batches)} batches, less than the required prefetch concurrency of {prefetch_conncurrency}.")
@@ -156,37 +156,31 @@ class PrefetchService:
                     # Iterate over future batches to determine access during the prefetch cycle duration
                     job_batches_snapshot = list(job.future_batches.values())
                     for batch in job_batches_snapshot:
-                        if time_counter <= prefetch_cycle_duration:
-                                # If accessed within the cycle, add its time to the counter
-                                if batch.is_cached or batch.caching_in_progress:
-                                    time_counter += avg_time_on_hit
-                                else:
-                                    time_counter += avg_time_on_miss
-                                logger.info(f"batch '{batch.batch_id}' wont be prefetched in time. Skipping.")
-                                continue
                         
                         if prefetch_counter >= prefetch_conncurrency:
                             break
 
-                        else:  
-                            # prefetch_counter += 1
-                            if not batch.is_cached and not batch.caching_in_progress:
-                                prefetch_counter += 1
-                                logger.debug(f"prefetching batch '{batch.batch_id}'")
+                        if batch.is_cached: 
+                            continue
 
-                                batch.set_caching_in_progress(True)
-                                payload = {
+                        if batch.caching_in_progress:
+                            logger.debug(f"batch '{batch.batch_id}' is already being prefetched")
+                            prefetch_counter += 1 # Increment the prefetch counter
+                            continue
+                        else:  
+                            prefetch_counter += 1
+                            # logger.debug(f"prefetching batch '{batch.batch_id}'")
+                            batch.set_caching_in_progress(True)
+                            payload = {
                                     'bucket_name': self.dataset.bucket_name,
                                     'batch_id': batch.batch_id,
                                     'batch_samples': self.dataset.get_samples(batch.indicies),
                                     'cache_address': self.cache_address,
                                     'task': 'prefetch',
                                 }
-                                prefetch_list[batch.batch_id] = (batch,json.dumps(payload))
-                                # prefetch_list.add((batch, json.dumps(payload)))
-                            else:
-                                logger.debug(f"batch '{batch.batch_id}' is already being prefetched")
-                  
+                            prefetch_list[batch.batch_id] = (batch,json.dumps(payload))
+                            # prefetch_list.add((batch, json.dumps(payload)))
+
                 # Submit the prefetch list for processing
                 if prefetch_list:
                     logger.info(f"Prefetching {len(prefetch_list)} batches for {prefetch_conncurrency} concurrency.")

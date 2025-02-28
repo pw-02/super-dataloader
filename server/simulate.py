@@ -10,17 +10,16 @@ import redis
 logger = logging.getLogger()
 
 # Constants
-MISS_WAIT_FOR_DATA_TIME = 0.659
+MISS_WAIT_FOR_DATA_TIME = 2
 HIT_WAIT_FOR_DATA_TIME = 0.0008
 PREFETCH_TIME = 2
 NUM_JOBS = 1 # Number of parallel jobs to simulate
 DELAY_BETWEEN_JOBS = 0  # Delay in seconds between the start of each job
-BATCHES_PER_JOB = 500  # Number of batches each job will process
-GPU_TIME = 0.342
-# PREPROCESS_TIME_ON_HIT = 0.001
-# PREPROCESS_TIME_ON_MISS = 0.001
+BATCHES_PER_JOB = 100  # Number of batches each job will process
+GPU_TIME = 0.25
 
 super_args:SUPERArgs = SUPERArgs(
+        dataloader_name='super',
             batch_size = 128,
             partitions_per_dataset = 1,
             lookahead_steps = 1000,
@@ -57,9 +56,8 @@ def simulate_training_job(job_id: str) -> Tuple[str, int, int, float]:
     # Process each batch for the job
     for i in range(BATCHES_PER_JOB):
         batch = batch_manager.get_next_batch(job_id)
-        cached_batch = cache_client.get(batch.batch_id)
 
-        if cached_batch:
+        if batch.is_cached:
             previous_step_wait_for_data_time = HIT_WAIT_FOR_DATA_TIME
             previous_step_is_cache_hit = True
             cache_hits += 1
@@ -69,7 +67,7 @@ def simulate_training_job(job_id: str) -> Tuple[str, int, int, float]:
             previous_step_wait_for_data_time = MISS_WAIT_FOR_DATA_TIME
             previous_step_is_cache_hit = False
             cache_misses += 1
-            cached_missed_batch = False
+            cached_missed_batch = True
             time.sleep(previous_step_wait_for_data_time + GPU_TIME)
            
         batch_manager.update_job_progess(job_id, batch.batch_id, previous_step_wait_for_data_time, previous_step_is_cache_hit, GPU_TIME, cached_missed_batch)

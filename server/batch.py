@@ -35,12 +35,12 @@ class Batch:
     def time_since_last_access(self):
         """Calculate time elapsed since last access."""
         with self.lock:
-            return time.time() - self.last_accessed_time
+            return time.perf_counter() - self.last_accessed_time
         
     def set_last_accessed_time(self):
         """Set the last accessed time to the current time."""
         with self.lock:
-            self.last_accessed_time = time.time()
+            self.last_accessed_time = time.perf_counter()
     
     def is_first_access(self):
         """Check if this is the first time the batch is being accessed."""

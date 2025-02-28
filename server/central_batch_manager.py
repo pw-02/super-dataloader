@@ -147,7 +147,7 @@ class PrefetchService:
                     #add in a check to see if the job is suffering from a data loading delay and benefit from prefetching
                     prefetch_counter, time_counter = 0, 0
                     # Fetch average times for cache hit and miss scenarios for the current job
-                    ave = job.training_step_times_on_hit.avg if job.training_step_times_on_hit.count > 0 else job.training_step_gpu_times.avg
+                    avg_time_on_hit = job.training_step_times_on_hit.avg if job.training_step_times_on_hit.count > 0 else job.training_step_gpu_times.avg
                     avg_time_on_miss = job.training_step_times_on_miss.avg if job.training_step_times_on_miss.count > 0 else job.training_step_gpu_times.avg + 1.5
 
                     if len(job.future_batches) < prefetch_conncurrency:
@@ -156,22 +156,22 @@ class PrefetchService:
                     # Iterate over future batches to determine access during the prefetch cycle duration
                     job_batches_snapshot = list(job.future_batches.values())
                     for batch in job_batches_snapshot:
-                        # if time_counter <= prefetch_cycle_duration:
-                        #         # If accessed within the cycle, add its time to the counter
-                        #         if batch.is_cached or batch.caching_in_progress:
-                        #             time_counter += avg_time_on_hit
-                        #         else:
-                        #             time_counter += avg_time_on_miss
-                        #         logger.info(f"batch '{batch.batch_id}' wont be prefetched in time. Skipping.")
-                        #         continue
+                        if time_counter <= prefetch_cycle_duration:
+                                # If accessed within the cycle, add its time to the counter
+                                if batch.is_cached or batch.caching_in_progress:
+                                    time_counter += avg_time_on_hit
+                                else:
+                                    time_counter += avg_time_on_miss
+                                logger.info(f"batch '{batch.batch_id}' wont be prefetched in time. Skipping.")
+                                continue
                         
                         if prefetch_counter >= prefetch_conncurrency:
                             break
 
-                        else: 
-                            prefetch_counter += 1
+                        else:  
+                            # prefetch_counter += 1
                             if not batch.is_cached and not batch.caching_in_progress:
-                                # prefetch_counter += 1
+                                prefetch_counter += 1
                                 logger.debug(f"prefetching batch '{batch.batch_id}'")
 
                                 batch.set_caching_in_progress(True)

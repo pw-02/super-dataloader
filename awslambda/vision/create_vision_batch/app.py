@@ -115,7 +115,7 @@ def create_minibatch(bucket_name: str, samples: list, transform, s3_client) -> s
         torch.save(minibatch, buffer)
         bytes_minibatch = buffer.getvalue()
         # Encode the serialized tensor with base64
-        # bytes_minibatch = lz4.frame.compress(bytes_minibatch)
+        bytes_minibatch = lz4.frame.compress(bytes_minibatch)
         # compressed_minibatch = compressor.compress(bytes_minibatch)
     return bytes_minibatch
 

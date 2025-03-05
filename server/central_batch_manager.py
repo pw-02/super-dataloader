@@ -162,6 +162,9 @@ class PrefetchService:
 
                         if batch.is_cached: 
                             continue
+                        if batch.batch_id in prefetch_list:
+                            prefetch_counter += 1 # Increment the prefetch counter
+                            continue
 
                         if batch.caching_in_progress:
                             logger.debug(f"batch '{batch.batch_id}' is already being prefetched")
@@ -170,7 +173,7 @@ class PrefetchService:
                         else:  
                             prefetch_counter += 1
                             # logger.debug(f"prefetching batch '{batch.batch_id}'")
-                            batch.set_caching_in_progress(True)
+                            # batch.set_caching_in_progress(True)
                             payload = {
                                     'bucket_name': self.dataset.bucket_name,
                                     'batch_id': batch.batch_id,

@@ -305,7 +305,7 @@ class CacheEvictionService:
                         
                         if batch.last_accessed_time is not None and batch.time_since_last_access() > self.keep_alive_time_threshold:
                             
-                            logger.info(f"Keeping batch '{batch.batch_id}' alive. {batch.time_since_last_access():.2f} seconds since last access.")
+                            # logger.info(f"Keeping batch '{batch.batch_id}' alive. {batch.time_since_last_access():.2f} seconds since last access.")
                             try:
                                 if self.simulate_keep_alvive:
                                         batch.set_cache_status(is_cached=True)
@@ -319,7 +319,7 @@ class CacheEvictionService:
                                             batch.set_cache_status(is_cached=False)
                                             logger.warning(f"Batch '{batch.batch_id}' is not in cache, setting is_cached to False.")
                             except Exception as e:
-                                    logger.error(f"Error keeping batch '{batch.batch_id}' alive: {e}")
+                                    # logger.error(f"Error keeping batch '{batch.batch_id}' alive: {e}")
                                     batch.set_cache_status(is_cached=False)
                 time.sleep(5)  # Sleep for a short while before checking the queue again
             

@@ -186,7 +186,7 @@ class PrefetchService:
 
                 # Submit the prefetch list for processing
                 if prefetch_list:
-                    logger.info(f"Prefetching {len(prefetch_list)} batches for {prefetch_conncurrency} concurrency.")
+                    logger.info(f"Prefetching {len(prefetch_list)} batches")
                     self.prefetch_batches_from_list(prefetch_list, prefetch_cycle_started)
                     logger.info(f"Prefetch took: {self.prefetch_cycle_times.val:.4f}s for {len(prefetch_list)} batches. (Avg Prefetch Time: {self.prefetch_cycle_times.avg:.4f}s, Avg Lambda Time: {self.prefetch_lambda_execution_times.avg:.4f}s, Running Cost: ${self._compute_prefeteching_cost():.4f})")
 

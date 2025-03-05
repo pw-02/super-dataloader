@@ -141,7 +141,7 @@ class PrefetchService:
                     prefetch_cycle_duration = self.prefetch_lambda_execution_times.avg + self.prefetch_delay if self.prefetch_lambda_execution_times.count > 0 else self.simulate_time if self.simulate_time else 2.5
                     
                     #prefetch_cycle_duration = self.prefetch_cycle_times.avg + self.prefetch_delay if self.prefetch_cycle_times.count > 0 else self.simulate_time if self.simulate_time else 3
-                    prefetch_conncurrency =  math.ceil(required_prefetch_bacthes_per_second * prefetch_cycle_duration) + 5 #add a buffer of 5
+                    prefetch_conncurrency =  math.ceil(required_prefetch_bacthes_per_second * prefetch_cycle_duration) * 0.25 #add a buffer of 5
 
                     logger.debug(f'Job: {job.job_id}, Job Rate:{max_bacthes_per_second} batchs/s, Prefetch Rate:{1/self.prefetch_lambda_execution_times.avg } batches/s,  prefetch_conncurrency: {prefetch_conncurrency}')
                     #add in a check to see if the job is suffering from a data loading delay and benefit from prefetching

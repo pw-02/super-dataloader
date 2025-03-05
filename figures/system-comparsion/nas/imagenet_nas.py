@@ -4,25 +4,25 @@ import matplotlib.ticker as mticker
 import numpy as np
 import matplotlib.gridspec as gridspec
 
-# Set global font properties
+# # Set global font properties
 plt.rc('font', family='serif')  # Set font family, weight, and size
-plt.rc('axes', titlesize=16)  # Set the font size for axes titles
-plt.rc('axes', labelsize=14)  # Set the font size for axes labels
-font_size = 12
+# plt.rc('axes', titlesize=16)  # Set the font size for axes titles
+# plt.rc('axes', labelsize=14)  # Set the font size for axes labels
+font_size = 13
 
-coordl_label = 'CoorDL'
+tensorsocket_label = 'TensorSocket'
 disdl_label = r'$\bf{DisDP}$'
 baseline_label = 'Pytorch'
 dataset_label = 'ImageNet'
-line_width = 1.5
+line_width = 1.75
 visual_map_plot_1 = {
-    coordl_label: {'color': 'black', 'linestyle': ':', 'marker': '', 'linewidth': line_width},
+    tensorsocket_label: {'color': 'black', 'linestyle': ':', 'marker': '', 'linewidth': line_width},
     disdl_label: {'color': 'black', 'linestyle': '-', 'marker': '', 'linewidth': line_width},
     baseline_label: {'color': 'black', 'linestyle': '--', 'marker': '', 'linewidth': line_width},
 }
 
 # visual_map_plot_1 = {
-#     coordl_label: {'color': '#007777', 'linestyle': '-', 'marker': '', 'linewidth': line_width},
+#     tensorsocket_label: {'color': '#007777', 'linestyle': '-', 'marker': '', 'linewidth': line_width},
 #     disdl_label: {'color': '#B0C4DE', 'linestyle': ':', 'marker': '', 'linewidth': line_width},
 #     baseline_label: {'color': '#FFA500', 'linestyle': '--', 'marker': '', 'linewidth': line_width},
 # }
@@ -30,8 +30,8 @@ visual_map_plot_1 = {
 
 
 
-fig = plt.figure(figsize=(17.5, 3.2))
-gs = gridspec.GridSpec(1, 4, width_ratios=[1.5, 1.5, 1.25, 1])  # First two plots are twice as wide
+fig = plt.figure(figsize=(16.5, 3.5))
+gs = gridspec.GridSpec(1, 4, width_ratios=[2, 2, 1.5, 1.5])  # First two plots are twice as wide
 
 ax1 = fig.add_subplot(gs[0, 0])  # First plot
 ax2 = fig.add_subplot(gs[0, 1])  # Second plot
@@ -40,19 +40,19 @@ ax4 = fig.add_subplot(gs[0, 3])  # Fourth plot
 
 # Titles for clarity
 # Data
-path  = 'C:\\Users\\pw\\Desktop\\super_results\\\image_classification\\data_for_paper_batches_over_time.csv'
+path  = r"C:\Users\pw\Desktop\disdl(new)\nas\image_classification\imagenet\paper_data_batches_over_time.csv"
 
 # Read the CSV file
 df = pd.read_csv(path, sep=",")
 # Extract columns
 num_samples = df["Batch"] * 256
-disdl_data = df["Elapsed Time (Super)"]
-elapsed_coordl = df["Elapsed Time (CoorDL)"]
-elapsed_baseline = df["Elapsed Time (Pytorch)"]
-ax1.plot(elapsed_coordl, num_samples, label=coordl_label,
-        color=visual_map_plot_1[coordl_label]['color'], linestyle=visual_map_plot_1[coordl_label]['linestyle'], linewidth=visual_map_plot_1[coordl_label]['linewidth'])
-ax1.plot(elapsed_baseline, num_samples, label=baseline_label,
-        color=visual_map_plot_1[baseline_label]['color'], linestyle=visual_map_plot_1[baseline_label]['linestyle'], linewidth=visual_map_plot_1[baseline_label]['linewidth'])
+disdl_data = df["Elapsed Time(DisDL)"]
+elapsed_tensorsocket = df["Elapsed Time(TensorSocket)"]
+# elapsed_baseline = df["Elapsed Time (Pytorch)"]
+ax1.plot(elapsed_tensorsocket, num_samples, label=tensorsocket_label,
+        color=visual_map_plot_1[tensorsocket_label]['color'], linestyle=visual_map_plot_1[tensorsocket_label]['linestyle'], linewidth=visual_map_plot_1[tensorsocket_label]['linewidth'])
+# ax1.plot(elapsed_baseline, num_samples, label=baseline_label,
+#         color=visual_map_plot_1[baseline_label]['color'], linestyle=visual_map_plot_1[baseline_label]['linestyle'], linewidth=visual_map_plot_1[baseline_label]['linewidth'])
 ax1.plot(disdl_data, num_samples, label=disdl_label,
         color=visual_map_plot_1[disdl_label]['color'], linestyle=visual_map_plot_1[disdl_label]['linestyle'], linewidth=visual_map_plot_1[disdl_label]['linewidth'])
 
@@ -61,7 +61,7 @@ ax1.set_xlabel('Time (seconds)', fontsize=font_size)
 ax1.set_ylabel('Aggregated samples processed', fontsize=font_size)
 # for label in ax1.get_xticklabels():
 #     label.set_fontsize(font_size)
-# ax1.set_title(f"{dataset_label}: Aggregated Throughput of 4 Jobs", fontsize=font_size)
+ax1.set_title(f"{dataset_label}: Aggregated Throughput of 4 Jobs", fontsize=font_size)
 
 # Enable grid
 # ax.grid(True, linestyle='--', alpha=0.6)
@@ -74,25 +74,24 @@ ax1.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{int(x/1000)}
 
 #--------------------------------------------------------------------------------
 
-path  = "C:\\Users\\pw\\Desktop\\super_results\\image_classification\\data_for_paper_cost_over_time.csv"
+path  = r"C:\Users\pw\Desktop\disdl(new)\nas\image_classification\imagenet\paper_data_costs_over_time .csv"
 # Read the CSV file
-df = pd.read_csv(path, sep="\t")
+df = pd.read_csv(path, sep=",")
 # Extract columns
 num_samples = df["Batch"]
-cost_disdp = df["Cost (Super)"]
-cost_coordl = df["Cost (CoorDL)"]
-cost_baseline = df["Cost (Pytorch)"]
+cost_disdp = df["Cost(DisDL)"]
+cost_tensorsocket = df["Cost(TensorSocket)"]
 
 # Plot number of mini-batches processed over time
-ax2.plot(cost_coordl, num_samples, label=coordl_label,
-        color=visual_map_plot_1[coordl_label]['color'], linestyle=visual_map_plot_1[coordl_label]['linestyle'], linewidth=visual_map_plot_1[coordl_label]['linewidth'])
-ax2.plot(cost_baseline, num_samples, label=baseline_label,
-        color=visual_map_plot_1[baseline_label]['color'], linestyle=visual_map_plot_1[baseline_label]['linestyle'], linewidth=visual_map_plot_1[baseline_label]['linewidth'])
+ax2.plot(cost_tensorsocket, num_samples, label=tensorsocket_label,
+        color=visual_map_plot_1[tensorsocket_label]['color'], linestyle=visual_map_plot_1[tensorsocket_label]['linestyle'], linewidth=visual_map_plot_1[tensorsocket_label]['linewidth'])
+# ax2.plot(cost_baseline, num_samples, label=baseline_label,
+        # color=visual_map_plot_1[baseline_label]['color'], linestyle=visual_map_plot_1[baseline_label]['linestyle'], linewidth=visual_map_plot_1[baseline_label]['linewidth'])
 ax2.plot(cost_disdp, num_samples, label=disdl_label,
         color=visual_map_plot_1[disdl_label]['color'], linestyle=visual_map_plot_1[disdl_label]['linestyle'], linewidth=visual_map_plot_1[disdl_label]['linewidth'])
 
 # Labels and title
-# ax2.set_title(f"{dataset_label}: Aggregated Cost of 4 Jobs", fontsize=font_size)
+ax2.set_title(f"{dataset_label}: Aggregated Cost of 4 Jobs", fontsize=font_size)
 
 ax2.set_xlabel('Cost ($)', fontsize=font_size)
 ax2.set_ylabel('Aggregated samples processed', fontsize=font_size)
@@ -135,13 +134,13 @@ visual_map_stacked_bar = {
 
 
 time_breakdown = {
-    'IO': {coordl_label: 23,baseline_label: 22, disdl_label: 7},
-    'Transform': {coordl_label: 29,baseline_label: 41, disdl_label: 20},
-    'GPU': {coordl_label: 47,baseline_label: 37, disdl_label: 73}
+    'IO': {tensorsocket_label: 23,baseline_label: 22, disdl_label: 7},
+    'Transform': {tensorsocket_label: 29,baseline_label: 41, disdl_label: 20},
+    'GPU': {tensorsocket_label: 47,baseline_label: 37, disdl_label: 73}
 }
 
 # Extracting the data in the right order
-loaders = [coordl_label, baseline_label, disdl_label]
+loaders = [tensorsocket_label, baseline_label, disdl_label]
 bar_width = 0.75  # Set bar width
 
 io_times = [time_breakdown['IO'][l] for l in loaders]
@@ -178,7 +177,7 @@ ax3.bar(x,
 ax3.set_xticks(x)
 ax3.set_xticklabels(loaders)
 ax3.set_ylabel("Percentage (%)")
-# ax3.set_title(f"{dataset_label}: % Breakdown of Time", fontsize=font_size)
+ax3.set_title(f"{dataset_label}: % Breakdown of Time", fontsize=font_size)
 ax3.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{x:.0f}%"))
 ax3.set_ylim(0, 100)  # Manually set a higher limit
 padding = 15
@@ -189,30 +188,30 @@ ax3.legend(loc="upper center", ncol=3, fontsize=9)  # Moves legend above plot
 # #-------------------------------------------------------------------------------------
 
 visual_map_bar = {
-   coordl_label: {'color': '#4C8BB8', 'hatch': '///', 'edgecolor': 'black', 'alpha': 1.0},
+   tensorsocket_label: {'color': '#4C8BB8', 'hatch': '///', 'edgecolor': 'black', 'alpha': 1.0},
     disdl_label: {'color': '#FEA400', 'hatch': '....', 'edgecolor': 'black', 'alpha': 1.0},
     baseline_label: {'color': '#005250', 'hatch': '--', 'edgecolor': 'black', 'alpha': 1.0},
 }
 
 visual_map_bar = {
    disdl_label: {'color': '#005250', 'hatch': '\\\\\',', 'edgecolor': 'black', 'alpha': 1.0, 'marker':'o', 'linestyle':'-'},
-   coordl_label: {'color': '#FEA400', 'hatch': '//', 'edgecolor': 'black', 'alpha': 1.0,  'marker':'o', 'linestyle':'-'}
+   tensorsocket_label: {'color': '#FEA400', 'hatch': '//', 'edgecolor': 'black', 'alpha': 1.0,  'marker':'o', 'linestyle':'-'}
 }
 
 visual_map_bar = {
     disdl_label: {'color': '#007777', 'hatch': '...', 'edgecolor': 'black', 'alpha': 1.0},
     'transform': {'color': 'white', 'hatch': 'xx', 'edgecolor': 'black', 'alpha': 1.0},
-    coordl_label: {'color': '#FFA500', 'hatch': 'xx', 'edgecolor': 'black', 'alpha': 1.0},
+    tensorsocket_label: {'color': '#FFA500', 'hatch': 'xx', 'edgecolor': 'black', 'alpha': 1.0},
 }
 
 cache_hit_percentage = {
-    'CoorDL': 74,
+    'TensorSocket': 74,
     disdl_label: 96,
 }
 
 # Extracting the data in the right order
-# systems = [coordl_label, baseline_label, disdl_label]
-systems = [coordl_label, disdl_label]
+# systems = [tensorsocket_label, baseline_label, disdl_label]
+systems = [tensorsocket_label, disdl_label]
 # values = np.array(list(cache_hit_percentage.values()))
 
 # Create bars with the appropriate visual properties
@@ -230,7 +229,7 @@ for i, system in enumerate(systems):
 # Labeling
 ax4.set_xticklabels(systems)
 ax4.set_ylabel("Cache Hit %")
-# ax4.set_title(f"{dataset_label}: Cache Hit Rate", fontsize=font_size)
+ax4.set_title(f"{dataset_label}: Cache Hit Rate", fontsize=font_size)
 ax4.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{x:.0f}%"))
 # ax4.set_ylim(0, 100)  # Manually set a higher limit
 # padding = 15

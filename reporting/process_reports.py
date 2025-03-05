@@ -95,7 +95,7 @@ def compute_ec2_costs(instance_type: str, time_seconds: float):
 
 
 
-def get_training_summary(folder_path, max_batches =9000):
+def get_training_summary(folder_path, max_batches =None):
     search_pattern = os.path.join(folder_path, '**', 'metrics.csv')
     jobs_metric_list = []
     elapsed_times = []
@@ -208,7 +208,10 @@ def get_training_summary(folder_path, max_batches =9000):
 
     elapsed_times = sorted(elapsed_times)
     #trime elapsed times to max_batches
-    elapsed_times = elapsed_times[:max_batches]
+    if max_batches is not None and  len(elapsed_times) > max_batches:
+        elapsed_times = elapsed_times[:max_batches]
+    if elapsed_times is None:
+        elapsed_times = []
     optimal_times = sorted(optimal_times)
     return overall_metrics,jobs_metric_list, aggegared_throughput_overtime_list,elapsed_times,optimal_times, start_time_stamp, end_time_stamp
 
@@ -299,7 +302,7 @@ if __name__ == "__main__":
  
     paths = [
         # "C:\\Users\\pw\\Desktop\\image_classification\\coordl\\cifar10",
-        Path(r"C:\Users\pw\Desktop\disdl(new)\nas\image_classification")
+        Path(r"C:\Users\pw\Desktop\disdl(new)\nas\image_transfomer")
         # Path(r"C:\Users\pw\Desktop\super_results\\\image_transformer")
         # "C:\\Users\\pw\\Desktop\\vision transformer\\coordl\\imagenet"
         ]
@@ -311,14 +314,18 @@ if __name__ == "__main__":
         throuhgput_over_time_summary = []
         for exp_folder in experiment_folders:
             exp_name = os.path.basename(os.path.normpath(exp_folder))
-            dataset = os.path.basename(os.path.dirname(exp_folder))
-            dataloader = os.path.basename(os.path.dirname(os.path.dirname(exp_folder)))
+            dataloader = os.path.basename(os.path.dirname(exp_folder))
+            dataset = os.path.basename(os.path.dirname(os.path.dirname(exp_folder)))
 
             exp_summary  = {}
             exp_summary['name'] = exp_name
             exp_summary['dataloader'] = dataloader
             exp_summary['dataset'] = dataset
             exp_summary['path'] = exp_folder
+            if 'hpo' in str(folder_path):
+                #get the first fodler name under  exp_summary['path'] and use it as the model name
+                model_name = get_subfolder_names(exp_folder, include_children=False)[0]
+                exp_summary['model_name'] = model_name
 
             summary, job_metrics, aggegared_throughput_overtime_list, elapsed_times,optimal_times, start_timestamp, end_timestamp = get_training_summary(exp_folder)
             
